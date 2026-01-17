@@ -24,29 +24,62 @@ describe('ScoreDisplay', () => {
     })
   })
 
+  describe('song number display', () => {
+    it('shows current song number calculated from songsPlayed', () => {
+      render(<ScoreDisplay score={0} songsPlayed={4} />)
+
+      // Current song is songsPlayed + 1 = 5
+      expect(screen.getByText('Chanson 5')).toBeInTheDocument()
+    })
+
+    it('shows Chanson 1 when no songs played yet', () => {
+      render(<ScoreDisplay score={0} songsPlayed={0} />)
+
+      expect(screen.getByText('Chanson 1')).toBeInTheDocument()
+    })
+
+    it('uses explicit currentSongNumber when provided', () => {
+      render(<ScoreDisplay score={0} songsPlayed={3} currentSongNumber={10} />)
+
+      expect(screen.getByText('Chanson 10')).toBeInTheDocument()
+    })
+
+    it('updates song number with each new song', () => {
+      const { rerender } = render(<ScoreDisplay score={0} songsPlayed={0} />)
+      expect(screen.getByText('Chanson 1')).toBeInTheDocument()
+
+      rerender(<ScoreDisplay score={1} songsPlayed={1} />)
+      expect(screen.getByText('Chanson 2')).toBeInTheDocument()
+
+      rerender(<ScoreDisplay score={2} songsPlayed={2} />)
+      expect(screen.getByText('Chanson 3')).toBeInTheDocument()
+    })
+
+    it('has prominent styling for song number', () => {
+      render(<ScoreDisplay score={0} songsPlayed={0} />)
+
+      const songNumber = screen.getByText('Chanson 1')
+      expect(songNumber).toHaveClass('font-semibold', 'text-white')
+    })
+  })
+
   describe('songs played display', () => {
     it('uses singular form for one song', () => {
-      const { container } = render(<ScoreDisplay score={1} songsPlayed={1} />)
+      render(<ScoreDisplay score={1} songsPlayed={1} />)
 
-      // textContent combines all text nodes, allowing us to check the full text
-      const songsPlayedDiv = container.querySelectorAll('.text-purple-300')[1]
-      expect(songsPlayedDiv?.textContent).toContain('1 chanson jouée')
+      expect(screen.getByText('1 jouée')).toBeInTheDocument()
     })
 
     it('uses plural form for multiple songs', () => {
-      const { container } = render(<ScoreDisplay score={2} songsPlayed={2} />)
+      render(<ScoreDisplay score={2} songsPlayed={2} />)
 
-      const songsPlayedDiv = container.querySelectorAll('.text-purple-300')[1]
-      expect(songsPlayedDiv?.textContent).toContain('2 chanson')
-      expect(songsPlayedDiv?.textContent).toContain('jouée')
+      expect(screen.getByText('2 jouées')).toBeInTheDocument()
     })
 
     it('uses plural form for zero songs', () => {
-      const { container } = render(<ScoreDisplay score={0} songsPlayed={0} />)
+      render(<ScoreDisplay score={0} songsPlayed={0} />)
 
-      const songsPlayedDiv = container.querySelectorAll('.text-purple-300')[1]
-      expect(songsPlayedDiv?.textContent).toContain('0 chanson')
-      expect(songsPlayedDiv?.textContent).toContain('jouée')
+      expect(screen.getByText('0 jouées')).toBeInTheDocument()
     })
   })
 
