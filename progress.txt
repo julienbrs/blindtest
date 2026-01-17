@@ -492,3 +492,10 @@ Commit: 9e73f47
 Notes: Verified library end detection functionality already implemented in game page. When API returns 404 (all songs played), allSongsPlayed state is set to true and game.actions.quit() is called. GameRecap component displays "Félicitations !" title and "Vous avez écouté toute la bibliothèque !" message when allSongsPlayed prop is true. Added 11 comprehensive tests: 7 tests in GameRecap.test.tsx for library completion UI (congratulations title, completion message, priority over score messages, stats display, new game button, home button), 4 tests in page.test.tsx for GameRecap rendering when game ends. All 362 tests pass.
 Files: src/components/game/GameRecap.test.tsx, src/app/game/page.test.tsx
 
+=== Issue 6.13: Créer le hook useAudioPlayer ===
+Timestamp: 2026-01-18T00:35:00Z
+Status: COMPLETED
+Commit: aa946e3
+Notes: Implemented useAudioPlayer hook with full audio control capabilities. Added loadSong method to load audio from /api/audio/{songId}, play/pause/toggle methods for playback control, progress tracking with currentTime and percentage-based progress. Added isLoaded and isPlaying state. Implemented onEnded callback (fired when maxDuration reached or audio naturally ends) and onReady callback (fired with songId when audio is ready to play). Used refs to avoid stale closures with callbacks. Created comprehensive test suite with 18 tests covering initialization, loadSong, play/pause/toggle, progress tracking, callbacks, isLoaded state, cleanup, and ref stability. All 380 tests pass.
+Files: src/hooks/useAudioPlayer.ts, src/hooks/useAudioPlayer.test.ts
+
