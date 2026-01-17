@@ -289,3 +289,10 @@ Commit: 64473f0
 Notes: Implemented responsive game layout with mobile-first design. Mobile layout: vertical stack with header at top, central zone (cover+audio bar), buzzer/timer, and controls at bottom. Desktop layout (lg+): two-column layout with cover/audio on left side and controls/buzzer/timer on right side (fixed 320px width). Used Tailwind lg: breakpoint for smooth transitions between layouts. Improved quit button styling with hover background effect. All 141 tests pass.
 Files: src/app/game/page.tsx
 
+=== Issue 5.3: Créer le composant AudioPlayer ===
+Timestamp: 2026-01-17T19:57:00Z
+Status: COMPLETED
+Commit: 4ad0ad8
+Notes: Implemented full HTML5 audio player component. Audio loads from /api/audio/{songId} endpoint. Play/pause controlled via isPlaying prop with effects. Visual progress bar with gradient (pink to purple). Auto-stop playback when currentTime reaches maxDuration and calls onEnded callback. Uses onLoadStart event to reset state when new song loads, avoiding ESLint set-state-in-effect warning. Time display in mm:ss format. All 141 tests pass.
+Files: src/components/game/AudioPlayer.tsx
+

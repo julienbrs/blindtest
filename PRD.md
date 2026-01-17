@@ -75,7 +75,7 @@ After this task, all subsequent issues run with full feedback loops.
 
 - [x] 5.1 Créer la page /game
 - [x] 5.2 Implémenter le layout de jeu
-- [ ] 5.3 Créer le composant AudioPlayer
+- [x] 5.3 Créer le composant AudioPlayer
 - [ ] 5.4 Ajouter les contrôles play/pause
 - [ ] 5.5 Afficher la barre de progression audio
 - [ ] 5.6 Limiter la lecture à la durée configurée
