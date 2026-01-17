@@ -443,3 +443,10 @@ Commit: e1ddf03
 Notes: Implemented PLAYING → TIMER transition when buzzer is pressed. Updated BUZZ action type to include timerDuration parameter for proper timer reset. Audio automatically pauses since isPlaying is derived from status === 'playing'. Added 4 new comprehensive tests for buzz behavior: timer reset, buzz ignored in non-playing states (reveal, timer). Buzz goes directly to timer state (no intermediate buzzed state as per implementation). All 330 tests pass.
 Files: src/lib/types.ts, src/hooks/useGameState.ts, src/hooks/useGameState.test.ts
 
+=== Issue 6.6: Implémenter la transition BUZZED → TIMER ===
+Timestamp: 2026-01-18T00:00:00Z
+Status: COMPLETED
+Commit: e2fe970
+Notes: Verified and documented BUZZED → TIMER transition. In current implementation, BUZZ action transitions directly to 'timer' state (skipping transient 'buzzed' state as noted in epic). Timer starts immediately when status changes to 'timer'. Timer component is rendered conditionally when game.state.status === 'timer'. Added 6 comprehensive tests verifying: Timer renders in timer state, Timer hidden in playing state, Buzzer hidden in timer state, countdown visible via timerRemaining, immediate transition (no intermediate buzzed state), and proper props passing. Refactored test mock to support dynamic state modification. All 336 tests pass.
+Files: src/app/game/page.test.tsx
+
