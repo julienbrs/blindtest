@@ -527,3 +527,10 @@ Commit: 8606f01
 Notes: Created reusable Button component with 4 variants (primary, secondary, success, danger). Added hover, active, and disabled states for all variants. Primary variant has gradient from pink-500 to purple-600, scale hover/active effects. Secondary variant uses transparent bg-white/10. Success uses green-600, danger uses red-600. All variants have shadow-lg and proper transition animations. Implemented 3 size options (sm, md, lg) and fullWidth prop. Updated GameConfigForm, GameControls, GameRecap, and game page to use new Button component. Created comprehensive test suite with 32 tests. All 445 tests pass.
 Files: src/components/ui/Button.tsx, src/components/ui/Button.test.tsx, src/components/game/GameConfigForm.tsx, src/components/game/GameControls.tsx, src/components/game/GameRecap.tsx, src/app/game/page.tsx
 
+=== Issue 7.3: Ajouter des ombres et profondeur ===
+Timestamp: 2026-01-18T02:35:00Z
+Status: COMPLETED
+Commit: 82e1416
+Notes: Enhanced Card component with 3 variants (default, elevated, glow) for visual hierarchy. Default variant adds bg-white/10, backdrop-blur-sm, rounded-2xl, shadow-xl, and border-white/10. Elevated variant uses stronger shadow-[0_20px_50px_rgba(0,0,0,0.3)] for emphasis. Glow variant adds pink glow shadow-[0_0_30px_rgba(236,72,153,0.3)] with pink-tinted border. Updated GameConfigForm to use Card component for all sections. Updated ScoreDisplay with shadow-lg, border, and backdrop-blur. Updated GameRecap with deeper shadow and border on modal and stat cards. Updated SongReveal loading state and album cover with enhanced depth shadows. Created 14 comprehensive tests for Card component. All 459 tests pass.
+Files: src/components/ui/Card.tsx, src/components/ui/Card.test.tsx, src/components/game/GameConfigForm.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/GameRecap.tsx, src/components/game/SongReveal.tsx
+
