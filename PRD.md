@@ -43,7 +43,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 2.7 Gérer les fichiers sans métadonnées
 - [x] 2.8 Valider les formats audio supportés
 - [x] 2.9 Gérer les erreurs de lecture
-- [ ] 2.10 Ajouter un endpoint de rafraîchissement du cache
+- [x] 2.10 Ajouter un endpoint de rafraîchissement du cache
 
 ### Epic 3: API Routes (docs/epics/03-api-routes.md)
 
