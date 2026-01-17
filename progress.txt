@@ -233,3 +233,10 @@ Commit: c9e1728
 Notes: Added guess mode selector with 3 styled radio button options (title, artist, both). Each option shows label and description. Visual selection state with purple border/background highlight. Radio inputs use sr-only class for accessibility while remaining keyboard navigable via labels. All 141 tests pass.
 Files: src/components/game/GameConfigForm.tsx
 
+=== Issue 4.5: Ajouter le slider durée des extraits ===
+Timestamp: 2026-01-17T19:37:00Z
+Status: COMPLETED
+Commit: 3b0a30b
+Notes: Added range slider for clip duration (5-60 seconds, step 5). Displays current duration value in real-time with large bold text. Styled slider thumb with gradient from pink-500 to purple-500 matching theme. Added min/max labels (5s, 30s, 60s) below the slider. Removed underscore prefix from setClipDuration to enable functionality. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
