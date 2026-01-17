@@ -212,3 +212,10 @@ Commit: d041f24
 Notes: Updated layout.tsx with festive gradient background (from-indigo-950 via-purple-900 to-pink-900), min-h-screen flex container structure, and updated SEO metadata. Added CSS font variables for Poppins (headings) and Inter (body), heading font styles, and gradient-shift animation for animated background effect. All 141 tests pass.
 Files: src/app/layout.tsx, src/app/globals.css
 
+=== Issue 4.2: Designer la page d'accueil ===
+Timestamp: 2026-01-17T19:32:00Z
+Status: COMPLETED
+Commit: 7329177
+Notes: Redesigned homepage with festive gradient title (yellow-pink-purple), descriptive subtitle, and animated bouncing music icons for festive ambiance. Added placeholders for GameConfigForm and LibraryStats components (to be implemented in issues 4.3 and 4.6). Styled "Nouvelle Partie" button with gradient and hover effects. Responsive design with mobile/desktop title sizes. All 141 tests pass.
+Files: src/app/page.tsx
+
