@@ -163,3 +163,10 @@ Commit: eeda086
 Notes: Implemented GET /api/audio/[id] endpoint for streaming audio files. Added Range Request support (HTTP 206) for seeking in audio players. MIME types defined for all supported audio formats (mp3, wav, ogg, flac, m4a, aac). ID validation (12 hex characters). Created comprehensive test suite with 7 tests (122 tests total pass).
 Files: src/app/api/audio/[id]/route.ts, src/app/api/audio/[id]/route.test.ts
 
+=== Issue 3.5: Créer GET /api/cover/[id] ===
+Timestamp: 2026-01-17T18:41:00Z
+Status: COMPLETED
+Commit: 9f6b0ab
+Notes: Implemented GET /api/cover/[id] endpoint for serving album covers. Returns embedded cover from audio file if available (via extractCover), fallback to cover.jpg/cover.png in song directory, or placeholder SVG if no cover found. Image MIME type detected from magic bytes (JPEG, PNG, GIF, WebP). Cache headers set for 1 year. ID validation (12 hex characters). All 122 tests pass.
+Files: src/app/api/cover/[id]/route.ts
+
