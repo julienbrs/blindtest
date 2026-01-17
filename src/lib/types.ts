@@ -145,3 +145,4 @@ export type GameAction =
   | { type: 'END_GAME' }
   | { type: 'RESET' }
   | { type: 'CLIP_ENDED' }
+  | { type: 'REPLAY' }

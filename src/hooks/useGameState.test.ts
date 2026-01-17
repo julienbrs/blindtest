@@ -614,6 +614,143 @@ describe('useGameState', () => {
     })
   })
 
+  describe('REPLAY action', () => {
+    it('transitions from reveal to playing', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.reveal()
+      })
+      expect(result.current.state.status).toBe('reveal')
+
+      act(() => {
+        result.current.actions.replay()
+      })
+      expect(result.current.state.status).toBe('playing')
+    })
+
+    it('does nothing if not in reveal state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+      })
+      expect(result.current.state.status).toBe('playing')
+
+      act(() => {
+        result.current.actions.replay()
+      })
+      // Should still be playing, not change to loading or anything else
+      expect(result.current.state.status).toBe('playing')
+    })
+
+    it('does not reset timer', () => {
+      const configWithTimer10 = { ...mockConfig, timerDuration: 10 }
+      const { result } = renderHook(() => useGameState(configWithTimer10))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      // Timer is at 10
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(result.current.state.timerRemaining).toBe(7)
+
+      // Validate to go to reveal
+      act(() => {
+        result.current.actions.validate(false)
+      })
+      expect(result.current.state.status).toBe('reveal')
+      // Timer should still be 7 (not reset)
+      expect(result.current.state.timerRemaining).toBe(7)
+
+      // Replay should not reset timer
+      act(() => {
+        result.current.actions.replay()
+      })
+      expect(result.current.state.status).toBe('playing')
+      expect(result.current.state.timerRemaining).toBe(7)
+    })
+
+    it('preserves score when replaying', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.score).toBe(1)
+
+      act(() => {
+        result.current.actions.replay()
+      })
+      expect(result.current.state.score).toBe(1)
+    })
+
+    it('preserves songsPlayed when replaying', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.songsPlayed).toBe(1)
+
+      act(() => {
+        result.current.actions.replay()
+      })
+      expect(result.current.state.songsPlayed).toBe(1)
+    })
+
+    it('preserves playedSongIds when replaying', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.playedSongIds).toContain(mockSong.id)
+
+      act(() => {
+        result.current.actions.replay()
+      })
+      expect(result.current.state.playedSongIds).toContain(mockSong.id)
+    })
+
+    it('preserves isRevealed state when replaying', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.reveal()
+      })
+      expect(result.current.state.isRevealed).toBe(true)
+
+      act(() => {
+        result.current.actions.replay()
+      })
+      // isRevealed stays true - the song info is still visible
+      expect(result.current.state.isRevealed).toBe(true)
+    })
+
+    it('preserves currentSong when replaying', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.reveal()
+        result.current.actions.replay()
+      })
+      expect(result.current.state.currentSong).toEqual(mockSong)
+    })
+  })
+
   describe('immutability', () => {
     it('returns new state object on each action', () => {
       const { result } = renderHook(() => useGameState(mockConfig))
@@ -658,6 +795,7 @@ describe('useGameState', () => {
       expect(typeof result.current.actions.quit).toBe('function')
       expect(typeof result.current.actions.reset).toBe('function')
       expect(typeof result.current.actions.clipEnded).toBe('function')
+      expect(typeof result.current.actions.replay).toBe('function')
     })
 
     it('exposes dispatch function', () => {

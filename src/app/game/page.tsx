@@ -22,6 +22,8 @@ function GameContent() {
     null
   )
   const hasInitialized = useRef(false)
+  // Track if replay was triggered
+  const [shouldReplay, setShouldReplay] = useState(false)
 
   // Preloading state for the next song
   const [nextSong, setNextSong] = useState<Song | null>(null)
@@ -203,6 +205,17 @@ function GameContent() {
     setAudioReadyForSongId(songId)
   }, [])
 
+  // Handle replay button click - trigger replay and transition state
+  const handleReplay = useCallback(() => {
+    setShouldReplay(true)
+    game.actions.replay()
+  }, [game.actions])
+
+  // Callback when replay is complete (audio has been reset)
+  const handleReplayComplete = useCallback(() => {
+    setShouldReplay(false)
+  }, [])
+
   const handleNewGame = () => {
     // Reload the page with same config to start a new game
     window.location.reload()
@@ -286,6 +299,8 @@ function GameContent() {
             maxDuration={config.clipDuration}
             onEnded={game.actions.clipEnded}
             onReady={handleAudioReady}
+            shouldReplay={shouldReplay}
+            onReplayComplete={handleReplayComplete}
           />
         </div>
 
@@ -327,6 +342,7 @@ function GameContent() {
               onNext={game.actions.nextSong}
               onPlay={game.actions.play}
               onPause={game.actions.pause}
+              onReplay={handleReplay}
             />
           </div>
         </div>

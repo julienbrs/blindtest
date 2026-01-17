@@ -107,6 +107,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           : state.playedSongIds,
       }
 
+    case 'REPLAY':
+      // Replay the same song - go back to PLAYING state
+      // Timer is NOT reset - this is intentional per spec
+      // Audio reset to beginning is handled by the component
+      if (state.status !== 'reveal') return state
+      return {
+        ...state,
+        status: 'playing',
+      }
+
     default:
       return state
   }
@@ -126,6 +136,7 @@ interface UseGameStateReturn {
     quit: () => void
     reset: () => void
     clipEnded: () => void
+    replay: () => void
   }
   dispatch: React.Dispatch<GameAction>
 }
@@ -186,6 +197,12 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
     dispatch({ type: 'CLIP_ENDED' })
   }, [])
 
+  const replay = useCallback(() => {
+    // Replay the same song from the beginning
+    // Timer is NOT reset - only the audio restarts
+    dispatch({ type: 'REPLAY' })
+  }, [])
+
   const actions = {
     startGame,
     loadSong,
@@ -198,6 +215,7 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
     quit,
     reset,
     clipEnded,
+    replay,
   }
 
   return { state, actions, dispatch }

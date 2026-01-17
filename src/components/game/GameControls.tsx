@@ -10,6 +10,7 @@ interface GameControlsProps {
   onNext: () => void
   onPlay: () => void
   onPause: () => void
+  onReplay?: () => void
 }
 
 function PlayIcon({ className }: { className?: string }) {
@@ -60,6 +61,14 @@ function EyeIcon({ className }: { className?: string }) {
   )
 }
 
+function ReplayIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+    </svg>
+  )
+}
+
 export function GameControls({
   status,
   isRevealed,
@@ -68,6 +77,7 @@ export function GameControls({
   onNext,
   onPlay,
   onPause,
+  onReplay,
 }: GameControlsProps) {
   const isPlaying = status === 'playing'
   const showValidationButtons = status === 'buzzed' || status === 'timer'
@@ -75,6 +85,7 @@ export function GameControls({
   const showRevealButton =
     (status === 'playing' || status === 'buzzed' || status === 'timer') &&
     !isRevealed
+  const showReplayButton = status === 'reveal' && onReplay
 
   return (
     <footer className="mt-6 flex flex-col items-center gap-4">
@@ -86,6 +97,17 @@ export function GameControls({
         >
           Chanson suivante
           <ArrowRightIcon className="h-6 w-6" />
+        </button>
+      )}
+
+      {/* Replay button - visible in reveal state to replay the same song */}
+      {showReplayButton && (
+        <button
+          onClick={onReplay}
+          className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-purple-200 transition-colors hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+        >
+          <ReplayIcon className="h-5 w-5" />
+          Rejouer l&apos;extrait
         </button>
       )}
 

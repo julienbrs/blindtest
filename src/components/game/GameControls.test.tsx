@@ -162,6 +162,77 @@ describe('GameControls', () => {
     })
   })
 
+  describe('Replay button', () => {
+    it('does not show replay button when status is idle', () => {
+      render(
+        <GameControls {...defaultProps} status="idle" onReplay={vi.fn()} />
+      )
+      expect(screen.queryByText("Rejouer l'extrait")).not.toBeInTheDocument()
+    })
+
+    it('does not show replay button when status is playing', () => {
+      render(
+        <GameControls {...defaultProps} status="playing" onReplay={vi.fn()} />
+      )
+      expect(screen.queryByText("Rejouer l'extrait")).not.toBeInTheDocument()
+    })
+
+    it('does not show replay button when status is buzzed', () => {
+      render(
+        <GameControls {...defaultProps} status="buzzed" onReplay={vi.fn()} />
+      )
+      expect(screen.queryByText("Rejouer l'extrait")).not.toBeInTheDocument()
+    })
+
+    it('does not show replay button when status is timer', () => {
+      render(
+        <GameControls {...defaultProps} status="timer" onReplay={vi.fn()} />
+      )
+      expect(screen.queryByText("Rejouer l'extrait")).not.toBeInTheDocument()
+    })
+
+    it('shows replay button when status is reveal and onReplay provided', () => {
+      render(
+        <GameControls {...defaultProps} status="reveal" onReplay={vi.fn()} />
+      )
+      expect(screen.getByText("Rejouer l'extrait")).toBeInTheDocument()
+    })
+
+    it('does not show replay button when status is reveal but no onReplay provided', () => {
+      render(<GameControls {...defaultProps} status="reveal" />)
+      expect(screen.queryByText("Rejouer l'extrait")).not.toBeInTheDocument()
+    })
+
+    it('calls onReplay when replay button is clicked', () => {
+      const onReplay = vi.fn()
+      render(
+        <GameControls {...defaultProps} status="reveal" onReplay={onReplay} />
+      )
+      fireEvent.click(screen.getByText("Rejouer l'extrait"))
+      expect(onReplay).toHaveBeenCalledTimes(1)
+    })
+
+    it('replay button has appropriate styling', () => {
+      render(
+        <GameControls {...defaultProps} status="reveal" onReplay={vi.fn()} />
+      )
+      const replayButton = screen
+        .getByText("Rejouer l'extrait")
+        .closest('button')
+      expect(replayButton).toHaveClass('bg-white/10', 'text-purple-200')
+    })
+
+    it('replay button has replay icon', () => {
+      render(
+        <GameControls {...defaultProps} status="reveal" onReplay={vi.fn()} />
+      )
+      const replayButton = screen
+        .getByText("Rejouer l'extrait")
+        .closest('button')
+      expect(replayButton?.querySelector('svg')).toBeInTheDocument()
+    })
+  })
+
   describe('Reveal button', () => {
     it('does not show reveal button when status is idle', () => {
       render(

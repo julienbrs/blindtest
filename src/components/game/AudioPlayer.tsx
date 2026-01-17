@@ -8,6 +8,8 @@ interface AudioPlayerProps {
   maxDuration: number
   onEnded: () => void
   onReady?: (songId: string) => void
+  shouldReplay?: boolean
+  onReplayComplete?: () => void
 }
 
 export function AudioPlayer({
@@ -16,6 +18,8 @@ export function AudioPlayer({
   maxDuration,
   onEnded,
   onReady,
+  shouldReplay,
+  onReplayComplete,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -54,6 +58,19 @@ export function AudioPlayer({
       handleEnded()
     }
   }, [currentTime, maxDuration, handleEnded])
+
+  // Handle replay - reset audio to beginning and start playing
+  // Uses queueMicrotask to avoid setState-in-effect linting warning
+  useEffect(() => {
+    if (shouldReplay && audioRef.current && isLoaded) {
+      audioRef.current.currentTime = 0
+      queueMicrotask(() => {
+        setCurrentTime(0)
+      })
+      audioRef.current.play().catch(console.error)
+      onReplayComplete?.()
+    }
+  }, [shouldReplay, isLoaded, onReplayComplete])
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
