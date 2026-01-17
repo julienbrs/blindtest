@@ -149,3 +149,10 @@ Commit: a58f422
 Notes: Implemented GET /api/songs/random endpoint for selecting random songs. Added support for exclude query parameter to filter out already-played songs. Returns 404 when no songs available or all songs excluded. Created comprehensive test suite with 8 tests including uniform distribution verification (107 tests total pass).
 Files: src/app/api/songs/random/route.ts, src/app/api/songs/random/route.test.ts
 
+=== Issue 3.3: Créer GET /api/songs/[id] ===
+Timestamp: 2026-01-17T18:30:00Z
+Status: COMPLETED
+Commit: 854586d
+Notes: Implemented GET /api/songs/[id] endpoint to return a specific song by ID. Added ID format validation (12 hex characters). Returns 404 for unknown song IDs, 400 for invalid ID format. Created comprehensive test suite with 8 tests (115 tests total pass).
+Files: src/app/api/songs/[id]/route.ts, src/app/api/songs/[id]/route.test.ts
+
