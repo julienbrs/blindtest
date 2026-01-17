@@ -97,7 +97,7 @@ After this task, all subsequent issues run with full feedback loops.
 
 - [x] 6.1 Créer le hook useGameState
 - [x] 6.2 Définir les états du jeu
-- [ ] 6.3 Implémenter la transition IDLE → LOADING
+- [x] 6.3 Implémenter la transition IDLE → LOADING
 - [ ] 6.4 Implémenter la transition LOADING → PLAYING
 - [ ] 6.5 Implémenter la transition PLAYING → BUZZED
 - [ ] 6.6 Implémenter la transition BUZZED → TIMER

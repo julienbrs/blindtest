@@ -422,3 +422,10 @@ Commit: f2a19f4
 Notes: Added comprehensive JSDoc documentation for GameStatus type in types.ts. Documentation includes ASCII state machine diagram showing all transitions, state/actions table with descriptions for each of the 7 states (idle, loading, playing, buzzed, timer, reveal, ended), and detailed explanations of each state's purpose. Type was already exported and fully defined - this issue focused on documenting transitions as per acceptance criteria. All 321 tests pass.
 Files: src/lib/types.ts
 
+=== Issue 6.3: Implémenter la transition IDLE → LOADING ===
+Timestamp: 2026-01-17T23:44:00Z
+Status: COMPLETED
+Commit: 0b1832b
+Notes: Implemented IDLE → LOADING transition with automatic game start on page load. Added loadRandomSong function that fetches from /api/songs/random with exclude parameter to avoid replaying songs. Added allSongsPlayed state and handling for "no more songs" scenario with appropriate message in GameRecap. Added loading indicator during loading state. Updated game page tests with proper mocks for new actions. All 321 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx, src/components/game/GameRecap.tsx
+
