@@ -268,3 +268,10 @@ Commit: fa189a8
 Notes: Added collapsible "Paramètres avancés" section with smooth CSS animations. Implemented three advanced options: 1) Timer duration slider (3-30 seconds), 2) No-timer toggle for unlimited response time, 3) Random start point toggle to begin at random position in song. Extended SavedConfig interface and loadSavedConfig validation for all new settings. All settings persisted to localStorage and passed to /game via query params. All 141 tests pass.
 Files: src/components/game/GameConfigForm.tsx
 
+=== Issue 4.10: Créer une animation d'entrée ===
+Timestamp: 2026-01-17T19:50:00Z
+Status: COMPLETED
+Commit: 251665e
+Notes: Installed framer-motion for smooth page entry animations. Converted homepage to client component with staggered fade-up animations. Title appears first, then music icons, form, and finally stats. Implemented prefers-reduced-motion support via useReducedMotion hook - animations are completely disabled when user has reduced motion preference. No flash of unstyled content. All 141 tests pass.
+Files: package.json, package-lock.json, src/app/page.tsx
+
