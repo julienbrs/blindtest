@@ -534,3 +534,10 @@ Commit: 82e1416
 Notes: Enhanced Card component with 3 variants (default, elevated, glow) for visual hierarchy. Default variant adds bg-white/10, backdrop-blur-sm, rounded-2xl, shadow-xl, and border-white/10. Elevated variant uses stronger shadow-[0_20px_50px_rgba(0,0,0,0.3)] for emphasis. Glow variant adds pink glow shadow-[0_0_30px_rgba(236,72,153,0.3)] with pink-tinted border. Updated GameConfigForm to use Card component for all sections. Updated ScoreDisplay with shadow-lg, border, and backdrop-blur. Updated GameRecap with deeper shadow and border on modal and stat cards. Updated SongReveal loading state and album cover with enhanced depth shadows. Created 14 comprehensive tests for Card component. All 459 tests pass.
 Files: src/components/ui/Card.tsx, src/components/ui/Card.test.tsx, src/components/game/GameConfigForm.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/GameRecap.tsx, src/components/game/SongReveal.tsx
 
+=== Issue 7.4: Créer les animations de transition ===
+Timestamp: 2026-01-18T02:40:00Z
+Status: COMPLETED
+Commit: dbd97f6
+Notes: Added AnimatePresence from Framer Motion for smooth transitions between game states. Created three animation variants: fadeSlideUp (buzzer appears with slide), fadeScale (timer and recap appear with scale), fadeIn (modal overlay fades). Used AnimatePresence mode="wait" to prevent content flash during state changes. Added useReducedMotion hook for accessibility compliance. Wrapped loading indicator, buzzer, timer, and quit modal with motion.div and AnimatePresence. Updated tests to use waitFor for animation exit completion. All 459 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx
+
