@@ -188,6 +188,79 @@ describe('parseFileName', () => {
     expect(result.artist).toBeUndefined()
     expect(result.title).toBe('')
   })
+
+  // Track number formats
+  it('should parse "01 - Title" format (track number prefix)', () => {
+    const result = parseFileName('01 - Bohemian Rhapsody')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('Bohemian Rhapsody')
+  })
+
+  it('should parse "1 - Title" format (single digit track number)', () => {
+    const result = parseFileName('1 - First Track')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('First Track')
+  })
+
+  it('should parse "123 - Title" format (three digit track number)', () => {
+    const result = parseFileName('123 - Some Track')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('Some Track')
+  })
+
+  it('should parse "01. Title" format (track number with dot)', () => {
+    const result = parseFileName('01. Bohemian Rhapsody')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('Bohemian Rhapsody')
+  })
+
+  it('should parse "01.Title" format (track number with dot, no space)', () => {
+    const result = parseFileName('01.Bohemian Rhapsody')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('Bohemian Rhapsody')
+  })
+
+  // Underscore format
+  it('should parse "Artist_Title" format (underscore separator)', () => {
+    const result = parseFileName('Queen_Bohemian Rhapsody')
+
+    expect(result.artist).toBe('Queen')
+    expect(result.title).toBe('Bohemian Rhapsody')
+  })
+
+  it('should not parse multiple underscores as artist-title', () => {
+    const result = parseFileName('Some_Complex_Filename')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('Some_Complex_Filename')
+  })
+
+  it('should not parse underscore with empty parts', () => {
+    const result = parseFileName('_Title')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('_Title')
+  })
+
+  // Edge cases
+  it('should prefer dash format over underscore', () => {
+    const result = parseFileName('Artist_Name - Song Title')
+
+    expect(result.artist).toBe('Artist_Name')
+    expect(result.title).toBe('Song Title')
+  })
+
+  it('should handle track number with dashes in title', () => {
+    const result = parseFileName('05 - Song - Remix - Extended')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('Song - Remix - Extended')
+  })
 })
 
 describe('generateSongId', () => {

@@ -87,7 +87,14 @@ export function getSupportedExtensions(): string[] {
 }
 
 /**
- * Parses a filename in "Artist - Title" format
+ * Parses a filename in various formats to extract artist and title
+ * Supported formats:
+ * - "Artist - Title" (standard format)
+ * - "01 - Title" (track number prefix - returns title only)
+ * - "01. Title" (track number with dot - returns title only)
+ * - "Artist_Title" (underscore separator)
+ * - "Title" (title only)
+ *
  * @param fileName - The file name without extension
  * @returns Object with optional artist and title
  */
@@ -95,17 +102,45 @@ export function parseFileName(fileName: string): {
   artist?: string
   title?: string
 } {
+  const trimmed = fileName.trim()
+
   // Format: "Artist - Title" (with possible multiple dashes in title)
-  const parts = fileName.split(' - ')
-  if (parts.length >= 2) {
+  const dashParts = trimmed.split(' - ')
+  if (dashParts.length >= 2) {
+    const firstPart = dashParts[0].trim()
+
+    // Check if first part is just a track number (e.g., "01", "1", "12")
+    if (/^\d{1,3}$/.test(firstPart)) {
+      // It's a track number prefix like "01 - Title"
+      const title = dashParts.slice(1).join(' - ').trim()
+      return { title: title || trimmed }
+    }
+
     return {
-      artist: parts[0].trim(),
-      title: parts.slice(1).join(' - ').trim(),
+      artist: firstPart,
+      title: dashParts.slice(1).join(' - ').trim(),
+    }
+  }
+
+  // Format: "01. Title" or "01 Title" (track number with dot or space at start)
+  const trackDotMatch = trimmed.match(/^\d{1,3}\.\s*(.+)$/)
+  if (trackDotMatch) {
+    return { title: trackDotMatch[1].trim() }
+  }
+
+  // Format: "Artist_Title" (underscore separator - only if single underscore)
+  const underscoreParts = trimmed.split('_')
+  if (underscoreParts.length === 2) {
+    const artist = underscoreParts[0].trim()
+    const title = underscoreParts[1].trim()
+    // Only use underscore format if both parts are non-empty
+    if (artist && title) {
+      return { artist, title }
     }
   }
 
   // Format: "Title" only (no separator found)
-  return { title: fileName.trim() }
+  return { title: trimmed }
 }
 
 /**
