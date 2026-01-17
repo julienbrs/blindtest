@@ -114,3 +114,10 @@ Commit: 2a28105
 Notes: Enhanced parseFileName to handle additional filename formats beyond "Artist - Title". Added support for track number prefixes (01 - Title, 1 - Title), track numbers with dots (01. Title), and underscore separators (Artist_Title). Dash format prioritized over underscore. Added 10 new tests for filename parsing edge cases (57 tests total pass).
 Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
 
+=== Issue 2.8: Valider les formats audio supportés ===
+Timestamp: 2026-01-17T18:12:00Z
+Status: COMPLETED
+Commit: 6b5a007
+Notes: Added format validation functions: isFormatSupported (checks universal browser support), getFormatWarning (returns warnings for OGG/FLAC), getUniversalFormats and getPartialSupportFormats helpers. Documented browser compatibility in JSDoc comments with compatibility table. Created 15 comprehensive tests for format validation (72 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
