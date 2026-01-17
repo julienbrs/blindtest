@@ -85,3 +85,4 @@ export type GameAction =
   | { type: 'NEXT_SONG' }
   | { type: 'END_GAME' }
   | { type: 'RESET' }
+  | { type: 'CLIP_ENDED' }
