@@ -13,7 +13,7 @@ These issues must run before feedback loops (Husky, Vitest) can be set up.
 - [x] 1.2 Configurer Tailwind CSS
 - [x] 1.3 Définir la palette de couleurs festive
 - [x] 1.4 Configurer les fonts
-- [ ] 1.5 Créer la structure des dossiers
+- [x] 1.5 Créer la structure des dossiers
 - [ ] 1.6 Configurer les variables d'environnement
 - [ ] 1.7 Configurer ESLint et Prettier
 
