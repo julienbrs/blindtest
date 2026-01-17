@@ -548,3 +548,10 @@ Commit: 63e4b61
 Notes: Implemented celebration effects for correct answers. Installed canvas-confetti package for multi-burst confetti animation (100 particles center + 50 from each side). Created useCorrectAnswerCelebration hook with festive colors (pink, purple, gold, green). Created CorrectAnswerFlash component for green screen flash effect with 500ms duration. Updated ScoreDisplay with score "pop" animation (scale 1.5 to 1, green to white color transition). Integrated celebration effects in game page via handleValidate wrapper function. All effects respect prefers-reduced-motion accessibility setting. Created 11 comprehensive tests (4 for CorrectAnswerFlash, 7 for useCorrectAnswerCelebration hook). All 474 tests pass.
 Files: package.json, package-lock.json, src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts, src/components/game/CorrectAnswerFlash.tsx, src/components/game/CorrectAnswerFlash.test.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx, src/app/game/page.tsx
 
+=== Issue 7.6: Ajouter l'animation de mauvaise réponse ===
+Timestamp: 2026-01-18T03:15:00Z
+Status: COMPLETED
+Commit: 559b316
+Notes: Implemented visual feedback effects for incorrect answers. Created IncorrectAnswerFlash component with subtle red flash overlay (0.2 max opacity, lower than correct answer's 0.3 to avoid being punitive). Created useWrongAnswerEffect hook that triggers a shake animation on the main game container. Shake uses Framer Motion's animate prop with x keyframes [-10, 10, -10, 10, 0] over 400ms. Both effects integrated in game page's handleValidate function. All effects respect prefers-reduced-motion accessibility setting. Created 17 comprehensive tests (8 for IncorrectAnswerFlash, 9 for useWrongAnswerEffect hook). All 491 tests pass.
+Files: src/components/game/IncorrectAnswerFlash.tsx, src/components/game/IncorrectAnswerFlash.test.tsx, src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts, src/app/game/page.tsx
+
