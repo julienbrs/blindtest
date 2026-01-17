@@ -267,3 +267,124 @@ describe('GameRecap', () => {
     expect(newGameButton).toHaveClass('to-purple-600')
   })
 })
+
+describe('GameRecap - Library End Detection (Issue 6.12)', () => {
+  const mockOnNewGame = vi.fn()
+  const mockOnHome = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('shows congratulations title when all songs played', () => {
+    render(
+      <GameRecap
+        score={10}
+        songsPlayed={20}
+        onNewGame={mockOnNewGame}
+        onHome={mockOnHome}
+        allSongsPlayed={true}
+      />
+    )
+
+    expect(screen.getByText('Félicitations !')).toBeInTheDocument()
+  })
+
+  it('shows library completion message when all songs played', () => {
+    render(
+      <GameRecap
+        score={5}
+        songsPlayed={20}
+        onNewGame={mockOnNewGame}
+        onHome={mockOnHome}
+        allSongsPlayed={true}
+      />
+    )
+
+    expect(
+      screen.getByText('Vous avez écouté toute la bibliothèque !')
+    ).toBeInTheDocument()
+  })
+
+  it('shows normal title when not all songs played', () => {
+    render(
+      <GameRecap
+        score={5}
+        songsPlayed={10}
+        onNewGame={mockOnNewGame}
+        onHome={mockOnHome}
+        allSongsPlayed={false}
+      />
+    )
+
+    expect(screen.getByText('Partie terminée !')).toBeInTheDocument()
+  })
+
+  it('library completion message takes priority over score messages', () => {
+    render(
+      <GameRecap
+        score={10}
+        songsPlayed={10}
+        onNewGame={mockOnNewGame}
+        onHome={mockOnHome}
+        allSongsPlayed={true}
+      />
+    )
+
+    // Should show library completion message, not perfect score message
+    expect(
+      screen.getByText('Vous avez écouté toute la bibliothèque !')
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Score parfait !')).not.toBeInTheDocument()
+  })
+
+  it('still displays all stats when all songs played', () => {
+    render(
+      <GameRecap
+        score={15}
+        songsPlayed={20}
+        onNewGame={mockOnNewGame}
+        onHome={mockOnHome}
+        allSongsPlayed={true}
+      />
+    )
+
+    expect(screen.getByText('Score')).toBeInTheDocument()
+    expect(screen.getByText('Chansons jouées')).toBeInTheDocument()
+    expect(screen.getByText('75%')).toBeInTheDocument() // 15/20
+  })
+
+  it('allows starting new game after completing library', () => {
+    render(
+      <GameRecap
+        score={20}
+        songsPlayed={20}
+        onNewGame={mockOnNewGame}
+        onHome={mockOnHome}
+        allSongsPlayed={true}
+      />
+    )
+
+    const newGameButton = screen.getByText('Nouvelle partie')
+    expect(newGameButton).toBeInTheDocument()
+    fireEvent.click(newGameButton)
+    expect(mockOnNewGame).toHaveBeenCalledTimes(1)
+  })
+
+  it('allows returning home after completing library', () => {
+    render(
+      <GameRecap
+        score={20}
+        songsPlayed={20}
+        onNewGame={mockOnNewGame}
+        onHome={mockOnHome}
+        allSongsPlayed={true}
+      />
+    )
+
+    const homeButton = screen.getByText("Retour à l'accueil")
+    expect(homeButton).toBeInTheDocument()
+    fireEvent.click(homeButton)
+    expect(mockOnHome).toHaveBeenCalledTimes(1)
+  })
+})

@@ -87,6 +87,28 @@ vi.mock('@/components/game/GameControls', () => ({
   GameControls: () => <div data-testid="game-controls">GameControls</div>,
 }))
 
+vi.mock('@/components/game/GameRecap', () => ({
+  GameRecap: ({
+    score,
+    songsPlayed,
+    allSongsPlayed,
+  }: {
+    score: number
+    songsPlayed: number
+    onNewGame: () => void
+    onHome: () => void
+    allSongsPlayed?: boolean
+  }) => (
+    <div data-testid="game-recap">
+      <span data-testid="recap-score">{score}</span>
+      <span data-testid="recap-songs-played">{songsPlayed}</span>
+      {allSongsPlayed && (
+        <span data-testid="recap-all-songs-played">All songs played</span>
+      )}
+    </div>
+  ),
+}))
+
 // Import after mocks
 import GamePage from './page'
 
@@ -376,5 +398,64 @@ describe('GamePage - REVEAL → LOADING transition (Issue 6.10)', () => {
     render(<GamePage />)
 
     expect(screen.queryByTestId('timer')).not.toBeInTheDocument()
+  })
+})
+
+describe('GamePage - Library End Detection (Issue 6.12)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+  })
+
+  it('shows GameRecap when status is ended', () => {
+    mockGameState.status = 'ended'
+    mockGameState.score = 10
+    mockGameState.songsPlayed = 15
+
+    render(<GamePage />)
+
+    // GameRecap should be shown
+    expect(screen.getByTestId('game-recap')).toBeInTheDocument()
+    expect(screen.getByTestId('recap-score')).toHaveTextContent('10')
+    expect(screen.getByTestId('recap-songs-played')).toHaveTextContent('15')
+  })
+
+  it('does not show game UI components when game has ended', () => {
+    mockGameState.status = 'ended'
+    mockGameState.score = 5
+    mockGameState.songsPlayed = 10
+
+    render(<GamePage />)
+
+    // Main game elements should not be rendered
+    expect(screen.queryByTestId('audio-player')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('song-reveal')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('game-controls')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('buzzer-button')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('score-display')).not.toBeInTheDocument()
+  })
+
+  it('does not show quit button when game has ended', () => {
+    mockGameState.status = 'ended'
+    mockGameState.score = 5
+    mockGameState.songsPlayed = 10
+
+    render(<GamePage />)
+
+    // Quit button should not be visible on recap screen
+    expect(
+      screen.queryByRole('button', { name: /quitter/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('displays score and songs played count in recap', () => {
+    mockGameState.status = 'ended'
+    mockGameState.score = 8
+    mockGameState.songsPlayed = 12
+
+    render(<GamePage />)
+
+    expect(screen.getByTestId('recap-score')).toHaveTextContent('8')
+    expect(screen.getByTestId('recap-songs-played')).toHaveTextContent('12')
   })
 })
