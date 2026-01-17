@@ -331,3 +331,10 @@ Commit: cd86abf
 Notes: Added Framer Motion animations to BuzzerButton component. Implemented whileTap (scale 0.9) and whileHover (scale 1.05) for smooth press/hover effects. Added justBuzzed state with glowing box-shadow animation on press (60px to 100px to 60px). Created shockwave effect with expanding circle that fades out when buzzer is pressed. Used useCallback for handleClick optimization. Updated tests for animation state verification. All 167 tests pass.
 Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
 
+=== Issue 5.9: Créer le composant Timer ===
+Timestamp: 2026-01-17T20:15:00Z
+Status: COMPLETED
+Commit: 5ae53c7
+Notes: Timer component already fully implemented with circular SVG progress indicator, countdown display from N to 0, and urgency indicator (red color + pulse animation when remaining <= 2 seconds). Created comprehensive test suite with 15 tests covering rendering, progress calculation, urgency indicator styling, and edge cases. All 182 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
