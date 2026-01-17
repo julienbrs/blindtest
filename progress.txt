@@ -429,3 +429,10 @@ Commit: 0b1832b
 Notes: Implemented IDLE → LOADING transition with automatic game start on page load. Added loadRandomSong function that fetches from /api/songs/random with exclude parameter to avoid replaying songs. Added allSongsPlayed state and handling for "no more songs" scenario with appropriate message in GameRecap. Added loading indicator during loading state. Updated game page tests with proper mocks for new actions. All 321 tests pass.
 Files: src/app/game/page.tsx, src/app/game/page.test.tsx, src/components/game/GameRecap.tsx
 
+=== Issue 6.4: Implémenter la transition LOADING → PLAYING ===
+Timestamp: 2026-01-17T23:49:00Z
+Status: COMPLETED
+Commit: 1c75730
+Notes: Implemented LOADING → PLAYING transition with automatic playback start when audio is ready. Added onReady callback prop to AudioPlayer component that triggers with songId when canplay event fires. Added audioReadyForSongId state in game page to track which song's audio is ready (prevents race conditions when loading new songs). Created effect that transitions to PLAYING state when audio is ready and song matches. All 326 tests pass.
+Files: src/components/game/AudioPlayer.tsx, src/components/game/AudioPlayer.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
+
