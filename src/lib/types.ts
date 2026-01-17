@@ -42,11 +42,70 @@ export interface GameState {
   isRevealed: boolean // Si la réponse est révélée
 }
 
+/**
+ * GameStatus - États possibles de la machine d'état du jeu
+ *
+ * ## Diagramme d'état
+ * ```
+ *                     ┌──────────┐
+ *                     │   IDLE   │ ← État initial / Fin de partie
+ *                     └────┬─────┘
+ *                          │ START_GAME
+ *                          ▼
+ *                     ┌──────────┐
+ *          ┌─────────│ LOADING  │←─────────────────────┐
+ *          │         └────┬─────┘                      │
+ *          │              │ Song loaded                │
+ *          │              ▼                            │
+ *          │         ┌──────────┐                      │
+ *          │         │ PLAYING  │                      │
+ *          │         └────┬─────┘                      │
+ *          │              │ BUZZ                       │
+ *          │              ▼                            │
+ *          │         ┌──────────┐                      │
+ *          │         │  BUZZED  │                      │
+ *          │         └────┬─────┘                      │
+ *          │              │ (immédiat)                 │
+ *          │              ▼                            │
+ *          │         ┌──────────┐                      │
+ *          │         │  TIMER   │──── VALIDATE(true) ──┤
+ *          │         └────┬─────┘                      │
+ *          │              │ Timeout ou VALIDATE(false) │
+ *          │              ▼                            │
+ *          │         ┌──────────┐                      │
+ *          └─────────│  REVEAL  │                      │
+ *            QUIT    └────┬─────┘                      │
+ *                         │ NEXT_SONG                  │
+ *                         └────────────────────────────┘
+ * ```
+ *
+ * ## Table des états et transitions
+ *
+ * | État      | Description                        | Actions possibles              |
+ * |-----------|------------------------------------|---------------------------------|
+ * | `idle`    | En attente, avant de démarrer      | START_GAME                     |
+ * | `loading` | Chargement d'une chanson           | - (automatique vers PLAYING)   |
+ * | `playing` | Musique en lecture                 | BUZZ, REVEAL, CLIP_ENDED       |
+ * | `buzzed`  | Transition après buzz (transitoire)| - (immédiat vers TIMER)        |
+ * | `timer`   | Countdown pour répondre            | VALIDATE, REVEAL, TICK_TIMER   |
+ * | `reveal`  | Réponse affichée                   | NEXT_SONG, END_GAME            |
+ * | `ended`   | Partie terminée                    | RESET                          |
+ *
+ * ## Détail des états
+ *
+ * - **idle**: État initial au chargement de la page. Attend START_GAME pour démarrer.
+ * - **loading**: Récupération de la chanson depuis l'API. Transition automatique vers PLAYING quand l'audio est prêt.
+ * - **playing**: L'extrait musical est en cours de lecture. Le joueur peut buzzer ou attendre la fin de l'extrait.
+ * - **buzzed**: État transitoire après un buzz. Passe immédiatement à TIMER (peut servir pour animations).
+ * - **timer**: Le countdown est actif. Le joueur doit donner sa réponse avant que le timer atteigne 0.
+ * - **reveal**: La réponse (titre/artiste) est affichée. La pochette n'est plus floutée.
+ * - **ended**: Partie terminée. Affiche le récapitulatif avec score final.
+ */
 export type GameStatus =
   | 'idle' // En attente de démarrage
   | 'loading' // Chargement d'une chanson
   | 'playing' // Musique en lecture
-  | 'buzzed' // Quelqu'un a buzzé
+  | 'buzzed' // Quelqu'un a buzzé (transitoire)
   | 'timer' // Timer en cours
   | 'reveal' // Réponse révélée
   | 'ended' // Partie terminée
