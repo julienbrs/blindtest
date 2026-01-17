@@ -317,3 +317,10 @@ Commit: 343bed3
 Notes: Verified duration limiting already implemented in AudioPlayer component via useEffect that checks currentTime >= maxDuration and pauses audio while calling onEnded callback. Added @testing-library/jest-dom for improved test assertions. Created AudioPlayer.test.tsx with 14 comprehensive tests verifying maxDuration prop, progress capping with Math.min(progress, 100), time formatting, and styling. All 155 tests pass.
 Files: src/components/game/AudioPlayer.test.tsx, src/test/setup.ts, package.json
 
+=== Issue 5.7: Créer le composant BuzzerButton ===
+Timestamp: 2026-01-17T20:08:00Z
+Status: COMPLETED
+Commit: 5cc2f50
+Notes: Implemented BuzzerButton component with large tactile-friendly size (h-40 w-40 md:h-48 md:w-48), red gradient styling with glow shadow effect, visual press effects (active:scale-95, hover:scale-105), mobile vibration support using navigator.vibrate when available, and focus ring for keyboard accessibility. Fixed vibrate check to use typeof for safer detection. Created comprehensive test suite with 12 tests verifying all acceptance criteria. All 167 tests pass.
+Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
+

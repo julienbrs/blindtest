@@ -79,7 +79,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 5.4 Ajouter les contrôles play/pause
 - [x] 5.5 Afficher la barre de progression audio
 - [x] 5.6 Limiter la lecture à la durée configurée
-- [ ] 5.7 Créer le composant BuzzerButton
+- [x] 5.7 Créer le composant BuzzerButton
 - [ ] 5.8 Ajouter l'animation du buzzer
 - [ ] 5.9 Créer le composant Timer
 - [ ] 5.10 Ajouter l'animation du timer
