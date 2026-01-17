@@ -401,3 +401,10 @@ Commit: d5af4b2
 Notes: Added current song number display ("Chanson N") to ScoreDisplay component. Song number is calculated as songsPlayed + 1 by default, with optional currentSongNumber prop override. Displayed prominently in white with font-semibold, while songs played count is shown in smaller secondary text below. Added 5 new tests for song number display functionality. All 257 tests pass.
 Files: src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx
 
+=== Issue 5.19: Créer le récap de fin de partie ===
+Timestamp: 2026-01-17T20:57:00Z
+Status: COMPLETED
+Commit: 773a94a
+Notes: Created GameRecap component showing final game stats (score, songs played, correct answers, success rate). Added confetti animation for good scores (>=50%) with lazy initialization to avoid impure render calls. Dynamic messages based on performance (from "Score parfait !" to "La prochaine fois sera meilleure !"). Integrated with game page to display when status is 'ended'. Added "Nouvelle partie" and "Retour à l'accueil" buttons. Created 17 comprehensive tests. All 274 tests pass. Respects prefers-reduced-motion for accessibility.
+Files: src/components/game/GameRecap.tsx, src/components/game/GameRecap.test.tsx, src/app/game/page.tsx
+
