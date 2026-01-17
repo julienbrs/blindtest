@@ -1,4 +1,6 @@
-// Placeholder - will be fully implemented in Epic 5
+'use client'
+
+import Image from 'next/image'
 import type { Song, GuessMode } from '@/lib/types'
 
 interface SongRevealProps {
@@ -18,11 +20,21 @@ export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Pochette placeholder */}
-      <div className="relative h-64 w-64 overflow-hidden rounded-2xl bg-white/10 shadow-2xl">
-        <div className="flex h-full items-center justify-center">
-          <span className="text-6xl">🎵</span>
-        </div>
+      {/* Pochette */}
+      <div className="relative h-64 w-64 overflow-hidden rounded-2xl shadow-2xl">
+        <Image
+          src={`/api/cover/${song.id}`}
+          alt="Pochette album"
+          fill
+          className={`object-cover transition-all duration-500 ${
+            isRevealed ? '' : 'scale-110 blur-xl'
+          }`}
+        />
+        {!isRevealed && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-6xl">🎵</span>
+          </div>
+        )}
       </div>
 
       {/* Informations - shown when revealed */}
