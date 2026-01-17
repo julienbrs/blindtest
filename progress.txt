@@ -541,3 +541,10 @@ Commit: dbd97f6
 Notes: Added AnimatePresence from Framer Motion for smooth transitions between game states. Created three animation variants: fadeSlideUp (buzzer appears with slide), fadeScale (timer and recap appear with scale), fadeIn (modal overlay fades). Used AnimatePresence mode="wait" to prevent content flash during state changes. Added useReducedMotion hook for accessibility compliance. Wrapped loading indicator, buzzer, timer, and quit modal with motion.div and AnimatePresence. Updated tests to use waitFor for animation exit completion. All 459 tests pass.
 Files: src/app/game/page.tsx, src/app/game/page.test.tsx
 
+=== Issue 7.5: Ajouter l'animation de bonne réponse ===
+Timestamp: 2026-01-18T03:00:00Z
+Status: COMPLETED
+Commit: 63e4b61
+Notes: Implemented celebration effects for correct answers. Installed canvas-confetti package for multi-burst confetti animation (100 particles center + 50 from each side). Created useCorrectAnswerCelebration hook with festive colors (pink, purple, gold, green). Created CorrectAnswerFlash component for green screen flash effect with 500ms duration. Updated ScoreDisplay with score "pop" animation (scale 1.5 to 1, green to white color transition). Integrated celebration effects in game page via handleValidate wrapper function. All effects respect prefers-reduced-motion accessibility setting. Created 11 comprehensive tests (4 for CorrectAnswerFlash, 7 for useCorrectAnswerCelebration hook). All 474 tests pass.
+Files: package.json, package-lock.json, src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts, src/components/game/CorrectAnswerFlash.tsx, src/components/game/CorrectAnswerFlash.test.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx, src/app/game/page.tsx
+

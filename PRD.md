@@ -117,7 +117,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 7.2 Styliser les boutons principaux
 - [x] 7.3 Ajouter des ombres et profondeur
 - [x] 7.4 Créer les animations de transition
-- [ ] 7.5 Ajouter l'animation de bonne réponse
+- [x] 7.5 Ajouter l'animation de bonne réponse
 - [ ] 7.6 Ajouter l'animation de mauvaise réponse
 - [ ] 7.7 Styliser le timer avec urgence
 - [ ] 7.8 Ajouter des icônes
