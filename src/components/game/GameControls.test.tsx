@@ -105,6 +105,55 @@ describe('GameControls', () => {
     })
   })
 
+  describe('Next song button', () => {
+    it('does not show next button when status is idle', () => {
+      render(<GameControls {...defaultProps} status="idle" />)
+      expect(screen.queryByText('Chanson suivante')).not.toBeInTheDocument()
+    })
+
+    it('does not show next button when status is playing', () => {
+      render(<GameControls {...defaultProps} status="playing" />)
+      expect(screen.queryByText('Chanson suivante')).not.toBeInTheDocument()
+    })
+
+    it('does not show next button when status is buzzed', () => {
+      render(<GameControls {...defaultProps} status="buzzed" />)
+      expect(screen.queryByText('Chanson suivante')).not.toBeInTheDocument()
+    })
+
+    it('does not show next button when status is timer', () => {
+      render(<GameControls {...defaultProps} status="timer" />)
+      expect(screen.queryByText('Chanson suivante')).not.toBeInTheDocument()
+    })
+
+    it('shows next button when status is reveal', () => {
+      render(<GameControls {...defaultProps} status="reveal" />)
+      expect(screen.getByText('Chanson suivante')).toBeInTheDocument()
+    })
+
+    it('calls onNext when next button is clicked', () => {
+      render(<GameControls {...defaultProps} status="reveal" />)
+      fireEvent.click(screen.getByText('Chanson suivante'))
+      expect(defaultProps.onNext).toHaveBeenCalledTimes(1)
+    })
+
+    it('next button has gradient styling', () => {
+      render(<GameControls {...defaultProps} status="reveal" />)
+      const nextButton = screen.getByText('Chanson suivante').closest('button')
+      expect(nextButton).toHaveClass(
+        'bg-gradient-to-r',
+        'from-pink-500',
+        'to-purple-600'
+      )
+    })
+
+    it('next button has arrow icon', () => {
+      render(<GameControls {...defaultProps} status="reveal" />)
+      const nextButton = screen.getByText('Chanson suivante').closest('button')
+      expect(nextButton?.querySelector('svg')).toBeInTheDocument()
+    })
+  })
+
   describe('Status indicator', () => {
     it('displays current status', () => {
       render(<GameControls {...defaultProps} status="buzzed" />)

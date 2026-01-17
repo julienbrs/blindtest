@@ -43,19 +43,39 @@ function XIcon({ className }: { className?: string }) {
   )
 }
 
+function ArrowRightIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" />
+    </svg>
+  )
+}
+
 export function GameControls({
   status,
   onValidate,
   onReveal: _onReveal,
-  onNext: _onNext,
+  onNext,
   onPlay,
   onPause,
 }: GameControlsProps) {
   const isPlaying = status === 'playing'
   const showValidationButtons = status === 'buzzed' || status === 'timer'
+  const showNextButton = status === 'reveal'
 
   return (
     <footer className="mt-6 flex flex-col items-center gap-4">
+      {/* Next song button - visible only in reveal state */}
+      {showNextButton && (
+        <button
+          onClick={onNext}
+          className="flex w-full max-w-md items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 py-4 px-6 text-lg font-bold transition-all hover:from-pink-400 hover:to-purple-500 hover:shadow-lg hover:shadow-purple-500/25 focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+        >
+          Chanson suivante
+          <ArrowRightIcon className="h-6 w-6" />
+        </button>
+      )}
+
       {/* Validation buttons - visible after buzz */}
       {showValidationButtons && (
         <div className="flex w-full max-w-md gap-4">
