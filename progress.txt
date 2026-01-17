@@ -415,3 +415,10 @@ Commit: c2bc523
 Notes: Implemented useGameState hook with useReducer-based state machine for game logic. Added gameReducer with all state transitions (START_GAME, LOAD_SONG, PLAY, BUZZ, TICK_TIMER, VALIDATE, REVEAL, NEXT_SONG, END_GAME, RESET, CLIP_ENDED). Timer countdown effect auto-ticks every second when in timer state. All actions memoized with useCallback for performance. Added CLIP_ENDED action type to types.ts for proper clip end handling. Created comprehensive test suite with 47 tests covering all actions, state transitions, timer countdown, and immutability. All 321 tests pass.
 Files: src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/lib/types.ts
 
+=== Issue 6.2: Définir les états du jeu ===
+Timestamp: 2026-01-17T23:40:00Z
+Status: COMPLETED
+Commit: f2a19f4
+Notes: Added comprehensive JSDoc documentation for GameStatus type in types.ts. Documentation includes ASCII state machine diagram showing all transitions, state/actions table with descriptions for each of the 7 states (idle, loading, playing, buzzed, timer, reveal, ended), and detailed explanations of each state's purpose. Type was already exported and fully defined - this issue focused on documenting transitions as per acceptance criteria. All 321 tests pass.
+Files: src/lib/types.ts
+
