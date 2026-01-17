@@ -54,7 +54,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 3.5 Créer GET /api/cover/[id]
 - [x] 3.6 Gérer les Range Requests pour l'audio
 - [x] 3.7 Ajouter les headers CORS appropriés
-- [ ] 3.8 Créer GET /api/stats
+- [x] 3.8 Créer GET /api/stats
 - [ ] 3.9 Optimiser le streaming audio
 - [ ] 3.10 Créer POST /api/songs/rescan
 

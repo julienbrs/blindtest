@@ -184,3 +184,10 @@ Commit: 9f73a55
 Notes: Configured CORS headers in next.config.ts for all API routes. Added Access-Control-Allow-Origin: * for cross-origin requests, Access-Control-Allow-Methods for GET/POST/OPTIONS, Access-Control-Allow-Headers for Content-Type and Range headers, and Access-Control-Expose-Headers for Content-Range and Accept-Ranges to support Range Requests from cross-origin clients. All 133 tests pass.
 Files: next.config.ts
 
+=== Issue 3.8: Créer GET /api/stats ===
+Timestamp: 2026-01-17T18:48:00Z
+Status: COMPLETED
+Commit: 8d39e44
+Notes: Implemented GET /api/stats endpoint returning library statistics including totalSongs, totalArtists, totalAlbums, totalDuration (rounded integer), totalDurationFormatted (human-readable like "10h 0min"), formats breakdown by type, songsWithCover count, and lastScan timestamp. Created comprehensive test suite with 7 tests. All 140 tests pass.
+Files: src/app/api/stats/route.ts, src/app/api/stats/route.test.ts
+
