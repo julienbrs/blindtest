@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { GuessMode } from '@/lib/types'
+import { Button } from '@/components/ui/Button'
 
 const STORAGE_KEY = 'blindtest_config'
 
@@ -438,13 +439,9 @@ export function GameConfigForm() {
       )}
 
       {/* Bouton démarrer */}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full transform rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-4 text-xl font-bold shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <Button type="submit" disabled={isLoading} size="lg" fullWidth>
         {isLoading ? 'Chargement...' : 'Nouvelle Partie'}
-      </button>
+      </Button>
     </form>
   )
 }

@@ -10,6 +10,7 @@ import { ScoreDisplay } from '@/components/game/ScoreDisplay'
 import { SongReveal } from '@/components/game/SongReveal'
 import { GameControls } from '@/components/game/GameControls'
 import { GameRecap } from '@/components/game/GameRecap'
+import { Button } from '@/components/ui/Button'
 import type { GameConfig, GuessMode, Song } from '@/lib/types'
 
 function GameContent() {
@@ -246,12 +247,13 @@ function GameContent() {
           score={game.state.score}
           songsPlayed={game.state.songsPlayed}
         />
-        <button
+        <Button
           onClick={() => setShowQuitConfirm(true)}
-          className="rounded-lg px-3 py-2 text-purple-300 transition-colors hover:bg-white/10 hover:text-white"
+          variant="secondary"
+          size="sm"
         >
           Quitter
-        </button>
+        </Button>
       </header>
 
       {/* Quit confirmation modal */}
@@ -263,18 +265,22 @@ function GameContent() {
               Votre score ne sera pas sauvegardé.
             </p>
             <div className="flex gap-4">
-              <button
+              <Button
                 onClick={() => setShowQuitConfirm(false)}
-                className="flex-1 rounded-lg bg-white/10 py-2 transition-colors hover:bg-white/20"
+                variant="secondary"
+                size="md"
+                className="flex-1"
               >
                 Annuler
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => router.push('/')}
-                className="flex-1 rounded-lg bg-red-600 py-2 transition-colors hover:bg-red-500"
+                variant="danger"
+                size="md"
+                className="flex-1"
               >
                 Quitter
-              </button>
+              </Button>
             </div>
           </div>
         </div>

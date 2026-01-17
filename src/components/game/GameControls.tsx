@@ -1,6 +1,7 @@
 'use client'
 
 import type { GameStatus } from '@/lib/types'
+import { Button } from '@/components/ui/Button'
 
 interface GameControlsProps {
   status: GameStatus
@@ -91,55 +92,65 @@ export function GameControls({
     <footer className="mt-6 flex flex-col items-center gap-4">
       {/* Next song button - visible only in reveal state */}
       {showNextButton && (
-        <button
+        <Button
           onClick={onNext}
-          className="flex w-full max-w-md items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 py-4 px-6 text-lg font-bold transition-all hover:from-pink-400 hover:to-purple-500 hover:shadow-lg hover:shadow-purple-500/25 focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+          variant="primary"
+          size="lg"
+          className="flex w-full max-w-md items-center justify-center gap-2"
         >
           Chanson suivante
           <ArrowRightIcon className="h-6 w-6" />
-        </button>
+        </Button>
       )}
 
       {/* Replay button - visible in reveal state to replay the same song */}
       {showReplayButton && (
-        <button
+        <Button
           onClick={onReplay}
-          className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-purple-200 transition-colors hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+          variant="secondary"
+          size="sm"
+          className="flex items-center gap-2"
         >
           <ReplayIcon className="h-5 w-5" />
           Rejouer l&apos;extrait
-        </button>
+        </Button>
       )}
 
       {/* Validation buttons - visible after buzz */}
       {showValidationButtons && (
         <div className="flex w-full max-w-md gap-4">
-          <button
+          <Button
             onClick={() => onValidate(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 py-4 px-6 text-lg font-bold transition-colors hover:bg-green-500 focus:outline-none focus:ring-4 focus:ring-green-400/50"
+            variant="success"
+            size="lg"
+            className="flex flex-1 items-center justify-center gap-2"
           >
             <CheckIcon className="h-6 w-6" />
             Correct
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onValidate(false)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-4 px-6 text-lg font-bold transition-colors hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-400/50"
+            variant="danger"
+            size="lg"
+            className="flex flex-1 items-center justify-center gap-2"
           >
             <XIcon className="h-6 w-6" />
             Incorrect
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Reveal button - visible during playing/buzzed/timer when not yet revealed */}
       {showRevealButton && (
-        <button
+        <Button
           onClick={onReveal}
-          className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-purple-200 transition-colors hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+          variant="secondary"
+          size="sm"
+          className="flex items-center gap-2"
         >
           <EyeIcon className="h-5 w-5" />
           Révéler la réponse
-        </button>
+        </Button>
       )}
 
       {/* Play/Pause button - always visible for MJ control */}

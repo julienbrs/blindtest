@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { Button } from '@/components/ui/Button'
 
 interface ConfettiParticle {
   id: number
@@ -166,18 +167,12 @@ export function GameRecap({
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3">
-          <button
-            onClick={onNewGame}
-            className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 py-4 text-lg font-bold text-white transition-all hover:from-pink-400 hover:to-purple-500 focus:outline-none focus:ring-4 focus:ring-pink-400/50"
-          >
+          <Button onClick={onNewGame} variant="primary" size="lg" fullWidth>
             Nouvelle partie
-          </button>
-          <button
-            onClick={onHome}
-            className="w-full rounded-xl bg-white/10 py-3 text-lg text-purple-200 transition-colors hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-white/20"
-          >
+          </Button>
+          <Button onClick={onHome} variant="secondary" size="md" fullWidth>
             Retour à l&apos;accueil
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>
