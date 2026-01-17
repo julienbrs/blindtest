@@ -4,9 +4,27 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { GuessMode } from '@/lib/types'
 
+const modes: { value: GuessMode; label: string; description: string }[] = [
+  {
+    value: 'title',
+    label: 'Titre',
+    description: 'Deviner le nom de la chanson',
+  },
+  {
+    value: 'artist',
+    label: 'Artiste',
+    description: "Deviner l'artiste ou le groupe",
+  },
+  {
+    value: 'both',
+    label: 'Les deux',
+    description: 'Deviner titre ET artiste',
+  },
+]
+
 export function GameConfigForm() {
   const router = useRouter()
-  const [guessMode, _setGuessMode] = useState<GuessMode>('both')
+  const [guessMode, setGuessMode] = useState<GuessMode>('both')
   const [clipDuration, _setClipDuration] = useState(20)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -25,18 +43,47 @@ export function GameConfigForm() {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
-      {/* Mode de devinette - placeholder for issue 4.4 */}
+      {/* Mode de devinette */}
       <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
         <h2 className="mb-4 text-xl font-semibold">Que deviner ?</h2>
-        <p className="text-sm text-purple-200">
-          Mode actuel:{' '}
-          {guessMode === 'both'
-            ? 'Les deux'
-            : guessMode === 'title'
-              ? 'Titre'
-              : 'Artiste'}
-        </p>
-        {/* Radio buttons will be added in issue 4.4 */}
+        <div className="space-y-3">
+          {modes.map((mode) => (
+            <label
+              key={mode.value}
+              className={`flex cursor-pointer items-center rounded-lg p-4 transition-all ${
+                guessMode === mode.value
+                  ? 'border-2 border-purple-400 bg-purple-500/30'
+                  : 'border-2 border-transparent bg-white/5 hover:bg-white/10'
+              }`}
+            >
+              <input
+                type="radio"
+                name="guessMode"
+                value={mode.value}
+                checked={guessMode === mode.value}
+                onChange={(e) => setGuessMode(e.target.value as GuessMode)}
+                className="sr-only"
+              />
+              <div className="flex-1">
+                <div className="font-semibold">{mode.label}</div>
+                <div className="text-sm text-purple-200">
+                  {mode.description}
+                </div>
+              </div>
+              <div
+                className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                  guessMode === mode.value
+                    ? 'border-purple-400 bg-purple-400'
+                    : 'border-white/50'
+                }`}
+              >
+                {guessMode === mode.value && (
+                  <div className="h-2 w-2 rounded-full bg-white" />
+                )}
+              </div>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Durée des extraits - placeholder for issue 4.5 */}
