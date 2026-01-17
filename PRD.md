@@ -68,7 +68,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 4.6 Afficher le nombre de chansons disponibles
 - [x] 4.7 Ajouter la validation du formulaire
 - [x] 4.8 Persister la configuration
-- [ ] 4.9 Ajouter un bouton "Paramètres avancés"
+- [x] 4.9 Ajouter un bouton "Paramètres avancés"
 - [ ] 4.10 Créer une animation d'entrée
 
 ### Epic 5: Game Screen (docs/epics/05-game-screen.md)
