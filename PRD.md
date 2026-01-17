@@ -114,7 +114,7 @@ After this task, all subsequent issues run with full feedback loops.
 ### Epic 7: UI/UX (docs/epics/07-ui-ux.md)
 
 - [x] 7.1 Créer le fond d'écran festif
-- [ ] 7.2 Styliser les boutons principaux
+- [x] 7.2 Styliser les boutons principaux
 - [ ] 7.3 Ajouter des ombres et profondeur
 - [ ] 7.4 Créer les animations de transition
 - [ ] 7.5 Ajouter l'animation de bonne réponse

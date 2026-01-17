@@ -520,3 +520,10 @@ Commit: 8e9edc4
 Notes: Created FestiveBackground component with animated gradient (-45deg from indigo to purple to pink) and 6 floating orbs with blur effect. Added CSS animations (animate-gradient-shift, animate-float-orb) for smooth 15-32s animations. Used useSyncExternalStore for proper media query subscription to respect prefers-reduced-motion. Orbs have varied positions, sizes (180-300px), and animation delays for natural movement. Added vignette overlay for depth. Integrated component in layout.tsx as fixed background behind content. Created 10 comprehensive tests. All 413 tests pass.
 Files: src/components/ui/FestiveBackground.tsx, src/components/ui/FestiveBackground.test.tsx, src/app/globals.css, src/app/layout.tsx
 
+=== Issue 7.2: Styliser les boutons principaux ===
+Timestamp: 2026-01-18T01:45:00Z
+Status: COMPLETED
+Commit: 8606f01
+Notes: Created reusable Button component with 4 variants (primary, secondary, success, danger). Added hover, active, and disabled states for all variants. Primary variant has gradient from pink-500 to purple-600, scale hover/active effects. Secondary variant uses transparent bg-white/10. Success uses green-600, danger uses red-600. All variants have shadow-lg and proper transition animations. Implemented 3 size options (sm, md, lg) and fullWidth prop. Updated GameConfigForm, GameControls, GameRecap, and game page to use new Button component. Created comprehensive test suite with 32 tests. All 445 tests pass.
+Files: src/components/ui/Button.tsx, src/components/ui/Button.test.tsx, src/components/game/GameConfigForm.tsx, src/components/game/GameControls.tsx, src/components/game/GameRecap.tsx, src/app/game/page.tsx
+
