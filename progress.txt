@@ -85,3 +85,10 @@ Commit: 1baa45d
 Notes: Implemented extractMetadata function to read ID3 tags from audio files using music-metadata. Added parseFileName helper for fallback on "Artist - Title" filename format. Added generateSongId function for unique 12-char hex IDs based on file path. Extended AudioFormat type to include m4a and aac. Created comprehensive tests for all new functions (22 tests total pass).
 Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts, src/lib/types.ts
 
+=== Issue 2.4: Extraire les pochettes d'album ===
+Timestamp: 2026-01-17T18:00:00Z
+Status: COMPLETED
+Commit: 47b04c0
+Notes: Implemented extractCover function to extract album covers from audio files. First tries embedded covers in ID3 tags, then falls back to cover.jpg/cover.png/folder.jpg/folder.png/album.jpg/album.png in the song's directory. Added getCoverMimeType function to detect MIME type of cover images. Added getCoverFilenames helper. Created 15 comprehensive tests for cover extraction (37 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
