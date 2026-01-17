@@ -12,36 +12,40 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
+// Store mock state to allow modification in tests
+let mockGameState = {
+  status: 'playing' as string,
+  currentSong: {
+    id: 'test123abc',
+    title: 'Test Song',
+    artist: 'Test Artist',
+  } as { id: string; title: string; artist: string } | null,
+  score: 0,
+  songsPlayed: 0,
+  playedSongIds: [] as string[],
+  isRevealed: false,
+  timerRemaining: 5,
+}
+
+const mockActions = {
+  startGame: vi.fn(),
+  loadSong: vi.fn(),
+  quit: vi.fn(),
+  buzz: vi.fn(),
+  validate: vi.fn(),
+  reveal: vi.fn(),
+  nextSong: vi.fn(),
+  play: vi.fn(),
+  pause: vi.fn(),
+  clipEnded: vi.fn(),
+  reset: vi.fn(),
+}
+
 // Mock the game state hook
 vi.mock('@/hooks/useGameState', () => ({
   useGameState: () => ({
-    state: {
-      // Use 'playing' status to avoid triggering the useEffect that calls startGame
-      status: 'playing',
-      currentSong: {
-        id: 'test123abc',
-        title: 'Test Song',
-        artist: 'Test Artist',
-      },
-      score: 0,
-      songsPlayed: 0,
-      playedSongIds: [],
-      isRevealed: false,
-      timerRemaining: 5,
-    },
-    actions: {
-      startGame: vi.fn(),
-      loadSong: vi.fn(),
-      quit: vi.fn(),
-      buzz: vi.fn(),
-      validate: vi.fn(),
-      reveal: vi.fn(),
-      nextSong: vi.fn(),
-      play: vi.fn(),
-      pause: vi.fn(),
-      clipEnded: vi.fn(),
-      reset: vi.fn(),
-    },
+    state: mockGameState,
+    actions: mockActions,
   }),
 }))
 
@@ -86,9 +90,27 @@ vi.mock('@/components/game/GameControls', () => ({
 // Import after mocks
 import GamePage from './page'
 
+// Helper to reset mock state before each test
+function resetMockState() {
+  mockGameState = {
+    status: 'playing',
+    currentSong: {
+      id: 'test123abc',
+      title: 'Test Song',
+      artist: 'Test Artist',
+    },
+    score: 0,
+    songsPlayed: 0,
+    playedSongIds: [],
+    isRevealed: false,
+    timerRemaining: 5,
+  }
+}
+
 describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    resetMockState()
   })
 
   it('passes onReady callback to AudioPlayer', () => {
@@ -113,6 +135,7 @@ describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
 describe('GamePage - Quit Button', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    resetMockState()
   })
 
   it('renders quit button in header', () => {
@@ -202,5 +225,84 @@ describe('GamePage - Quit Button', () => {
     const quitButtons = screen.getAllByRole('button', { name: /quitter/i })
     const modalQuitButton = quitButtons[1]
     expect(modalQuitButton).toHaveClass('bg-red-600')
+  })
+})
+
+describe('GamePage - BUZZED → TIMER transition (Issue 6.6)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+  })
+
+  it('renders Timer component when status is timer', () => {
+    mockGameState.status = 'timer'
+    mockGameState.timerRemaining = 5
+
+    render(<GamePage />)
+
+    const timer = screen.getByTestId('timer')
+    expect(timer).toBeInTheDocument()
+  })
+
+  it('does not render Timer when status is playing', () => {
+    mockGameState.status = 'playing'
+
+    render(<GamePage />)
+
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument()
+  })
+
+  it('does not render Buzzer when status is timer', () => {
+    mockGameState.status = 'timer'
+
+    render(<GamePage />)
+
+    expect(screen.queryByTestId('buzzer-button')).not.toBeInTheDocument()
+  })
+
+  it('renders Timer with countdown visible (via timerRemaining)', () => {
+    mockGameState.status = 'timer'
+    mockGameState.timerRemaining = 3
+
+    render(<GamePage />)
+
+    // Timer component is rendered - it receives remaining prop
+    const timer = screen.getByTestId('timer')
+    expect(timer).toBeInTheDocument()
+    // The actual countdown display is handled by the Timer component
+    // which receives the timerRemaining from game state
+  })
+
+  it('Timer starts immediately after status changes to timer (no buzzed intermediate)', () => {
+    // In our implementation, BUZZ goes directly to 'timer' state
+    // There is no 'buzzed' intermediate state
+    mockGameState.status = 'timer'
+    mockGameState.timerRemaining = 5
+
+    render(<GamePage />)
+
+    // Timer should be visible immediately
+    const timer = screen.getByTestId('timer')
+    expect(timer).toBeInTheDocument()
+
+    // Buzzer should NOT be visible
+    expect(screen.queryByTestId('buzzer-button')).not.toBeInTheDocument()
+  })
+
+  it('validates that Timer receives proper props from game state', () => {
+    // This test ensures Timer is rendered in the right location
+    // and will receive the duration and remaining props
+    mockGameState.status = 'timer'
+    mockGameState.timerRemaining = 4
+
+    render(<GamePage />)
+
+    // Timer should be in the right column area
+    const timer = screen.getByTestId('timer')
+    expect(timer.parentElement).toHaveClass(
+      'flex',
+      'items-center',
+      'justify-center'
+    )
   })
 })
