@@ -352,3 +352,10 @@ Commit: 0a82be3
 Notes: ScoreDisplay component already implemented with score label and value in glass-effect container, plus songs played counter with French pluralization. Created comprehensive test suite with 8 tests covering score display, songs played with singular/plural forms, and styling verification. All 194 tests pass.
 Files: src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx
 
+=== Issue 5.12: Créer le composant SongReveal ===
+Timestamp: 2026-01-17T20:38:00Z
+Status: COMPLETED
+Commit: e093909
+Notes: Implemented SongReveal component with Next.js Image for album cover display. Added blur effect (blur-xl scale-110) when song not revealed with smooth 500ms transition. Music note icon overlay when blurred. Title/artist display based on guessMode (title/artist/both). Album name shown when available. Added fade-in animation to globals.css. Added cleanup to test setup for proper test isolation. Created comprehensive test suite with 18 tests. All 212 tests pass.
+Files: src/components/game/SongReveal.tsx, src/components/game/SongReveal.test.tsx, src/app/globals.css, src/test/setup.ts
+
