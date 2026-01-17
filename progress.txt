@@ -506,3 +506,10 @@ Commit: f511b90
 Notes: Implemented next song preloading during REVEAL state for instant transitions. Added nextSong state to store prefetched song data, preloadedAudioRef to preload audio in background, and isPrefetchingRef to prevent duplicate prefetch requests. Created prefetchNextSong function that fetches from /api/songs/random during REVEAL state with exclude parameter (played songs + current song). Updated loadRandomSong to use preloaded song for instant transitions when available. Added cleanup effect for preloaded audio on unmount. Created 6 comprehensive tests for preloading behavior. All 386 tests pass.
 Files: src/app/game/page.tsx, src/app/game/page.test.tsx
 
+=== Issue 6.15: Ajouter un mode "rejouer la même chanson" ===
+Timestamp: 2026-01-18T00:55:00Z
+Status: COMPLETED
+Commit: 200927b
+Notes: Implemented replay functionality to allow re-listening to the current song clip. Added REPLAY action type to GameAction. Implemented REPLAY action handler in useGameState reducer that transitions from reveal to playing state without resetting the timer. Added replay() action to hook interface. Added shouldReplay and onReplayComplete props to AudioPlayer for audio reset (resets currentTime to 0 and starts playback). Added "Rejouer l'extrait" button to GameControls component (visible only in reveal state). Wired up replay in game page with state management. Created 17 comprehensive tests (8 for REPLAY action in useGameState, 9 for replay button in GameControls). All 403 tests pass.
+Files: src/lib/types.ts, src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/components/game/AudioPlayer.tsx, src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx, src/app/game/page.tsx
+
