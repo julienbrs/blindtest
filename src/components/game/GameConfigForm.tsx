@@ -25,7 +25,7 @@ const modes: { value: GuessMode; label: string; description: string }[] = [
 export function GameConfigForm() {
   const router = useRouter()
   const [guessMode, setGuessMode] = useState<GuessMode>('both')
-  const [clipDuration, _setClipDuration] = useState(20)
+  const [clipDuration, setClipDuration] = useState(20)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -86,13 +86,31 @@ export function GameConfigForm() {
         </div>
       </div>
 
-      {/* Durée des extraits - placeholder for issue 4.5 */}
+      {/* Durée des extraits */}
       <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
         <h2 className="mb-4 text-xl font-semibold">Durée des extraits</h2>
-        <p className="text-sm text-purple-200">
-          Durée actuelle: {clipDuration}s
-        </p>
-        {/* Slider will be added in issue 4.5 */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-purple-200">Durée</span>
+            <span className="text-2xl font-bold">{clipDuration}s</span>
+          </div>
+
+          <input
+            type="range"
+            min={5}
+            max={60}
+            step={5}
+            value={clipDuration}
+            onChange={(e) => setClipDuration(Number(e.target.value))}
+            className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/20 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-pink-500 [&::-webkit-slider-thumb]:to-purple-500 [&::-webkit-slider-thumb]:shadow-lg"
+          />
+
+          <div className="flex justify-between text-sm text-purple-300">
+            <span>5s</span>
+            <span>30s</span>
+            <span>60s</span>
+          </div>
+        </div>
       </div>
 
       {/* Bouton démarrer */}
