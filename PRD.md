@@ -108,7 +108,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 6.11 Gérer la liste des chansons déjà jouées
 - [x] 6.12 Détecter la fin de la bibliothèque
 - [x] 6.13 Créer le hook useAudioPlayer
-- [ ] 6.14 Gérer le preloading de la chanson suivante
+- [x] 6.14 Gérer le preloading de la chanson suivante
 - [ ] 6.15 Ajouter un mode "rejouer la même chanson"
 
 ### Epic 7: UI/UX (docs/epics/07-ui-ux.md)

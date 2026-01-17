@@ -499,3 +499,10 @@ Commit: aa946e3
 Notes: Implemented useAudioPlayer hook with full audio control capabilities. Added loadSong method to load audio from /api/audio/{songId}, play/pause/toggle methods for playback control, progress tracking with currentTime and percentage-based progress. Added isLoaded and isPlaying state. Implemented onEnded callback (fired when maxDuration reached or audio naturally ends) and onReady callback (fired with songId when audio is ready to play). Used refs to avoid stale closures with callbacks. Created comprehensive test suite with 18 tests covering initialization, loadSong, play/pause/toggle, progress tracking, callbacks, isLoaded state, cleanup, and ref stability. All 380 tests pass.
 Files: src/hooks/useAudioPlayer.ts, src/hooks/useAudioPlayer.test.ts
 
+=== Issue 6.14: Gérer le preloading de la chanson suivante ===
+Timestamp: 2026-01-18T00:45:00Z
+Status: COMPLETED
+Commit: f511b90
+Notes: Implemented next song preloading during REVEAL state for instant transitions. Added nextSong state to store prefetched song data, preloadedAudioRef to preload audio in background, and isPrefetchingRef to prevent duplicate prefetch requests. Created prefetchNextSong function that fetches from /api/songs/random during REVEAL state with exclude parameter (played songs + current song). Updated loadRandomSong to use preloaded song for instant transitions when available. Added cleanup effect for preloaded audio on unmount. Created 6 comprehensive tests for preloading behavior. All 386 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx
+
