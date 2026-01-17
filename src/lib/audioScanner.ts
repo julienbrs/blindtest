@@ -2,8 +2,8 @@
 // music-metadata library for reading ID3 tags from audio files
 import { parseFile, type IAudioMetadata } from 'music-metadata'
 import { createHash } from 'crypto'
-import { readdir, stat } from 'fs/promises'
-import { join, extname, basename } from 'path'
+import { readdir, stat, readFile, access } from 'fs/promises'
+import { join, extname, basename, dirname } from 'path'
 import type { Song, AudioFormat } from './types'
 
 // Export parseFile and IAudioMetadata for use in other modules
@@ -153,4 +153,77 @@ export async function extractMetadata(filePath: string): Promise<Song | null> {
     console.error(`Erreur lecture métadonnées: ${filePath}`, error)
     return null
   }
+}
+
+// Cover image filenames to look for in the song's directory
+const COVER_FILENAMES = [
+  'cover.jpg',
+  'cover.png',
+  'folder.jpg',
+  'folder.png',
+  'album.jpg',
+  'album.png',
+]
+
+/**
+ * Extracts album cover from an audio file
+ * First tries to get embedded cover, then falls back to cover files in the directory
+ * @param filePath - The absolute path to the audio file
+ * @returns Buffer containing the image data, or null if no cover found
+ */
+export async function extractCover(filePath: string): Promise<Buffer | null> {
+  try {
+    // 1. Try to extract embedded cover
+    const metadata = await parseFile(filePath)
+    if (metadata.common.picture && metadata.common.picture.length > 0) {
+      const picture = metadata.common.picture[0]
+      return Buffer.from(picture.data)
+    }
+
+    // 2. Look for cover file in the same directory
+    const dir = dirname(filePath)
+    for (const coverName of COVER_FILENAMES) {
+      const coverPath = join(dir, coverName)
+      try {
+        await access(coverPath)
+        return await readFile(coverPath)
+      } catch {
+        // File not found, continue to next
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error(`Erreur extraction pochette: ${filePath}`, error)
+    return null
+  }
+}
+
+/**
+ * Determines the MIME type of a cover image
+ * @param filePath - The path to the cover file (used for extension detection on fallback)
+ * @param embedded - Whether the cover is embedded in the audio file
+ * @param metadata - The audio metadata (only needed when embedded is true)
+ * @returns The MIME type string
+ */
+export function getCoverMimeType(
+  filePath: string,
+  embedded: boolean,
+  metadata?: IAudioMetadata
+): string {
+  if (embedded && metadata?.common?.picture?.[0]?.format) {
+    return metadata.common.picture[0].format
+  }
+
+  const ext = filePath.toLowerCase()
+  if (ext.endsWith('.png')) return 'image/png'
+  if (ext.endsWith('.gif')) return 'image/gif'
+  return 'image/jpeg'
+}
+
+/**
+ * Returns the list of cover filenames that are searched for
+ */
+export function getCoverFilenames(): string[] {
+  return [...COVER_FILENAMES]
 }

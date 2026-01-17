@@ -5,6 +5,9 @@ import {
   parseFileName,
   generateSongId,
   extractMetadata,
+  extractCover,
+  getCoverMimeType,
+  getCoverFilenames,
 } from './audioScanner'
 import { mkdir, writeFile, rm } from 'fs/promises'
 import { join } from 'path'
@@ -268,5 +271,180 @@ describe('extractMetadata', () => {
     expect(expectedId).toHaveLength(12)
     expect(expectedId).toMatch(/^[0-9a-f]{12}$/)
     consoleSpy.mockRestore()
+  })
+})
+
+describe('extractCover', () => {
+  let testDir: string
+
+  beforeEach(async () => {
+    testDir = join(tmpdir(), `cover-test-${Date.now()}`)
+    await mkdir(testDir, { recursive: true })
+  })
+
+  afterEach(async () => {
+    vi.restoreAllMocks()
+    try {
+      await rm(testDir, { recursive: true, force: true })
+    } catch {
+      // Ignore cleanup errors
+    }
+  })
+
+  it('should return null for non-existent file', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const result = await extractCover('/non/existent/file.mp3')
+
+    expect(result).toBeNull()
+    expect(consoleSpy).toHaveBeenCalled()
+  })
+
+  it('should return null when no embedded cover and no cover file exists', async () => {
+    // Create an empty mp3 file with no embedded cover
+    const testFile = join(testDir, 'nocov.mp3')
+    await writeFile(testFile, '')
+
+    const result = await extractCover(testFile)
+
+    expect(result).toBeNull()
+  })
+
+  it('should find cover.jpg in the same directory', async () => {
+    const testFile = join(testDir, 'song.mp3')
+    const coverFile = join(testDir, 'cover.jpg')
+    const coverData = Buffer.from('fake jpeg data')
+
+    await writeFile(testFile, '')
+    await writeFile(coverFile, coverData)
+
+    const result = await extractCover(testFile)
+
+    expect(result).not.toBeNull()
+    expect(result!.toString()).toBe(coverData.toString())
+  })
+
+  it('should find folder.jpg in the same directory', async () => {
+    const testFile = join(testDir, 'song.mp3')
+    const coverFile = join(testDir, 'folder.jpg')
+    const coverData = Buffer.from('fake folder jpg data')
+
+    await writeFile(testFile, '')
+    await writeFile(coverFile, coverData)
+
+    const result = await extractCover(testFile)
+
+    expect(result).not.toBeNull()
+    expect(result!.toString()).toBe(coverData.toString())
+  })
+
+  it('should find cover.png in the same directory', async () => {
+    const testFile = join(testDir, 'song.mp3')
+    const coverFile = join(testDir, 'cover.png')
+    const coverData = Buffer.from('fake png data')
+
+    await writeFile(testFile, '')
+    await writeFile(coverFile, coverData)
+
+    const result = await extractCover(testFile)
+
+    expect(result).not.toBeNull()
+    expect(result!.toString()).toBe(coverData.toString())
+  })
+
+  it('should prefer cover.jpg over folder.jpg', async () => {
+    const testFile = join(testDir, 'song.mp3')
+    const coverFile = join(testDir, 'cover.jpg')
+    const folderFile = join(testDir, 'folder.jpg')
+    const coverData = Buffer.from('cover.jpg data')
+    const folderData = Buffer.from('folder.jpg data')
+
+    await writeFile(testFile, '')
+    await writeFile(coverFile, coverData)
+    await writeFile(folderFile, folderData)
+
+    const result = await extractCover(testFile)
+
+    expect(result).not.toBeNull()
+    expect(result!.toString()).toBe(coverData.toString())
+  })
+
+  it('should find album.jpg as fallback', async () => {
+    const testFile = join(testDir, 'song.mp3')
+    const coverFile = join(testDir, 'album.jpg')
+    const coverData = Buffer.from('album jpg data')
+
+    await writeFile(testFile, '')
+    await writeFile(coverFile, coverData)
+
+    const result = await extractCover(testFile)
+
+    expect(result).not.toBeNull()
+    expect(result!.toString()).toBe(coverData.toString())
+  })
+})
+
+describe('getCoverMimeType', () => {
+  it('should return image/jpeg for .jpg files', () => {
+    expect(getCoverMimeType('/path/to/cover.jpg', false)).toBe('image/jpeg')
+    expect(getCoverMimeType('/path/to/COVER.JPG', false)).toBe('image/jpeg')
+  })
+
+  it('should return image/png for .png files', () => {
+    expect(getCoverMimeType('/path/to/cover.png', false)).toBe('image/png')
+    expect(getCoverMimeType('/path/to/COVER.PNG', false)).toBe('image/png')
+  })
+
+  it('should return image/gif for .gif files', () => {
+    expect(getCoverMimeType('/path/to/cover.gif', false)).toBe('image/gif')
+    expect(getCoverMimeType('/path/to/COVER.GIF', false)).toBe('image/gif')
+  })
+
+  it('should default to image/jpeg for unknown extensions', () => {
+    expect(getCoverMimeType('/path/to/cover', false)).toBe('image/jpeg')
+    expect(getCoverMimeType('/path/to/cover.webp', false)).toBe('image/jpeg')
+  })
+
+  it('should use embedded format when available', () => {
+    const metadata = {
+      common: {
+        picture: [{ format: 'image/png', data: [] }],
+      },
+    }
+    expect(getCoverMimeType('/path/to/song.mp3', true, metadata as never)).toBe(
+      'image/png'
+    )
+  })
+
+  it('should fall back to extension when embedded format is not available', () => {
+    const metadata = {
+      common: {
+        picture: [{ data: [] }],
+      },
+    }
+    expect(
+      getCoverMimeType('/path/to/cover.png', true, metadata as never)
+    ).toBe('image/png')
+  })
+})
+
+describe('getCoverFilenames', () => {
+  it('should return all cover filenames', () => {
+    const filenames = getCoverFilenames()
+
+    expect(filenames).toContain('cover.jpg')
+    expect(filenames).toContain('cover.png')
+    expect(filenames).toContain('folder.jpg')
+    expect(filenames).toContain('folder.png')
+    expect(filenames).toContain('album.jpg')
+    expect(filenames).toContain('album.png')
+    expect(filenames).toHaveLength(6)
+  })
+
+  it('should return a copy of the array', () => {
+    const names1 = getCoverFilenames()
+    const names2 = getCoverFilenames()
+
+    expect(names1).not.toBe(names2)
+    expect(names1).toEqual(names2)
   })
 })
