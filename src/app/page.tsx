@@ -1,3 +1,5 @@
+import { GameConfigForm } from '@/components/game/GameConfigForm'
+
 export default function HomePage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center p-4">
@@ -27,22 +29,8 @@ export default function HomePage() {
         </span>
       </div>
 
-      {/* Placeholder for GameConfigForm - will be added in issue 4.3 */}
-      <div className="w-full max-w-md space-y-6">
-        <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
-          <p className="text-center text-purple-200">
-            Formulaire de configuration (à venir)
-          </p>
-        </div>
-
-        {/* Placeholder start button */}
-        <button
-          type="button"
-          className="w-full transform rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-4 text-xl font-bold shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Nouvelle Partie
-        </button>
-      </div>
+      {/* Game configuration form */}
+      <GameConfigForm />
 
       {/* Placeholder for LibraryStats - will be added in issue 4.6 */}
       <div className="mt-8 text-center text-purple-200">
