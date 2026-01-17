@@ -219,3 +219,10 @@ Commit: 7329177
 Notes: Redesigned homepage with festive gradient title (yellow-pink-purple), descriptive subtitle, and animated bouncing music icons for festive ambiance. Added placeholders for GameConfigForm and LibraryStats components (to be implemented in issues 4.3 and 4.6). Styled "Nouvelle Partie" button with gradient and hover effects. Responsive design with mobile/desktop title sizes. All 141 tests pass.
 Files: src/app/page.tsx
 
+=== Issue 4.3: Créer le formulaire de configuration ===
+Timestamp: 2026-01-17T19:34:00Z
+Status: COMPLETED
+Commit: f9b4dc5
+Notes: Created GameConfigForm component with useState for guessMode (default 'both'), clipDuration (default 20s), and isLoading. Implemented handleSubmit that builds URLSearchParams and redirects to /game with query params. Styled form with backdrop-blur glass effect and sections for mode selector and duration slider (placeholders for 4.4/4.5). Integrated component in homepage replacing placeholder. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx, src/app/page.tsx
+
