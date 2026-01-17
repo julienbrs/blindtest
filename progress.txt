@@ -170,3 +170,10 @@ Commit: 9f6b0ab
 Notes: Implemented GET /api/cover/[id] endpoint for serving album covers. Returns embedded cover from audio file if available (via extractCover), fallback to cover.jpg/cover.png in song directory, or placeholder SVG if no cover found. Image MIME type detected from magic bytes (JPEG, PNG, GIF, WebP). Cache headers set for 1 year. ID validation (12 hex characters). All 122 tests pass.
 Files: src/app/api/cover/[id]/route.ts
 
+=== Issue 3.6: Gérer les Range Requests pour l'audio ===
+Timestamp: 2026-01-17T18:44:00Z
+Status: COMPLETED
+Commit: 873d4f2
+Notes: Added comprehensive Range Request test suite with 11 new tests. Tests verify: 206 Partial Content status, Content-Range header format, Accept-Ranges header, start-only ranges (bytes=512-), exact byte ranges, edge cases (first byte, last byte, middle ranges), 416 Range Not Satisfiable for invalid ranges, correct byte content verification for seeking simulation, MIME types for all audio formats. All 133 tests pass.
+Files: src/app/api/audio/[id]/route.test.ts
+
