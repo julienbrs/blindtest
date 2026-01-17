@@ -17,7 +17,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Blindtest',
-  description: 'Un jeu de blindtest musical festif',
+  description: 'Application de blindtest musical',
 }
 
 export default function RootLayout({
@@ -27,7 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${poppins.variable} ${inter.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900 text-white font-sans antialiased">
+        <div className="min-h-screen flex flex-col">{children}</div>
+      </body>
     </html>
   )
 }
