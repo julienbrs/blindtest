@@ -227,3 +227,75 @@ export function getCoverMimeType(
 export function getCoverFilenames(): string[] {
   return [...COVER_FILENAMES]
 }
+
+// ============================================================================
+// METADATA CACHE
+// ============================================================================
+
+// In-memory cache (singleton)
+let songsCache: Song[] | null = null
+let lastScanTime: number | null = null
+
+/**
+ * Gets the songs cache, triggering a scan if not yet initialized
+ * @returns Array of all songs in the library
+ */
+export async function getSongsCache(): Promise<Song[]> {
+  if (songsCache === null) {
+    await refreshCache()
+  }
+  return songsCache!
+}
+
+/**
+ * Refreshes the metadata cache by scanning the audio folder
+ * @throws Error if AUDIO_FOLDER_PATH is not defined
+ */
+export async function refreshCache(): Promise<void> {
+  const audioPath = process.env.AUDIO_FOLDER_PATH
+  if (!audioPath) {
+    throw new Error('AUDIO_FOLDER_PATH non défini')
+  }
+
+  const files = await scanAudioFolder(audioPath)
+  const songs: Song[] = []
+
+  for (const filePath of files) {
+    const song = await extractMetadata(filePath)
+    if (song) {
+      songs.push(song)
+    }
+  }
+
+  songsCache = songs
+  lastScanTime = Date.now()
+
+  console.log(`Cache rafraîchi: ${songs.length} chansons`)
+}
+
+/**
+ * Returns information about the current cache state
+ * @returns Object with song count and last scan timestamp
+ */
+export function getCacheInfo(): { count: number; lastScan: number | null } {
+  return {
+    count: songsCache?.length || 0,
+    lastScan: lastScanTime,
+  }
+}
+
+/**
+ * Clears the cache (useful for testing)
+ */
+export function clearCache(): void {
+  songsCache = null
+  lastScanTime = null
+}
+
+/**
+ * Checks if the cache has been initialized
+ * @returns true if cache is populated
+ */
+export function isCacheInitialized(): boolean {
+  return songsCache !== null
+}

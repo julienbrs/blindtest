@@ -8,6 +8,11 @@ import {
   extractCover,
   getCoverMimeType,
   getCoverFilenames,
+  getSongsCache,
+  refreshCache,
+  getCacheInfo,
+  clearCache,
+  isCacheInitialized,
 } from './audioScanner'
 import { mkdir, writeFile, rm } from 'fs/promises'
 import { join } from 'path'
@@ -446,5 +451,167 @@ describe('getCoverFilenames', () => {
 
     expect(names1).not.toBe(names2)
     expect(names1).toEqual(names2)
+  })
+})
+
+describe('Metadata Cache', () => {
+  let testDir: string
+  const originalEnv = process.env.AUDIO_FOLDER_PATH
+
+  beforeEach(async () => {
+    // Clear cache before each test
+    clearCache()
+    testDir = join(tmpdir(), `cache-test-${Date.now()}`)
+    await mkdir(testDir, { recursive: true })
+    process.env.AUDIO_FOLDER_PATH = testDir
+  })
+
+  afterEach(async () => {
+    vi.restoreAllMocks()
+    clearCache()
+    process.env.AUDIO_FOLDER_PATH = originalEnv
+    try {
+      await rm(testDir, { recursive: true, force: true })
+    } catch {
+      // Ignore cleanup errors
+    }
+  })
+
+  describe('clearCache', () => {
+    it('should clear the cache', async () => {
+      // First populate the cache
+      await writeFile(join(testDir, 'song.mp3'), '')
+      await getSongsCache()
+
+      expect(isCacheInitialized()).toBe(true)
+
+      // Clear it
+      clearCache()
+
+      expect(isCacheInitialized()).toBe(false)
+    })
+  })
+
+  describe('isCacheInitialized', () => {
+    it('should return false when cache is not initialized', () => {
+      expect(isCacheInitialized()).toBe(false)
+    })
+
+    it('should return true after cache is populated', async () => {
+      await getSongsCache()
+      expect(isCacheInitialized()).toBe(true)
+    })
+  })
+
+  describe('getCacheInfo', () => {
+    it('should return count 0 and null lastScan when not initialized', () => {
+      const info = getCacheInfo()
+
+      expect(info.count).toBe(0)
+      expect(info.lastScan).toBeNull()
+    })
+
+    it('should return correct count and lastScan after initialization', async () => {
+      await writeFile(join(testDir, 'song1.mp3'), '')
+      await writeFile(join(testDir, 'song2.mp3'), '')
+
+      const beforeScan = Date.now()
+      await getSongsCache()
+      const afterScan = Date.now()
+
+      const info = getCacheInfo()
+
+      expect(info.count).toBe(2)
+      expect(info.lastScan).not.toBeNull()
+      expect(info.lastScan).toBeGreaterThanOrEqual(beforeScan)
+      expect(info.lastScan).toBeLessThanOrEqual(afterScan)
+    })
+  })
+
+  describe('getSongsCache', () => {
+    it('should trigger scan on first call', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      await writeFile(join(testDir, 'Artist - Title.mp3'), '')
+
+      expect(isCacheInitialized()).toBe(false)
+
+      const songs = await getSongsCache()
+
+      expect(isCacheInitialized()).toBe(true)
+      expect(songs).toHaveLength(1)
+      expect(songs[0].artist).toBe('Artist')
+      expect(songs[0].title).toBe('Title')
+      expect(consoleSpy).toHaveBeenCalledWith('Cache rafraîchi: 1 chansons')
+    })
+
+    it('should use cache on subsequent calls', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      await writeFile(join(testDir, 'song.mp3'), '')
+
+      // First call - should scan
+      const songs1 = await getSongsCache()
+      expect(consoleSpy).toHaveBeenCalledTimes(1)
+
+      // Second call - should use cache
+      const songs2 = await getSongsCache()
+      expect(consoleSpy).toHaveBeenCalledTimes(1) // Still just 1 call
+
+      // Should return same data
+      expect(songs1).toBe(songs2)
+    })
+  })
+
+  describe('refreshCache', () => {
+    it('should throw error when AUDIO_FOLDER_PATH is not defined', async () => {
+      delete process.env.AUDIO_FOLDER_PATH
+
+      await expect(refreshCache()).rejects.toThrow(
+        'AUDIO_FOLDER_PATH non défini'
+      )
+    })
+
+    it('should rescan and update cache', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+      // Initial scan with one file
+      await writeFile(join(testDir, 'song1.mp3'), '')
+      await getSongsCache()
+
+      const info1 = getCacheInfo()
+      expect(info1.count).toBe(1)
+      expect(info1.lastScan).not.toBeNull()
+
+      // Add another file
+      await writeFile(join(testDir, 'song2.mp3'), '')
+
+      // Refresh the cache
+      await refreshCache()
+
+      const info2 = getCacheInfo()
+      expect(info2.count).toBe(2)
+      expect(info2.lastScan).not.toBeNull()
+      expect(info2.lastScan).toBeGreaterThanOrEqual(info1.lastScan!)
+      expect(consoleSpy).toHaveBeenCalledWith('Cache rafraîchi: 2 chansons')
+    })
+
+    it('should replace old cache completely', async () => {
+      vi.spyOn(console, 'log').mockImplementation(() => {})
+
+      // Initial scan
+      await writeFile(join(testDir, 'song1.mp3'), '')
+      const songs1 = await getSongsCache()
+      expect(songs1).toHaveLength(1)
+
+      // Add another file and refresh
+      await writeFile(join(testDir, 'song2.mp3'), '')
+      await refreshCache()
+
+      // Get cache again - should have new songs
+      const songs2 = await getSongsCache()
+      expect(songs2).toHaveLength(2)
+
+      // Arrays should be different instances (old cache replaced)
+      expect(songs1).not.toBe(songs2)
+    })
   })
 })
