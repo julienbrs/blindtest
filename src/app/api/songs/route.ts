@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server'
+import { getSongsCache } from '@/lib/audioScanner'
+import type { SongsListResponse } from '@/lib/types'
 
 export async function GET() {
-  const audioFolderPath = process.env.AUDIO_FOLDER_PATH
+  try {
+    const songs = await getSongsCache()
 
-  if (!audioFolderPath) {
+    const response: SongsListResponse = {
+      songs,
+      total: songs.length,
+    }
+
+    return NextResponse.json(response)
+  } catch (error) {
+    console.error('Erreur GET /api/songs:', error)
     return NextResponse.json(
-      { error: 'AUDIO_FOLDER_PATH not configured' },
+      { error: 'Erreur lors du chargement des chansons' },
       { status: 500 }
     )
   }
-
-  // Placeholder - will be fully implemented in Epic 3
-  return NextResponse.json({
-    songs: [],
-    total: 0,
-    audioFolderPath,
-  })
 }
