@@ -66,7 +66,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 4.4 Ajouter le sélecteur de mode de devinette
 - [x] 4.5 Ajouter le slider durée des extraits
 - [x] 4.6 Afficher le nombre de chansons disponibles
-- [ ] 4.7 Ajouter la validation du formulaire
+- [x] 4.7 Ajouter la validation du formulaire
 - [ ] 4.8 Persister la configuration
 - [ ] 4.9 Ajouter un bouton "Paramètres avancés"
 - [ ] 4.10 Créer une animation d'entrée
