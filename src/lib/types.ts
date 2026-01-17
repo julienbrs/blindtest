@@ -137,7 +137,7 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'LOAD_SONG'; song: Song }
   | { type: 'PLAY' }
-  | { type: 'BUZZ' }
+  | { type: 'BUZZ'; timerDuration: number }
   | { type: 'TICK_TIMER' }
   | { type: 'VALIDATE'; correct: boolean }
   | { type: 'REVEAL' }

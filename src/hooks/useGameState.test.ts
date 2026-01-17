@@ -163,6 +163,59 @@ describe('useGameState', () => {
       })
       expect(result.current.state.status).toBe('loading')
     })
+
+    it('resets timerRemaining to config timerDuration on buzz', () => {
+      const configWithTimer10 = { ...mockConfig, timerDuration: 10 }
+      const { result } = renderHook(() => useGameState(configWithTimer10))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      expect(result.current.state.timerRemaining).toBe(10)
+    })
+
+    it('ignores buzz in reveal state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.reveal()
+        result.current.actions.buzz()
+      })
+      expect(result.current.state.status).toBe('reveal')
+    })
+
+    it('ignores buzz in timer state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      expect(result.current.state.status).toBe('timer')
+      // Try buzzing again
+      act(() => {
+        result.current.actions.buzz()
+      })
+      // Should still be in timer state
+      expect(result.current.state.status).toBe('timer')
+    })
+
+    it('triggers immediate transition from playing to timer (no buzzed intermediate)', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+      })
+      expect(result.current.state.status).toBe('playing')
+
+      act(() => {
+        result.current.actions.buzz()
+      })
+      // Should go directly to timer, not through buzzed
+      expect(result.current.state.status).toBe('timer')
+    })
   })
 
   describe('Timer countdown', () => {

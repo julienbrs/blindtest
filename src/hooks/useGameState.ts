@@ -30,9 +30,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, status: 'playing' }
 
     case 'BUZZ':
-      // Only allow buzz when playing
+      // Only allow buzz when playing - audio will be paused by the component
+      // since isPlaying is derived from status === 'playing'
       if (state.status !== 'playing') return state
-      return { ...state, status: 'timer', timerRemaining: state.timerRemaining }
+      return { ...state, status: 'timer', timerRemaining: action.timerDuration }
 
     case 'TICK_TIMER':
       const newRemaining = state.timerRemaining - 1
@@ -157,7 +158,10 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
 
   const pause = useCallback(() => dispatch({ type: 'PLAY' }), []) // Toggle behavior
 
-  const buzz = useCallback(() => dispatch({ type: 'BUZZ' }), [])
+  const buzz = useCallback(
+    () => dispatch({ type: 'BUZZ', timerDuration: config.timerDuration }),
+    [config.timerDuration]
+  )
 
   const validate = useCallback(
     (correct: boolean) => dispatch({ type: 'VALIDATE', correct }),
