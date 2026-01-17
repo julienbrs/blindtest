@@ -56,7 +56,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 3.7 Ajouter les headers CORS appropriés
 - [x] 3.8 Créer GET /api/stats
 - [x] 3.9 Optimiser le streaming audio
-- [ ] 3.10 Créer POST /api/songs/rescan
+- [x] 3.10 Créer POST /api/songs/rescan
 
 ### Epic 4: Homepage (docs/epics/04-homepage.md)
 

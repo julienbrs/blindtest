@@ -198,3 +198,10 @@ Commit: 7a09bdc
 Notes: Optimized audio streaming to use true streaming via Readable.toWeb() instead of buffering the entire file in memory. Added 64KB highWaterMark for optimal chunk sizes. Both Range Requests and full file requests now stream without loading the entire file into memory. Memory stays stable even with large audio files.
 Files: src/app/api/audio/[id]/route.ts
 
+=== Issue 3.10: Créer POST /api/songs/rescan ===
+Timestamp: 2026-01-17T18:56:00Z
+Status: COMPLETED
+Commit: b588cbd
+Notes: Updated POST /api/songs/rescan endpoint to return scanDuration and human-readable message as per epic specs. Response now includes success, songsFound, scanDuration, and message fields. Added test for scan duration measurement accuracy. All 141 tests pass.
+Files: src/app/api/songs/rescan/route.ts, src/app/api/songs/rescan/route.test.ts
+
