@@ -103,7 +103,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 6.6 Implémenter la transition BUZZED → TIMER
 - [x] 6.7 Implémenter la fin du timer
 - [x] 6.8 Implémenter la validation de réponse
-- [ ] 6.9 Implémenter la transition vers REVEAL
+- [x] 6.9 Implémenter la transition vers REVEAL
 - [ ] 6.10 Implémenter la transition REVEAL → LOADING
 - [ ] 6.11 Gérer la liste des chansons déjà jouées
 - [ ] 6.12 Détecter la fin de la bibliothèque

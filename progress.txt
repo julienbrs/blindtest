@@ -464,3 +464,10 @@ Commit: afb4f90
 Notes: Verified VALIDATE action already fully implemented in useGameState hook (lines 55-65). VALIDATE action handles: transition to 'reveal' status, isRevealed set to true, score incremented by 1 if correct (action.correct ? state.score + 1 : state.score), songsPlayed incremented, currentSong.id added to playedSongIds. GameControls component has Correct/Incorrect buttons (lines 95-109) that call onValidate(true) and onValidate(false) respectively. Comprehensive tests already exist in useGameState.test.ts (lines 341-406) testing: transitions to reveal, increments score when correct, no score increment when incorrect, increments songsPlayed, adds song id to playedSongIds, sets isRevealed to true. GameControls.test.tsx (lines 44-106) tests button visibility and callbacks. All 336 tests pass.
 Files: src/hooks/useGameState.ts (verified), src/hooks/useGameState.test.ts (verified), src/components/game/GameControls.tsx (verified), src/components/game/GameControls.test.tsx (verified)
 
+=== Issue 6.9: Implémenter la transition vers REVEAL ===
+Timestamp: 2026-01-18T00:15:00Z
+Status: COMPLETED
+Commit: 9e22a8c
+Notes: Verified REVEAL transition already fully implemented. REVEAL action in useGameState.ts (lines 67-80) sets status to 'reveal', isRevealed to true, increments songsPlayed if not already revealed, and adds song id to playedSongIds. SongReveal component (lines 29-53) removes blur from cover when isRevealed=true and displays song info (title/artist/album based on guessMode). GameControls provides "Révéler la réponse" button connected to reveal action. Tests exist in useGameState.test.ts (lines 409-467) covering all REVEAL behaviors. All 336 tests pass.
+Files: src/hooks/useGameState.ts (verified), src/components/game/SongReveal.tsx (verified), src/components/game/GameControls.tsx (verified), src/hooks/useGameState.test.ts (verified)
+
