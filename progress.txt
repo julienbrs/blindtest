@@ -471,3 +471,10 @@ Commit: 9e22a8c
 Notes: Verified REVEAL transition already fully implemented. REVEAL action in useGameState.ts (lines 67-80) sets status to 'reveal', isRevealed to true, increments songsPlayed if not already revealed, and adds song id to playedSongIds. SongReveal component (lines 29-53) removes blur from cover when isRevealed=true and displays song info (title/artist/album based on guessMode). GameControls provides "Révéler la réponse" button connected to reveal action. Tests exist in useGameState.test.ts (lines 409-467) covering all REVEAL behaviors. All 336 tests pass.
 Files: src/hooks/useGameState.ts (verified), src/components/game/SongReveal.tsx (verified), src/components/game/GameControls.tsx (verified), src/hooks/useGameState.test.ts (verified)
 
+=== Issue 6.10: Implémenter la transition REVEAL → LOADING ===
+Timestamp: 2026-01-18T00:20:00Z
+Status: COMPLETED
+Commit: 4b55d35
+Notes: Implemented REVEAL → LOADING transition when clicking "Chanson suivante". Updated NEXT_SONG action in useGameState reducer to reset timerRemaining to config.timerDuration (added timerDuration param to action type). Added effect in game page that detects when status is 'loading' with no currentSong and triggers loadRandomSong. Unified loading behavior for both initial game start and subsequent song transitions. Reset audioReadyForSongId to null when loading new song to prevent race conditions. Added 7 new tests for REVEAL → LOADING behavior (1 in useGameState.test.ts for timer reset, 6 in page.test.tsx for loading state UI). All 343 tests pass.
+Files: src/hooks/useGameState.ts, src/lib/types.ts, src/app/game/page.tsx, src/hooks/useGameState.test.ts, src/app/game/page.test.tsx
+
