@@ -366,3 +366,10 @@ Commit: 77b820e
 Notes: Blur effect for album cover was fully implemented in issue 5.12. Verified all acceptance criteria: blur-xl (24px) makes cover unreadable when not revealed, transition-all duration-500 provides smooth 500ms transition to clear state, CSS blur filter uses hardware acceleration for optimal performance. Tests already exist verifying blur classes are applied when isRevealed=false and removed when isRevealed=true. All 212 tests pass.
 Files: src/components/game/SongReveal.tsx (no changes - verification only)
 
+=== Issue 5.14: Créer les boutons de validation ===
+Timestamp: 2026-01-17T20:43:00Z
+Status: COMPLETED
+Commit: 8b36486
+Notes: Added validation buttons (Correct/Incorrect) to GameControls component. Created CheckIcon and XIcon SVG components. Green "Correct" button calls onValidate(true), red "Incorrect" button calls onValidate(false). Buttons only visible when status is 'buzzed' or 'timer'. Created comprehensive test suite with 15 tests covering button visibility, callbacks, and styling. All 227 tests pass.
+Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx
+
