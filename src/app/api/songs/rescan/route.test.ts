@@ -13,7 +13,7 @@ describe('POST /api/songs/rescan', () => {
     vi.clearAllMocks()
   })
 
-  it('returns success with song count when rescan succeeds', async () => {
+  it('returns success with song count and scan duration when rescan succeeds', async () => {
     const mockCacheInfo = { count: 42, lastScan: 1705500000000 }
     vi.mocked(audioScanner.refreshCache).mockResolvedValue(undefined)
     vi.mocked(audioScanner.getCacheInfo).mockReturnValue(mockCacheInfo)
@@ -22,13 +22,11 @@ describe('POST /api/songs/rescan', () => {
     const data = await response.json()
 
     expect(response.status).toBe(200)
-    expect(data).toEqual({
-      success: true,
-      data: {
-        songsCount: 42,
-        lastScan: 1705500000000,
-      },
-    })
+    expect(data.success).toBe(true)
+    expect(data.songsFound).toBe(42)
+    expect(typeof data.scanDuration).toBe('number')
+    expect(data.scanDuration).toBeGreaterThanOrEqual(0)
+    expect(data.message).toMatch(/Scan terminé: 42 chansons trouvées en \d+ms/)
     expect(audioScanner.refreshCache).toHaveBeenCalledTimes(1)
     expect(audioScanner.getCacheInfo).toHaveBeenCalledTimes(1)
   })
@@ -43,8 +41,7 @@ describe('POST /api/songs/rescan', () => {
 
     expect(response.status).toBe(500)
     expect(data).toEqual({
-      success: false,
-      error: 'AUDIO_FOLDER_PATH non défini',
+      error: 'Erreur lors du rescan',
     })
   })
 
@@ -56,8 +53,7 @@ describe('POST /api/songs/rescan', () => {
 
     expect(response.status).toBe(500)
     expect(data).toEqual({
-      success: false,
-      error: 'Erreur inconnue lors du rescan',
+      error: 'Erreur lors du rescan',
     })
   })
 
@@ -86,6 +82,24 @@ describe('POST /api/songs/rescan', () => {
 
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
-    expect(data.data.songsCount).toBe(0)
+    expect(data.songsFound).toBe(0)
+    expect(data.message).toMatch(/Scan terminé: 0 chansons trouvées/)
+  })
+
+  it('measures scan duration accurately', async () => {
+    const mockCacheInfo = { count: 100, lastScan: Date.now() }
+    const delay = 50 // 50ms delay
+    vi.mocked(audioScanner.refreshCache).mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    })
+    vi.mocked(audioScanner.getCacheInfo).mockReturnValue(mockCacheInfo)
+
+    const response = await POST()
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.scanDuration).toBeGreaterThanOrEqual(delay)
+    // Allow some tolerance for test execution overhead
+    expect(data.scanDuration).toBeLessThan(delay + 100)
   })
 })

@@ -1,42 +1,37 @@
 import { NextResponse } from 'next/server'
 import { refreshCache, getCacheInfo } from '@/lib/audioScanner'
-import type { ApiResponse } from '@/lib/types'
 
 export interface RescanResponse {
-  songsCount: number
-  lastScan: number
+  success: boolean
+  songsFound: number
+  scanDuration: number
+  message: string
 }
 
 /**
  * POST /api/songs/rescan
  * Triggers a rescan of the audio folder and refreshes the metadata cache
- * Returns the number of songs found
+ * Returns the number of songs found and scan duration
  */
 export async function POST(): Promise<
-  NextResponse<ApiResponse<RescanResponse>>
+  NextResponse<RescanResponse | { error: string }>
 > {
   try {
+    const startTime = Date.now()
     await refreshCache()
-    const cacheInfo = getCacheInfo()
+    const duration = Date.now() - startTime
+    const info = getCacheInfo()
 
     return NextResponse.json({
       success: true,
-      data: {
-        songsCount: cacheInfo.count,
-        lastScan: cacheInfo.lastScan!,
-      },
+      songsFound: info.count,
+      scanDuration: duration,
+      message: `Scan terminé: ${info.count} chansons trouvées en ${duration}ms`,
     })
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Erreur inconnue lors du rescan'
-
-    console.error('Rescan error:', error)
-
+    console.error('Erreur POST /api/songs/rescan:', error)
     return NextResponse.json(
-      {
-        success: false,
-        error: errorMessage,
-      },
+      { error: 'Erreur lors du rescan' },
       { status: 500 }
     )
   }
