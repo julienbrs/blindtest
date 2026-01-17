@@ -1,9 +1,11 @@
 # Epic 13 : Déploiement
 
 ## Objectif
+
 Préparer et déployer l'application sur un serveur maison (NAS, Raspberry Pi, etc.).
 
 ## Dépendances
+
 - Application complète et testée
 - Accès au serveur cible
 
@@ -12,12 +14,14 @@ Préparer et déployer l'application sur un serveur maison (NAS, Raspberry Pi, e
 ## Issues
 
 ### 13.1 Créer le script de build
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Configurer et tester le build de production Next.js.
 
 **Commandes**
+
 ```bash
 # Build de production
 npm run build
@@ -27,6 +31,7 @@ npm run start
 ```
 
 **Configuration** : `next.config.js`
+
 ```javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -47,9 +52,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-        ],
+        headers: [{ key: 'Access-Control-Allow-Origin', value: '*' }],
       },
     ]
   },
@@ -59,6 +62,7 @@ module.exports = nextConfig
 ```
 
 **Vérifications post-build**
+
 ```bash
 # Taille du bundle
 ls -lh .next/standalone
@@ -68,6 +72,7 @@ PORT=3000 node .next/standalone/server.js
 ```
 
 **Critères d'acceptation**
+
 - [ ] `npm run build` sans erreur
 - [ ] `npm run start` fonctionne
 - [ ] Taille du bundle raisonnable
@@ -76,12 +81,14 @@ PORT=3000 node .next/standalone/server.js
 ---
 
 ### 13.2 Configurer le démarrage en production
+
 **Priorité** : P1 (Important)
 
 **Description**
 Script de démarrage fiable avec redémarrage automatique.
 
 **Option 1 : PM2** (recommandé)
+
 ```bash
 # Installation globale
 npm install -g pm2
@@ -97,27 +104,31 @@ pm2 startup
 ```
 
 **Fichier** : `ecosystem.config.js`
+
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'blindtest',
-    script: 'node',
-    args: '.next/standalone/server.js',
-    cwd: '/path/to/app',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      AUDIO_FOLDER_PATH: '/volume1/music',
+  apps: [
+    {
+      name: 'blindtest',
+      script: 'node',
+      args: '.next/standalone/server.js',
+      cwd: '/path/to/app',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+        AUDIO_FOLDER_PATH: '/volume1/music',
+      },
+      watch: false,
+      instances: 1,
+      autorestart: true,
+      max_memory_restart: '500M',
     },
-    watch: false,
-    instances: 1,
-    autorestart: true,
-    max_memory_restart: '500M',
-  }]
+  ],
 }
 ```
 
 **Option 2 : Systemd** (Linux)
+
 ```ini
 # /etc/systemd/system/blindtest.service
 [Unit]
@@ -147,6 +158,7 @@ sudo systemctl status blindtest
 ```
 
 **Critères d'acceptation**
+
 - [ ] Application démarre au boot
 - [ ] Redémarrage auto en cas de crash
 - [ ] Logs accessibles
@@ -155,6 +167,7 @@ sudo systemctl status blindtest
 ---
 
 ### 13.3 Documenter l'installation sur NAS
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -162,10 +175,11 @@ Guide pas à pas pour installer l'application sur un NAS Synology ou QNAP.
 
 **Guide Synology (DSM 7)**
 
-```markdown
+````markdown
 # Installation Blindtest sur Synology
 
 ## Prérequis
+
 - DSM 7.0+
 - Node.js installé (via Package Center ou manuellement)
 - Accès SSH activé
@@ -177,12 +191,14 @@ Guide pas à pas pour installer l'application sur un NAS Synology ou QNAP.
 3. Installer la version 18+
 
 Ou manuellement :
+
 ```bash
 wget https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.xz
 tar -xf node-v18.19.0-linux-x64.tar.xz
 sudo mv node-v18.19.0-linux-x64 /volume1/@appstore/nodejs
 export PATH=$PATH:/volume1/@appstore/nodejs/bin
 ```
+````
 
 ## 2. Télécharger l'application
 
@@ -207,6 +223,7 @@ nano .env.local
 ```
 
 Modifier :
+
 ```
 AUDIO_FOLDER_PATH=/volume1/music
 PORT=3000
@@ -224,7 +241,8 @@ pm2 startup
 ## 6. Accéder à l'application
 
 Ouvrir : http://IP_DU_NAS:3000
-```
+
+````
 
 **Critères d'acceptation**
 - [ ] Guide testé sur NAS réel
@@ -261,15 +279,17 @@ server {
     client_max_body_size 100M;
     proxy_read_timeout 300s;
 }
-```
+````
 
 **Synology Reverse Proxy**
+
 1. Control Panel > Application Portal > Reverse Proxy
 2. Create :
    - Source: blindtest.local:80
    - Destination: localhost:3000
 
 **Critères d'acceptation**
+
 - [ ] Proxy configuré
 - [ ] HTTPS optionnel
 - [ ] Timeouts appropriés pour l'audio
@@ -277,6 +297,7 @@ server {
 ---
 
 ### 13.5 Ajouter un healthcheck endpoint
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
@@ -320,6 +341,7 @@ export async function GET() {
 ```
 
 **Réponse**
+
 ```json
 {
   "status": "ok",
@@ -337,6 +359,7 @@ export async function GET() {
 ```
 
 **Usage avec PM2**
+
 ```javascript
 // ecosystem.config.js
 {
@@ -350,6 +373,7 @@ export async function GET() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Endpoint accessible
 - [ ] Retourne les infos système
 - [ ] Status error si problème
@@ -358,12 +382,14 @@ export async function GET() {
 ---
 
 ### 13.6 Créer un Dockerfile
+
 **Priorité** : P3 (Futur)
 
 **Description**
 Containerisation de l'application pour un déploiement plus portable.
 
 **Fichier** : `Dockerfile`
+
 ```dockerfile
 # Stage 1: Build
 FROM node:18-alpine AS builder
@@ -400,6 +426,7 @@ CMD ["node", "server.js"]
 ```
 
 **Fichier** : `docker-compose.yml`
+
 ```yaml
 version: '3.8'
 
@@ -407,7 +434,7 @@ services:
   blindtest:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - AUDIO_FOLDER_PATH=/music
@@ -415,13 +442,15 @@ services:
       - /path/to/your/music:/music:ro
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      test:
+        ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
 ```
 
 **Commandes**
+
 ```bash
 # Build
 docker build -t blindtest .
@@ -439,6 +468,7 @@ docker-compose up -d
 ```
 
 **Critères d'acceptation**
+
 - [ ] Image build sans erreur
 - [ ] Container démarre
 - [ ] Volume audio accessible
@@ -475,6 +505,7 @@ docker-compose up -d
 - [ ] 13.6 Dockerfile
 
 ## Estimation
+
 ~3-4 heures de travail
 
 ---

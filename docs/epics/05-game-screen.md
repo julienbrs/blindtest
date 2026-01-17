@@ -1,9 +1,11 @@
 # Epic 5 : Frontend - Écran de jeu principal
 
 ## Objectif
+
 Créer l'interface de jeu complète : lecteur audio, buzzer, timer, zone de révélation, contrôles du maître de jeu. C'est le coeur de l'expérience utilisateur.
 
 ## Dépendances
+
 - Epic 1-4 terminés
 - API routes fonctionnelles
 
@@ -12,6 +14,7 @@ Créer l'interface de jeu complète : lecteur audio, buzzer, timer, zone de rév
 ## Issues
 
 ### 5.1 Créer la page /game
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -20,6 +23,7 @@ Page principale du jeu qui orchestre tous les composants.
 **Fichier** : `src/app/game/page.tsx`
 
 **Implémentation**
+
 ```tsx
 'use client'
 
@@ -49,7 +53,10 @@ function GameContent() {
     <main className="min-h-screen flex flex-col p-4">
       {/* Header avec score */}
       <header className="flex justify-between items-center mb-6">
-        <ScoreDisplay score={game.state.score} songsPlayed={game.state.songsPlayed} />
+        <ScoreDisplay
+          score={game.state.score}
+          songsPlayed={game.state.songsPlayed}
+        />
         <button
           onClick={game.actions.quit}
           className="text-purple-300 hover:text-white"
@@ -104,7 +111,13 @@ function GameContent() {
 
 export default function GamePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          Chargement...
+        </div>
+      }
+    >
       <GameContent />
     </Suspense>
   )
@@ -112,6 +125,7 @@ export default function GamePage() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Page accessible à /game
 - [ ] Paramètres récupérés depuis URL
 - [ ] Tous les composants intégrés
@@ -120,12 +134,14 @@ export default function GamePage() {
 ---
 
 ### 5.2 Implémenter le layout de jeu
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Organiser les zones de l'écran de jeu de manière claire et ergonomique.
 
 **Layout Mobile (portrait)**
+
 ```
 ┌──────────────────────┐
 │ Score      [Quitter] │  <- Header
@@ -143,6 +159,7 @@ Organiser les zones de l'écran de jeu de manière claire et ergonomique.
 ```
 
 **Layout Desktop**
+
 ```
 ┌───────────────────────────────────────────────┐
 │ Score                               [Quitter] │
@@ -158,6 +175,7 @@ Organiser les zones de l'écran de jeu de manière claire et ergonomique.
 ```
 
 **Critères d'acceptation**
+
 - [ ] Layout mobile fonctionnel
 - [ ] Layout desktop optimisé
 - [ ] Transitions fluides entre breakpoints
@@ -165,6 +183,7 @@ Organiser les zones de l'écran de jeu de manière claire et ergonomique.
 ---
 
 ### 5.3 Créer le composant AudioPlayer
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -173,6 +192,7 @@ Lecteur audio HTML5 avec contrôles custom, pas les contrôles natifs du navigat
 **Fichier** : `src/components/game/AudioPlayer.tsx`
 
 **Implémentation**
+
 ```tsx
 'use client'
 
@@ -185,7 +205,12 @@ interface AudioPlayerProps {
   onEnded: () => void
 }
 
-export function AudioPlayer({ songId, isPlaying, maxDuration, onEnded }: AudioPlayerProps) {
+export function AudioPlayer({
+  songId,
+  isPlaying,
+  maxDuration,
+  onEnded,
+}: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -265,6 +290,7 @@ function formatTime(seconds: number): string {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Audio se charge depuis l'API
 - [ ] Play/pause fonctionnel
 - [ ] Barre de progression visuelle
@@ -273,12 +299,14 @@ function formatTime(seconds: number): string {
 ---
 
 ### 5.4 Ajouter les contrôles play/pause
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Boutons stylisés pour contrôler la lecture audio, intégrés dans GameControls.
 
 **Implémentation**
+
 ```tsx
 // Dans GameControls.tsx
 <button
@@ -294,6 +322,7 @@ Boutons stylisés pour contrôler la lecture audio, intégrés dans GameControls
 ```
 
 **Icônes**
+
 ```tsx
 function PlayIcon({ className }: { className?: string }) {
   return (
@@ -313,6 +342,7 @@ function PauseIcon({ className }: { className?: string }) {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Boutons visuellement distincts
 - [ ] État play/pause reflété
 - [ ] Accessible au clavier
@@ -320,17 +350,20 @@ function PauseIcon({ className }: { className?: string }) {
 ---
 
 ### 5.5 Afficher la barre de progression audio
+
 **Priorité** : P1 (Important)
 
 **Description**
 Visualiser l'avancement de l'extrait avec une barre de progression animée.
 
 **Déjà inclus dans 5.3**, mais peut être amélioré avec :
+
 - Animation de pulsation
 - Changement de couleur proche de la fin
 - Indicateur de position cliquable (seeking)
 
 **Critères d'acceptation**
+
 - [ ] Barre se remplit en temps réel
 - [ ] Temps affiché en format mm:ss
 - [ ] Visuel agréable
@@ -338,12 +371,14 @@ Visualiser l'avancement de l'extrait avec une barre de progression animée.
 ---
 
 ### 5.6 Limiter la lecture à la durée configurée
+
 **Priorité** : P0 (Critique)
 
 **Description**
 L'extrait doit s'arrêter automatiquement après la durée configurée (ex: 20 secondes), même si la chanson est plus longue.
 
 **Déjà implémenté dans 5.3** via :
+
 ```tsx
 useEffect(() => {
   if (currentTime >= maxDuration) {
@@ -354,6 +389,7 @@ useEffect(() => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Arrêt automatique à maxDuration
 - [ ] Callback onEnded appelé
 - [ ] Pas de dépassement
@@ -361,6 +397,7 @@ useEffect(() => {
 ---
 
 ### 5.7 Créer le composant BuzzerButton
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -369,6 +406,7 @@ Gros bouton central pour buzzer. Doit être très visible et satisfaisant à pre
 **Fichier** : `src/components/game/BuzzerButton.tsx`
 
 **Implémentation**
+
 ```tsx
 'use client'
 
@@ -413,12 +451,14 @@ export function BuzzerButton({ onBuzz, disabled = false }: BuzzerButtonProps) {
 ```
 
 **Design**
+
 - Gros bouton rond rouge
 - Effet de glow
 - Animation au press (scale down)
 - Texte "BUZZ!" ou icône
 
 **Critères d'acceptation**
+
 - [ ] Bouton de grande taille (tactile friendly)
 - [ ] Effet visuel au clic
 - [ ] Vibration sur mobile
@@ -427,17 +467,20 @@ export function BuzzerButton({ onBuzz, disabled = false }: BuzzerButtonProps) {
 ---
 
 ### 5.8 Ajouter l'animation du buzzer
+
 **Priorité** : P1 (Important)
 
 **Description**
 Effets visuels supplémentaires quand quelqu'un buzze.
 
 **Effets suggérés**
+
 - Flash de l'écran
 - Onde de choc depuis le bouton
 - Son de buzzer (voir Epic 8)
 
 **Avec Framer Motion**
+
 ```tsx
 import { motion } from 'framer-motion'
 
@@ -452,6 +495,7 @@ import { motion } from 'framer-motion'
 ```
 
 **Critères d'acceptation**
+
 - [ ] Animation fluide
 - [ ] Feedback immédiat
 - [ ] Pas de lag perceptible
@@ -459,6 +503,7 @@ import { motion } from 'framer-motion'
 ---
 
 ### 5.9 Créer le composant Timer
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -467,6 +512,7 @@ Afficher le countdown de 5 secondes après un buzz.
 **Fichier** : `src/components/game/Timer.tsx`
 
 **Implémentation**
+
 ```tsx
 'use client'
 
@@ -511,22 +557,23 @@ export function Timer({ duration, remaining }: TimerProps) {
           />
         </svg>
         {/* Nombre */}
-        <div className={`absolute inset-0 flex items-center justify-center text-5xl font-bold ${
-          isUrgent ? 'text-red-500 animate-pulse' : 'text-white'
-        }`}>
+        <div
+          className={`absolute inset-0 flex items-center justify-center text-5xl font-bold ${
+            isUrgent ? 'text-red-500 animate-pulse' : 'text-white'
+          }`}
+        >
           {remaining}
         </div>
       </div>
 
-      <p className="text-lg text-purple-200">
-        Temps pour répondre...
-      </p>
+      <p className="text-lg text-purple-200">Temps pour répondre...</p>
     </div>
   )
 }
 ```
 
 **Critères d'acceptation**
+
 - [ ] Countdown visuel de 5 à 0
 - [ ] Cercle qui se vide
 - [ ] Indicateur d'urgence (rouge, clignotant)
@@ -534,18 +581,21 @@ export function Timer({ duration, remaining }: TimerProps) {
 ---
 
 ### 5.10 Ajouter l'animation du timer
+
 **Priorité** : P1 (Important)
 
 **Description**
 Rendre le timer plus dramatique avec des animations.
 
 **Effets**
+
 - Cercle qui se vide progressivement
 - Pulsation dans les dernières secondes
 - Changement de couleur (vert → jaune → rouge)
 - Son tick-tock (voir Epic 8)
 
 **Critères d'acceptation**
+
 - [ ] Animation fluide du cercle
 - [ ] Effet d'urgence visible
 - [ ] Pas de saccade
@@ -553,6 +603,7 @@ Rendre le timer plus dramatique avec des animations.
 ---
 
 ### 5.11 Créer le composant ScoreDisplay
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -561,6 +612,7 @@ Afficher le score actuel et le nombre de chansons jouées.
 **Fichier** : `src/components/game/ScoreDisplay.tsx`
 
 **Implémentation**
+
 ```tsx
 interface ScoreDisplayProps {
   score: number
@@ -575,7 +627,8 @@ export function ScoreDisplay({ score, songsPlayed }: ScoreDisplayProps) {
         <div className="text-2xl font-bold">{score}</div>
       </div>
       <div className="text-purple-300">
-        {songsPlayed} chanson{songsPlayed > 1 ? 's' : ''} jouée{songsPlayed > 1 ? 's' : ''}
+        {songsPlayed} chanson{songsPlayed > 1 ? 's' : ''} jouée
+        {songsPlayed > 1 ? 's' : ''}
       </div>
     </div>
   )
@@ -583,6 +636,7 @@ export function ScoreDisplay({ score, songsPlayed }: ScoreDisplayProps) {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Score affiché clairement
 - [ ] Nombre de chansons jouées
 - [ ] Design intégré au header
@@ -590,6 +644,7 @@ export function ScoreDisplay({ score, songsPlayed }: ScoreDisplayProps) {
 ---
 
 ### 5.12 Créer le composant SongReveal
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -598,6 +653,7 @@ Zone affichant la pochette (floue ou nette) et les informations de la chanson ap
 **Fichier** : `src/components/game/SongReveal.tsx`
 
 **Implémentation**
+
 ```tsx
 'use client'
 
@@ -658,6 +714,7 @@ export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Pochette affichée
 - [ ] Effet blur quand non révélé
 - [ ] Titre/artiste selon le mode
@@ -666,12 +723,14 @@ export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
 ---
 
 ### 5.13 Implémenter le blur de la pochette
+
 **Priorité** : P1 (Important)
 
 **Description**
 Flouter la pochette pendant le jeu pour ne pas donner d'indices visuels.
 
 **CSS**
+
 ```css
 .blur-xl {
   filter: blur(24px);
@@ -679,11 +738,13 @@ Flouter la pochette pendant le jeu pour ne pas donner d'indices visuels.
 ```
 
 **Transition**
+
 ```tsx
 className={`transition-all duration-500 ${isRevealed ? '' : 'blur-xl scale-110'}`}
 ```
 
 **Critères d'acceptation**
+
 - [ ] Pochette illisible quand floue
 - [ ] Transition fluide vers net
 - [ ] Performance OK (pas de lag)
@@ -691,35 +752,40 @@ className={`transition-all duration-500 ${isRevealed ? '' : 'blur-xl scale-110'}
 ---
 
 ### 5.14 Créer les boutons de validation
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Boutons pour que le MJ valide (correct) ou invalide (incorrect) la réponse orale.
 
 **Implémentation**
+
 ```tsx
 // Dans GameControls.tsx
-{(status === 'buzzed' || status === 'timer') && (
-  <div className="flex gap-4">
-    <button
-      onClick={() => onValidate(true)}
-      className="flex-1 py-4 px-6 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors"
-    >
-      <CheckIcon className="w-6 h-6" />
-      Correct
-    </button>
-    <button
-      onClick={() => onValidate(false)}
-      className="flex-1 py-4 px-6 bg-red-600 hover:bg-red-500 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors"
-    >
-      <XIcon className="w-6 h-6" />
-      Incorrect
-    </button>
-  </div>
-)}
+{
+  ;(status === 'buzzed' || status === 'timer') && (
+    <div className="flex gap-4">
+      <button
+        onClick={() => onValidate(true)}
+        className="flex-1 py-4 px-6 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors"
+      >
+        <CheckIcon className="w-6 h-6" />
+        Correct
+      </button>
+      <button
+        onClick={() => onValidate(false)}
+        className="flex-1 py-4 px-6 bg-red-600 hover:bg-red-500 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors"
+      >
+        <XIcon className="w-6 h-6" />
+        Incorrect
+      </button>
+    </div>
+  )
+}
 ```
 
 **Critères d'acceptation**
+
 - [ ] Bouton vert pour correct
 - [ ] Bouton rouge pour incorrect
 - [ ] Visibles uniquement après buzz
@@ -728,24 +794,29 @@ Boutons pour que le MJ valide (correct) ou invalide (incorrect) la réponse oral
 ---
 
 ### 5.15 Créer le bouton "Chanson suivante"
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Passer à la chanson suivante, visible après révélation.
 
 **Implémentation**
+
 ```tsx
-{status === 'reveal' && (
-  <button
-    onClick={onNext}
-    className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-bold text-lg"
-  >
-    Chanson suivante →
-  </button>
-)}
+{
+  status === 'reveal' && (
+    <button
+      onClick={onNext}
+      className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-bold text-lg"
+    >
+      Chanson suivante →
+    </button>
+  )
+}
 ```
 
 **Critères d'acceptation**
+
 - [ ] Visible uniquement en état REVEAL
 - [ ] Charge une nouvelle chanson
 - [ ] Design attractif
@@ -753,24 +824,30 @@ Passer à la chanson suivante, visible après révélation.
 ---
 
 ### 5.16 Créer le bouton "Révéler la réponse"
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Permettre de révéler la réponse manuellement sans passer par le système de buzz/validation.
 
 **Implémentation**
+
 ```tsx
-{(status === 'playing' || status === 'buzzed' || status === 'timer') && !isRevealed && (
-  <button
-    onClick={onReveal}
-    className="py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-purple-200"
-  >
-    Révéler la réponse
-  </button>
-)}
+{
+  ;(status === 'playing' || status === 'buzzed' || status === 'timer') &&
+    !isRevealed && (
+      <button
+        onClick={onReveal}
+        className="py-2 px-4 bg-white/10 hover:bg-white/20 rounded-lg text-purple-200"
+      >
+        Révéler la réponse
+      </button>
+    )
+}
 ```
 
 **Critères d'acceptation**
+
 - [ ] Visible pendant le jeu
 - [ ] Révèle sans donner de points
 - [ ] Permet de passer à la suite
@@ -778,12 +855,14 @@ Permettre de révéler la réponse manuellement sans passer par le système de b
 ---
 
 ### 5.17 Ajouter un bouton "Quitter la partie"
+
 **Priorité** : P1 (Important)
 
 **Description**
 Permettre de revenir à l'accueil avec une confirmation.
 
 **Implémentation**
+
 ```tsx
 const [showQuitConfirm, setShowQuitConfirm] = useState(false)
 
@@ -810,6 +889,7 @@ const [showQuitConfirm, setShowQuitConfirm] = useState(false)
 ```
 
 **Critères d'acceptation**
+
 - [ ] Confirmation avant de quitter
 - [ ] Retour à l'accueil
 - [ ] Modal stylisé
@@ -817,6 +897,7 @@ const [showQuitConfirm, setShowQuitConfirm] = useState(false)
 ---
 
 ### 5.18 Afficher le numéro de la chanson
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
@@ -825,18 +906,21 @@ Indiquer quelle chanson on joue (ex: "Chanson 5").
 **Déjà inclus dans ScoreDisplay** : `{songsPlayed} chansons jouées`
 
 **Critères d'acceptation**
+
 - [ ] Numéro visible
 - [ ] Mise à jour à chaque chanson
 
 ---
 
 ### 5.19 Créer le récap de fin de partie
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Écran final avec les statistiques de la partie quand on quitte.
 
 **Contenu**
+
 - Score final
 - Nombre de bonnes réponses
 - Nombre de chansons jouées
@@ -844,6 +928,7 @@ Indiquer quelle chanson on joue (ex: "Chanson 5").
 - Bouton "Nouvelle partie"
 
 **Critères d'acceptation**
+
 - [ ] Stats complètes affichées
 - [ ] Option de rejouer
 - [ ] Design festif (confettis si bon score)
@@ -873,4 +958,5 @@ Indiquer quelle chanson on joue (ex: "Chanson 5").
 - [ ] 5.19 Récap fin de partie
 
 ## Estimation
+
 ~6-8 heures de travail

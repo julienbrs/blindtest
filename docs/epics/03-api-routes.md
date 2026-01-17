@@ -1,9 +1,11 @@
 # Epic 3 : Backend - API Routes
 
 ## Objectif
+
 Créer les endpoints REST pour exposer la bibliothèque musicale, streamer les fichiers audio, et servir les pochettes d'album.
 
 ## Dépendances
+
 - Epic 1 et 2 terminés
 - Scanner audio fonctionnel
 
@@ -12,6 +14,7 @@ Créer les endpoints REST pour exposer la bibliothèque musicale, streamer les f
 ## Issues
 
 ### 3.1 Créer GET /api/songs
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -20,6 +23,7 @@ Endpoint qui retourne la liste complète des chansons avec leurs métadonnées.
 **Fichier** : `src/app/api/songs/route.ts`
 
 **Implémentation**
+
 ```typescript
 import { NextResponse } from 'next/server'
 import { getSongsCache } from '@/lib/audioScanner'
@@ -46,6 +50,7 @@ export async function GET() {
 ```
 
 **Réponse**
+
 ```json
 {
   "songs": [
@@ -65,6 +70,7 @@ export async function GET() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Retourne la liste des chansons en JSON
 - [ ] Inclut le count total
 - [ ] Gestion des erreurs avec status 500
@@ -73,6 +79,7 @@ export async function GET() {
 ---
 
 ### 3.2 Créer GET /api/songs/random
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -81,6 +88,7 @@ Endpoint qui retourne une chanson aléatoire, avec possibilité d'exclure certai
 **Fichier** : `src/app/api/songs/random/route.ts`
 
 **Implémentation**
+
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongsCache } from '@/lib/audioScanner'
@@ -103,7 +111,7 @@ export async function GET(request: NextRequest) {
     const excludeIds = excludeParam ? excludeParam.split(',') : []
 
     // Filtrer les chansons déjà jouées
-    const availableSongs = songs.filter(song => !excludeIds.includes(song.id))
+    const availableSongs = songs.filter((song) => !excludeIds.includes(song.id))
 
     if (availableSongs.length === 0) {
       return NextResponse.json(
@@ -129,15 +137,18 @@ export async function GET(request: NextRequest) {
 ```
 
 **Query Parameters**
+
 - `exclude` : IDs séparés par des virgules à exclure
 
 **Exemples**
+
 ```
 GET /api/songs/random
 GET /api/songs/random?exclude=abc123,def456,ghi789
 ```
 
 **Critères d'acceptation**
+
 - [ ] Retourne une chanson aléatoire
 - [ ] Support du paramètre `exclude`
 - [ ] Erreur 404 si aucune chanson disponible
@@ -146,6 +157,7 @@ GET /api/songs/random?exclude=abc123,def456,ghi789
 ---
 
 ### 3.3 Créer GET /api/songs/[id]
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -154,6 +166,7 @@ Endpoint qui retourne les détails d'une chanson spécifique par son ID.
 **Fichier** : `src/app/api/songs/[id]/route.ts`
 
 **Implémentation**
+
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongsCache } from '@/lib/audioScanner'
@@ -164,7 +177,7 @@ export async function GET(
 ) {
   try {
     const songs = await getSongsCache()
-    const song = songs.find(s => s.id === params.id)
+    const song = songs.find((s) => s.id === params.id)
 
     if (!song) {
       return NextResponse.json(
@@ -176,15 +189,13 @@ export async function GET(
     return NextResponse.json({ song })
   } catch (error) {
     console.error(`Erreur GET /api/songs/${params.id}:`, error)
-    return NextResponse.json(
-      { error: 'Erreur serveur' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
 ```
 
 **Critères d'acceptation**
+
 - [ ] Retourne la chanson si trouvée
 - [ ] Erreur 404 si ID inconnu
 - [ ] Validation du format de l'ID
@@ -192,6 +203,7 @@ export async function GET(
 ---
 
 ### 3.4 Créer GET /api/audio/[id]
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -200,6 +212,7 @@ Endpoint qui streame le fichier audio. Support des Range Requests pour le seekin
 **Fichier** : `src/app/api/audio/[id]/route.ts`
 
 **Implémentation**
+
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
 import { createReadStream, statSync } from 'fs'
@@ -220,10 +233,13 @@ export async function GET(
 ) {
   try {
     const songs = await getSongsCache()
-    const song = songs.find(s => s.id === params.id)
+    const song = songs.find((s) => s.id === params.id)
 
     if (!song) {
-      return NextResponse.json({ error: 'Chanson non trouvée' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Chanson non trouvée' },
+        { status: 404 }
+      )
     }
 
     const filePath = song.filePath
@@ -286,12 +302,14 @@ export async function GET(
 ```
 
 **Headers importants**
+
 - `Content-Type` : MIME type du fichier audio
 - `Content-Length` : Taille du fichier/chunk
 - `Accept-Ranges: bytes` : Indique le support des Range Requests
 - `Content-Range` : Pour les réponses 206 Partial Content
 
 **Critères d'acceptation**
+
 - [ ] Stream du fichier audio complet
 - [ ] Support des Range Requests (status 206)
 - [ ] MIME type correct selon le format
@@ -300,6 +318,7 @@ export async function GET(
 ---
 
 ### 3.5 Créer GET /api/cover/[id]
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -308,6 +327,7 @@ Endpoint qui retourne la pochette d'album d'une chanson.
 **Fichier** : `src/app/api/cover/[id]/route.ts`
 
 **Implémentation**
+
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongsCache, extractCover } from '@/lib/audioScanner'
@@ -325,10 +345,13 @@ export async function GET(
 ) {
   try {
     const songs = await getSongsCache()
-    const song = songs.find(s => s.id === params.id)
+    const song = songs.find((s) => s.id === params.id)
 
     if (!song) {
-      return NextResponse.json({ error: 'Chanson non trouvée' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Chanson non trouvée' },
+        { status: 404 }
+      )
     }
 
     const coverBuffer = await extractCover(song.filePath)
@@ -359,12 +382,16 @@ export async function GET(
     })
   } catch (error) {
     console.error(`Erreur GET /api/cover/${params.id}:`, error)
-    return NextResponse.json({ error: 'Erreur récupération pochette' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Erreur récupération pochette' },
+      { status: 500 }
+    )
   }
 }
 ```
 
 **Critères d'acceptation**
+
 - [ ] Retourne la pochette embedded si disponible
 - [ ] Fallback sur cover.jpg du dossier
 - [ ] Placeholder SVG si aucune pochette
@@ -373,22 +400,26 @@ export async function GET(
 ---
 
 ### 3.6 Gérer les Range Requests pour l'audio
+
 **Priorité** : P1 (Important)
 
 **Description**
 Les Range Requests permettent au navigateur de demander seulement une partie du fichier, nécessaire pour le seeking dans le lecteur audio.
 
 **Comportement**
+
 1. Client envoie `Range: bytes=0-` pour commencer
 2. Serveur répond `206 Partial Content` avec `Content-Range`
 3. Client peut demander d'autres ranges pour le seeking
 
 **Test**
+
 ```bash
 curl -I -H "Range: bytes=0-1023" http://localhost:3000/api/audio/abc123
 ```
 
 **Réponse attendue**
+
 ```
 HTTP/1.1 206 Partial Content
 Content-Range: bytes 0-1023/5242880
@@ -398,6 +429,7 @@ Accept-Ranges: bytes
 ```
 
 **Critères d'acceptation**
+
 - [ ] Header Range parsé correctement
 - [ ] Status 206 pour les requêtes partielles
 - [ ] Content-Range header correct
@@ -406,12 +438,14 @@ Accept-Ranges: bytes
 ---
 
 ### 3.7 Ajouter les headers CORS appropriés
+
 **Priorité** : P1 (Important)
 
 **Description**
 Si l'application est accédée depuis un domaine différent (ex: téléphones en mode multi), configurer CORS.
 
 **Configuration** : `next.config.js`
+
 ```javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -423,7 +457,10 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Range' },
-          { key: 'Access-Control-Expose-Headers', value: 'Content-Range, Accept-Ranges' },
+          {
+            key: 'Access-Control-Expose-Headers',
+            value: 'Content-Range, Accept-Ranges',
+          },
         ],
       },
     ]
@@ -436,6 +473,7 @@ module.exports = nextConfig
 **Note** : En production, remplacer `*` par les domaines autorisés.
 
 **Critères d'acceptation**
+
 - [ ] CORS configuré dans next.config.js
 - [ ] Requêtes cross-origin fonctionnent
 - [ ] Headers exposés pour Range Requests
@@ -443,6 +481,7 @@ module.exports = nextConfig
 ---
 
 ### 3.8 Créer GET /api/stats
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
@@ -451,6 +490,7 @@ Endpoint qui retourne des statistiques sur la bibliothèque.
 **Fichier** : `src/app/api/stats/route.ts`
 
 **Implémentation**
+
 ```typescript
 import { NextResponse } from 'next/server'
 import { getSongsCache, getCacheInfo } from '@/lib/audioScanner'
@@ -461,12 +501,15 @@ export async function GET() {
     const cacheInfo = getCacheInfo()
 
     // Calculer les stats
-    const artists = new Set(songs.map(s => s.artist))
-    const albums = new Set(songs.filter(s => s.album).map(s => s.album))
-    const formats = songs.reduce((acc, s) => {
-      acc[s.format] = (acc[s.format] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const artists = new Set(songs.map((s) => s.artist))
+    const albums = new Set(songs.filter((s) => s.album).map((s) => s.album))
+    const formats = songs.reduce(
+      (acc, s) => {
+        acc[s.format] = (acc[s.format] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     const totalDuration = songs.reduce((sum, s) => sum + s.duration, 0)
 
@@ -477,7 +520,7 @@ export async function GET() {
       totalDuration: Math.round(totalDuration),
       totalDurationFormatted: formatDuration(totalDuration),
       formats,
-      songsWithCover: songs.filter(s => s.hasCover).length,
+      songsWithCover: songs.filter((s) => s.hasCover).length,
       lastScan: cacheInfo.lastScan,
     })
   } catch (error) {
@@ -494,6 +537,7 @@ function formatDuration(seconds: number): string {
 ```
 
 **Réponse**
+
 ```json
 {
   "totalSongs": 150,
@@ -508,6 +552,7 @@ function formatDuration(seconds: number): string {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Stats calculées correctement
 - [ ] Durée formatée lisible
 - [ ] Répartition par format
@@ -515,22 +560,28 @@ function formatDuration(seconds: number): string {
 ---
 
 ### 3.9 Optimiser le streaming audio
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Améliorer les performances du streaming pour les grandes bibliothèques et les connexions lentes.
 
 **Optimisations**
+
 1. **Chunked streaming** : Ne pas charger tout le fichier en mémoire
 2. **Buffer approprié** : Chunks de 64KB
 3. **Early hints** : Envoyer les headers avant le body
 
 **Implémentation alternative avec streaming pur**
+
 ```typescript
 import { createReadStream, statSync } from 'fs'
 import { Readable } from 'stream'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   // ... validation ...
 
   const stream = createReadStream(filePath)
@@ -546,6 +597,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 ```
 
 **Critères d'acceptation**
+
 - [ ] Mémoire stable même avec gros fichiers
 - [ ] Pas de timeout sur fichiers lents
 - [ ] Compatible avec tous les navigateurs
@@ -553,6 +605,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 ---
 
 ### 3.10 Créer POST /api/songs/rescan
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
@@ -561,6 +614,7 @@ Endpoint pour forcer un re-scan de la bibliothèque musicale.
 **Fichier** : `src/app/api/songs/rescan/route.ts`
 
 **Implémentation**
+
 ```typescript
 import { NextResponse } from 'next/server'
 import { refreshCache, getCacheInfo } from '@/lib/audioScanner'
@@ -592,6 +646,7 @@ export async function POST() {
 En production, protéger cet endpoint (token, IP whitelist, etc.)
 
 **Critères d'acceptation**
+
 - [ ] Déclenche un nouveau scan
 - [ ] Retourne le nombre de chansons
 - [ ] Indique la durée du scan
@@ -612,4 +667,5 @@ En production, protéger cet endpoint (token, IP whitelist, etc.)
 - [ ] 3.10 POST /api/songs/rescan
 
 ## Estimation
+
 ~3-4 heures de travail

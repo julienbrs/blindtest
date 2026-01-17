@@ -9,15 +9,17 @@ Read detailed specifications for each issue in the referenced epic file.
 These issues must run before feedback loops (Husky, Vitest) can be set up.
 
 ### Epic 1: Setup (docs/epics/01-setup.md)
+
 - [x] 1.1 Initialiser le projet Next.js
 - [x] 1.2 Configurer Tailwind CSS
 - [x] 1.3 Définir la palette de couleurs festive
 - [x] 1.4 Configurer les fonts
 - [x] 1.5 Créer la structure des dossiers
 - [x] 1.6 Configurer les variables d'environnement
-- [ ] 1.7 Configurer ESLint et Prettier
+- [x] 1.7 Configurer ESLint et Prettier
 
 ### Feedback Loop Setup
+
 - [ ] BOOTSTRAP.FEEDBACK: Install Vitest, Husky, lint-staged and configure pre-commit hooks
 
 After this task, all subsequent issues run with full feedback loops.
@@ -27,9 +29,11 @@ After this task, all subsequent issues run with full feedback loops.
 ## Main Phase (With feedback loops: typecheck, test, lint)
 
 ### Epic 1: Setup - Continued (docs/epics/01-setup.md)
+
 - [ ] 1.8 Créer le fichier de types global
 
 ### Epic 2: Backend Audio (docs/epics/02-backend-audio.md)
+
 - [ ] 2.1 Installer music-metadata
 - [ ] 2.2 Créer le scanner de dossier audio
 - [ ] 2.3 Extraire les métadonnées ID3
@@ -42,6 +46,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 2.10 Ajouter un endpoint de rafraîchissement du cache
 
 ### Epic 3: API Routes (docs/epics/03-api-routes.md)
+
 - [ ] 3.1 Créer GET /api/songs
 - [ ] 3.2 Créer GET /api/songs/random
 - [ ] 3.3 Créer GET /api/songs/[id]
@@ -54,6 +59,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 3.10 Créer POST /api/songs/rescan
 
 ### Epic 4: Homepage (docs/epics/04-homepage.md)
+
 - [ ] 4.1 Créer le layout principal
 - [ ] 4.2 Designer la page d'accueil
 - [ ] 4.3 Créer le formulaire de configuration
@@ -66,6 +72,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 4.10 Créer une animation d'entrée
 
 ### Epic 5: Game Screen (docs/epics/05-game-screen.md)
+
 - [ ] 5.1 Créer la page /game
 - [ ] 5.2 Implémenter le layout de jeu
 - [ ] 5.3 Créer le composant AudioPlayer
@@ -87,6 +94,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 5.19 Créer le récap de fin de partie
 
 ### Epic 6: Game Logic (docs/epics/06-game-logic.md)
+
 - [ ] 6.1 Créer le hook useGameState
 - [ ] 6.2 Définir les états du jeu
 - [ ] 6.3 Implémenter la transition IDLE → LOADING
@@ -104,6 +112,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 6.15 Ajouter un mode "rejouer la même chanson"
 
 ### Epic 7: UI/UX (docs/epics/07-ui-ux.md)
+
 - [ ] 7.1 Créer le fond d'écran festif
 - [ ] 7.2 Styliser les boutons principaux
 - [ ] 7.3 Ajouter des ombres et profondeur
@@ -116,6 +125,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 7.10 Ajouter des particules de fond
 
 ### Epic 8: Sound Effects (docs/epics/08-sound-effects.md)
+
 - [ ] 8.1 Ajouter un son de buzzer
 - [ ] 8.2 Ajouter un son de bonne réponse
 - [ ] 8.3 Ajouter un son de mauvaise réponse
@@ -126,6 +136,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 8.8 Gérer le volume principal
 
 ### Epic 9: Responsive (docs/epics/09-responsive.md)
+
 - [ ] 9.1 Adapter le layout pour mobile
 - [ ] 9.2 Agrandir les zones tactiles
 - [ ] 9.3 Tester sur différentes tailles d'écran
@@ -136,6 +147,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 9.8 Tester la lecture audio sur iOS Safari
 
 ### Epic 10: Error Handling (docs/epics/10-error-handling.md)
+
 - [ ] 10.1 Gérer l'erreur "dossier audio vide"
 - [ ] 10.2 Gérer l'erreur "fichier audio introuvable"
 - [ ] 10.3 Gérer l'erreur réseau
@@ -146,6 +158,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 10.8 Logger les erreurs côté serveur
 
 ### Epic 11: Configuration (docs/epics/11-configuration.md)
+
 - [ ] 11.1 Permettre de configurer le chemin audio
 - [ ] 11.2 Permettre de changer le timer (pas que 5s)
 - [ ] 11.3 Ajouter un mode "sans timer"
@@ -154,6 +167,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 11.6 Créer des playlists personnalisées
 
 ### Epic 12: Testing (docs/epics/12-testing.md)
+
 - [ ] 12.1 Tester le scan de fichiers audio
 - [ ] 12.2 Tester les API routes
 - [ ] 12.3 Tester la machine d'état du jeu
@@ -163,6 +177,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 12.7 Ajouter des tests E2E
 
 ### Epic 13: Deployment (docs/epics/13-deployment.md)
+
 - [ ] 13.1 Créer le script de build
 - [ ] 13.2 Configurer le démarrage en production
 - [ ] 13.3 Documenter l'installation sur NAS

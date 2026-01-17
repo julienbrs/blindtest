@@ -1,9 +1,11 @@
 # Epic 10 : Gestion des erreurs et edge cases
 
 ## Objectif
+
 Gérer gracieusement toutes les situations d'erreur possibles pour une expérience utilisateur robuste.
 
 ## Dépendances
+
 - Application fonctionnelle (Epics 1-6)
 
 ---
@@ -11,12 +13,14 @@ Gérer gracieusement toutes les situations d'erreur possibles pour une expérien
 ## Issues
 
 ### 10.1 Gérer l'erreur "dossier audio vide"
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Afficher un message clair si la bibliothèque musicale est vide ou si le chemin est invalide.
 
 **Détection**
+
 ```typescript
 // Dans /api/songs
 const songs = await getSongsCache()
@@ -29,6 +33,7 @@ if (songs.length === 0) {
 ```
 
 **UI**
+
 ```tsx
 function EmptyLibraryError() {
   return (
@@ -36,12 +41,14 @@ function EmptyLibraryError() {
       <div className="text-6xl mb-4">🎵</div>
       <h2 className="text-2xl font-bold mb-2">Aucune chanson trouvée</h2>
       <p className="text-purple-300 mb-6 max-w-md">
-        Vérifiez que le chemin vers votre bibliothèque musicale est correct
-        et que le dossier contient des fichiers audio (MP3, FLAC, OGG, WAV).
+        Vérifiez que le chemin vers votre bibliothèque musicale est correct et
+        que le dossier contient des fichiers audio (MP3, FLAC, OGG, WAV).
       </p>
       <div className="bg-white/10 rounded-lg p-4 text-left font-mono text-sm">
         <p className="text-purple-400">Chemin configuré :</p>
-        <p className="text-white">{process.env.AUDIO_FOLDER_PATH || 'Non défini'}</p>
+        <p className="text-white">
+          {process.env.AUDIO_FOLDER_PATH || 'Non défini'}
+        </p>
       </div>
       <button
         onClick={() => window.location.reload()}
@@ -55,6 +62,7 @@ function EmptyLibraryError() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Message clair et utile
 - [ ] Affiche le chemin configuré
 - [ ] Bouton pour réessayer
@@ -63,12 +71,14 @@ function EmptyLibraryError() {
 ---
 
 ### 10.2 Gérer l'erreur "fichier audio introuvable"
+
 **Priorité** : P1 (Important)
 
 **Description**
 Si un fichier a été déplacé/supprimé depuis le scan, gérer gracieusement.
 
 **Détection**
+
 ```typescript
 // Dans /api/audio/[id]
 try {
@@ -85,6 +95,7 @@ try {
 ```
 
 **Comportement**
+
 1. Logger l'erreur côté serveur
 2. Retourner 404
 3. Côté client : skip automatique vers la chanson suivante
@@ -101,10 +112,12 @@ async function loadRandomSong() {
   }
 
   // Vérifier que le fichier est lisible
-  const audioTest = await fetch(`/api/audio/${data.song.id}`, { method: 'HEAD' })
+  const audioTest = await fetch(`/api/audio/${data.song.id}`, {
+    method: 'HEAD',
+  })
   if (!audioTest.ok) {
     // Fichier introuvable, exclure et réessayer
-    setExcludeIds(prev => [...prev, data.song.id])
+    setExcludeIds((prev) => [...prev, data.song.id])
     loadRandomSong()
     return
   }
@@ -114,6 +127,7 @@ async function loadRandomSong() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Skip automatique si fichier manquant
 - [ ] Log de l'erreur
 - [ ] Pas de blocage du jeu
@@ -121,14 +135,19 @@ async function loadRandomSong() {
 ---
 
 ### 10.3 Gérer l'erreur réseau
+
 **Priorité** : P1 (Important)
 
 **Description**
 Gérer les cas où le serveur ne répond pas ou la connexion est perdue.
 
 **Détection**
+
 ```typescript
-async function fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
+async function fetchWithTimeout(
+  url: string,
+  timeout = 10000
+): Promise<Response> {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeout)
 
@@ -147,6 +166,7 @@ async function fetchWithTimeout(url: string, timeout = 10000): Promise<Response>
 ```
 
 **UI - Toast d'erreur**
+
 ```tsx
 function NetworkErrorToast({ onRetry }: { onRetry: () => void }) {
   return (
@@ -172,6 +192,7 @@ function NetworkErrorToast({ onRetry }: { onRetry: () => void }) {
 ```
 
 **Retry automatique**
+
 ```typescript
 async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
   for (let i = 0; i < retries; i++) {
@@ -180,7 +201,7 @@ async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
       if (res.ok) return res
     } catch (error) {
       if (i === retries - 1) throw error
-      await new Promise(r => setTimeout(r, 1000 * (i + 1))) // Backoff
+      await new Promise((r) => setTimeout(r, 1000 * (i + 1))) // Backoff
     }
   }
   throw new Error('MAX_RETRIES')
@@ -188,6 +209,7 @@ async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Timeout après 10s
 - [ ] Retry automatique (3 tentatives)
 - [ ] Message d'erreur clair
@@ -196,16 +218,20 @@ async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
 ---
 
 ### 10.4 Gérer le navigateur sans support audio
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Détecter si le navigateur ne supporte pas l'API Audio HTML5.
 
 **Détection**
+
 ```typescript
 function checkAudioSupport(): boolean {
   const audio = document.createElement('audio')
-  return !!(audio.canPlayType && audio.canPlayType('audio/mpeg').replace(/no/, ''))
+  return !!(
+    audio.canPlayType && audio.canPlayType('audio/mpeg').replace(/no/, '')
+  )
 }
 
 // Au chargement
@@ -213,24 +239,26 @@ useEffect(() => {
   if (!checkAudioSupport()) {
     setError({
       type: 'BROWSER_UNSUPPORTED',
-      message: 'Votre navigateur ne supporte pas la lecture audio.'
+      message: 'Votre navigateur ne supporte pas la lecture audio.',
     })
   }
 }, [])
 ```
 
 **UI**
+
 ```tsx
 <div className="text-center p-8">
   <h2 className="text-2xl font-bold text-red-400">Navigateur non supporté</h2>
   <p className="mt-4">
-    Votre navigateur ne supporte pas la lecture audio HTML5.
-    Veuillez utiliser un navigateur moderne comme Chrome, Firefox, Safari ou Edge.
+    Votre navigateur ne supporte pas la lecture audio HTML5. Veuillez utiliser
+    un navigateur moderne comme Chrome, Firefox, Safari ou Edge.
   </p>
 </div>
 ```
 
 **Critères d'acceptation**
+
 - [ ] Détection au chargement
 - [ ] Message explicatif
 - [ ] Suggestion de navigateurs
@@ -238,12 +266,14 @@ useEffect(() => {
 ---
 
 ### 10.5 Ajouter un état de chargement global
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Afficher un spinner ou écran de chargement pendant le scan initial de la bibliothèque.
 
 **Implémentation**
+
 ```tsx
 function LoadingScreen() {
   return (
@@ -268,6 +298,7 @@ function HomePage() {
 ```
 
 **Variante avec progression**
+
 ```tsx
 function LoadingScreenWithProgress({ progress }: { progress: number }) {
   return (
@@ -278,15 +309,14 @@ function LoadingScreenWithProgress({ progress }: { progress: number }) {
           style={{ width: `${progress}%` }}
         />
       </div>
-      <p className="mt-4 text-purple-300">
-        Scan en cours... {progress}%
-      </p>
+      <p className="mt-4 text-purple-300">Scan en cours... {progress}%</p>
     </div>
   )
 }
 ```
 
 **Critères d'acceptation**
+
 - [ ] Spinner visible pendant le chargement
 - [ ] Message explicatif
 - [ ] Pas de flash de contenu vide
@@ -294,12 +324,14 @@ function LoadingScreenWithProgress({ progress }: { progress: number }) {
 ---
 
 ### 10.6 Gérer la perte de focus de la page
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Mettre en pause automatiquement quand l'utilisateur change d'onglet.
 
 **Implémentation**
+
 ```typescript
 useEffect(() => {
   const handleVisibilityChange = () => {
@@ -314,16 +346,19 @@ useEffect(() => {
   }
 
   document.addEventListener('visibilitychange', handleVisibilityChange)
-  return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  return () =>
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
 }, [state.status])
 ```
 
 **Comportement suggéré**
+
 - Pause automatique quand on quitte l'onglet
 - NE PAS reprendre automatiquement (pour éviter les surprises)
 - Afficher un message "Partie en pause"
 
 **Critères d'acceptation**
+
 - [ ] Pause quand onglet inactif
 - [ ] Timer également pausé
 - [ ] Reprise manuelle requise
@@ -331,12 +366,14 @@ useEffect(() => {
 ---
 
 ### 10.7 Ajouter des messages d'erreur user-friendly
+
 **Priorité** : P1 (Important)
 
 **Description**
 Système de notification (toast) pour afficher les erreurs de manière non-intrusive.
 
 **Hook useToast**
+
 ```typescript
 interface Toast {
   id: string
@@ -381,22 +418,26 @@ export const useToast = () => useContext(ToastContext)
 ```
 
 **ToastContainer**
+
 ```tsx
 function ToastContainer({ toasts, onRemove }) {
   return (
     <div className="fixed bottom-4 right-4 space-y-2 z-50">
       <AnimatePresence>
-        {toasts.map(toast => (
+        {toasts.map((toast) => (
           <motion.div
             key={toast.id}
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             className={`p-4 rounded-lg shadow-xl ${
-              toast.type === 'error' ? 'bg-red-600' :
-              toast.type === 'success' ? 'bg-green-600' :
-              toast.type === 'warning' ? 'bg-yellow-600' :
-              'bg-blue-600'
+              toast.type === 'error'
+                ? 'bg-red-600'
+                : toast.type === 'success'
+                  ? 'bg-green-600'
+                  : toast.type === 'warning'
+                    ? 'bg-yellow-600'
+                    : 'bg-blue-600'
             }`}
           >
             <p>{toast.message}</p>
@@ -409,6 +450,7 @@ function ToastContainer({ toasts, onRemove }) {
 ```
 
 **Usage**
+
 ```tsx
 const { addToast } = useToast()
 
@@ -417,12 +459,13 @@ try {
 } catch (error) {
   addToast({
     type: 'error',
-    message: 'Impossible de charger la chanson. Réessai en cours...'
+    message: 'Impossible de charger la chanson. Réessai en cours...',
   })
 }
 ```
 
 **Critères d'acceptation**
+
 - [ ] Toasts pour erreurs, succès, warnings
 - [ ] Auto-dismiss après 5s
 - [ ] Animation d'entrée/sortie
@@ -431,24 +474,32 @@ try {
 ---
 
 ### 10.8 Logger les erreurs côté serveur
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Enregistrer les erreurs pour faciliter le debug.
 
 **Implémentation simple**
+
 ```typescript
 function logError(context: string, error: unknown) {
   const timestamp = new Date().toISOString()
   const message = error instanceof Error ? error.message : String(error)
   const stack = error instanceof Error ? error.stack : undefined
 
-  console.error(JSON.stringify({
-    timestamp,
-    context,
-    message,
-    stack,
-  }, null, 2))
+  console.error(
+    JSON.stringify(
+      {
+        timestamp,
+        context,
+        message,
+        stack,
+      },
+      null,
+      2
+    )
+  )
 }
 
 // Usage dans les API routes
@@ -463,6 +514,7 @@ export async function GET(request: NextRequest) {
 ```
 
 **Format de log**
+
 ```json
 {
   "timestamp": "2024-01-17T10:30:00.000Z",
@@ -473,6 +525,7 @@ export async function GET(request: NextRequest) {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Erreurs loggées avec timestamp
 - [ ] Contexte (endpoint) inclus
 - [ ] Stack trace pour debug
@@ -492,4 +545,5 @@ export async function GET(request: NextRequest) {
 - [ ] 10.8 Logging serveur
 
 ## Estimation
+
 ~2-3 heures de travail
