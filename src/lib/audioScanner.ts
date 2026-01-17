@@ -1,8 +1,10 @@
 // Audio scanning utilities - Epic 2
 // music-metadata library for reading ID3 tags from audio files
 import { parseFile, type IAudioMetadata } from 'music-metadata'
+import { createHash } from 'crypto'
 import { readdir, stat } from 'fs/promises'
-import { join, extname } from 'path'
+import { join, extname, basename } from 'path'
+import type { Song, AudioFormat } from './types'
 
 // Export parseFile and IAudioMetadata for use in other modules
 export { parseFile, type IAudioMetadata }
@@ -82,4 +84,73 @@ export async function scanAudioFolder(folderPath: string): Promise<string[]> {
  */
 export function getSupportedExtensions(): string[] {
   return [...SUPPORTED_EXTENSIONS]
+}
+
+/**
+ * Parses a filename in "Artist - Title" format
+ * @param fileName - The file name without extension
+ * @returns Object with optional artist and title
+ */
+export function parseFileName(fileName: string): {
+  artist?: string
+  title?: string
+} {
+  // Format: "Artist - Title" (with possible multiple dashes in title)
+  const parts = fileName.split(' - ')
+  if (parts.length >= 2) {
+    return {
+      artist: parts[0].trim(),
+      title: parts.slice(1).join(' - ').trim(),
+    }
+  }
+
+  // Format: "Title" only (no separator found)
+  return { title: fileName.trim() }
+}
+
+/**
+ * Generates a unique ID for a song based on its file path
+ * @param filePath - The absolute path to the audio file
+ * @returns A 12-character hex string
+ */
+export function generateSongId(filePath: string): string {
+  return createHash('md5').update(filePath).digest('hex').slice(0, 12)
+}
+
+/**
+ * Extracts metadata from an audio file
+ * @param filePath - The absolute path to the audio file
+ * @returns Song object or null if extraction fails
+ */
+export async function extractMetadata(filePath: string): Promise<Song | null> {
+  try {
+    const metadata = await parseFile(filePath)
+
+    // Generate a unique ID based on the file path
+    const id = generateSongId(filePath)
+
+    // Extract the format from the file extension
+    const ext = extname(filePath).toLowerCase().slice(1) as AudioFormat
+
+    // Fallback on filename if no metadata present
+    const fileName = basename(filePath, extname(filePath))
+    const { artist: parsedArtist, title: parsedTitle } = parseFileName(fileName)
+
+    return {
+      id,
+      title: metadata.common.title || parsedTitle || 'Titre inconnu',
+      artist: metadata.common.artist || parsedArtist || 'Artiste inconnu',
+      album: metadata.common.album,
+      year: metadata.common.year,
+      duration: metadata.format.duration || 0,
+      filePath,
+      format: ext,
+      hasCover: !!(
+        metadata.common.picture && metadata.common.picture.length > 0
+      ),
+    }
+  } catch (error) {
+    console.error(`Erreur lecture métadonnées: ${filePath}`, error)
+    return null
+  }
 }

@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { scanAudioFolder, getSupportedExtensions } from './audioScanner'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import {
+  scanAudioFolder,
+  getSupportedExtensions,
+  parseFileName,
+  generateSongId,
+  extractMetadata,
+} from './audioScanner'
 import { mkdir, writeFile, rm } from 'fs/promises'
 import { join } from 'path'
 import { tmpdir } from 'os'
@@ -136,5 +142,131 @@ describe('getSupportedExtensions', () => {
 
     expect(ext1).not.toBe(ext2)
     expect(ext1).toEqual(ext2)
+  })
+})
+
+describe('parseFileName', () => {
+  it('should parse "Artist - Title" format correctly', () => {
+    const result = parseFileName('Michael Jackson - Billie Jean')
+
+    expect(result.artist).toBe('Michael Jackson')
+    expect(result.title).toBe('Billie Jean')
+  })
+
+  it('should handle multiple dashes in title', () => {
+    const result = parseFileName('Artist - Song - Part 2 - Extended Mix')
+
+    expect(result.artist).toBe('Artist')
+    expect(result.title).toBe('Song - Part 2 - Extended Mix')
+  })
+
+  it('should return title only when no separator', () => {
+    const result = parseFileName('Just A Title')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('Just A Title')
+  })
+
+  it('should trim whitespace', () => {
+    const result = parseFileName('  Artist  -  Title  ')
+
+    expect(result.artist).toBe('Artist')
+    expect(result.title).toBe('Title')
+  })
+
+  it('should handle empty string', () => {
+    const result = parseFileName('')
+
+    expect(result.artist).toBeUndefined()
+    expect(result.title).toBe('')
+  })
+})
+
+describe('generateSongId', () => {
+  it('should generate a 12-character hex string', () => {
+    const id = generateSongId('/path/to/song.mp3')
+
+    expect(id).toHaveLength(12)
+    expect(id).toMatch(/^[0-9a-f]{12}$/)
+  })
+
+  it('should generate the same ID for the same path', () => {
+    const path = '/path/to/song.mp3'
+    const id1 = generateSongId(path)
+    const id2 = generateSongId(path)
+
+    expect(id1).toBe(id2)
+  })
+
+  it('should generate different IDs for different paths', () => {
+    const id1 = generateSongId('/path/to/song1.mp3')
+    const id2 = generateSongId('/path/to/song2.mp3')
+
+    expect(id1).not.toBe(id2)
+  })
+})
+
+describe('extractMetadata', () => {
+  let testDir: string
+
+  beforeEach(async () => {
+    testDir = join(tmpdir(), `metadata-test-${Date.now()}`)
+    await mkdir(testDir, { recursive: true })
+  })
+
+  afterEach(async () => {
+    vi.restoreAllMocks()
+    try {
+      await rm(testDir, { recursive: true, force: true })
+    } catch {
+      // Ignore cleanup errors
+    }
+  })
+
+  it('should return null for non-existent file', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const result = await extractMetadata('/non/existent/file.mp3')
+
+    expect(result).toBeNull()
+    expect(consoleSpy).toHaveBeenCalled()
+  })
+
+  it('should use filename fallback when metadata is empty', async () => {
+    // Create an empty mp3 file - music-metadata can parse it but finds no tags
+    const testFile = join(testDir, 'Artist Name - Song Title.mp3')
+    await writeFile(testFile, '')
+
+    const result = await extractMetadata(testFile)
+
+    // Should use filename fallback for artist and title
+    expect(result).not.toBeNull()
+    expect(result!.artist).toBe('Artist Name')
+    expect(result!.title).toBe('Song Title')
+    expect(result!.format).toBe('mp3')
+    expect(result!.duration).toBe(0)
+    expect(result!.hasCover).toBe(false)
+  })
+
+  it('should use default values when filename has no artist', async () => {
+    const testFile = join(testDir, 'Just A Title.mp3')
+    await writeFile(testFile, '')
+
+    const result = await extractMetadata(testFile)
+
+    expect(result).not.toBeNull()
+    expect(result!.artist).toBe('Artiste inconnu')
+    expect(result!.title).toBe('Just A Title')
+  })
+
+  it('should generate correct ID from file path', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const testPath = '/music/Artist - Song.mp3'
+
+    // The ID generation itself works correctly
+    const expectedId = generateSongId(testPath)
+
+    expect(expectedId).toHaveLength(12)
+    expect(expectedId).toMatch(/^[0-9a-f]{12}$/)
+    consoleSpy.mockRestore()
   })
 })

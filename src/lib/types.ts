@@ -14,7 +14,7 @@ export interface Song {
   hasCover: boolean // Si une pochette est disponible
 }
 
-export type AudioFormat = 'mp3' | 'wav' | 'ogg' | 'flac'
+export type AudioFormat = 'mp3' | 'wav' | 'ogg' | 'flac' | 'm4a' | 'aac'
 
 // ============================================
 // Types pour la configuration de partie
