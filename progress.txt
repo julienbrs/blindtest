@@ -436,3 +436,10 @@ Commit: 1c75730
 Notes: Implemented LOADING → PLAYING transition with automatic playback start when audio is ready. Added onReady callback prop to AudioPlayer component that triggers with songId when canplay event fires. Added audioReadyForSongId state in game page to track which song's audio is ready (prevents race conditions when loading new songs). Created effect that transitions to PLAYING state when audio is ready and song matches. All 326 tests pass.
 Files: src/components/game/AudioPlayer.tsx, src/components/game/AudioPlayer.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
 
+=== Issue 6.5: Implémenter la transition PLAYING → BUZZED ===
+Timestamp: 2026-01-17T23:52:00Z
+Status: COMPLETED
+Commit: e1ddf03
+Notes: Implemented PLAYING → TIMER transition when buzzer is pressed. Updated BUZZ action type to include timerDuration parameter for proper timer reset. Audio automatically pauses since isPlaying is derived from status === 'playing'. Added 4 new comprehensive tests for buzz behavior: timer reset, buzz ignored in non-playing states (reveal, timer). Buzz goes directly to timer state (no intermediate buzzed state as per implementation). All 330 tests pass.
+Files: src/lib/types.ts, src/hooks/useGameState.ts, src/hooks/useGameState.test.ts
+
