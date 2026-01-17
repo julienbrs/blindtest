@@ -60,7 +60,7 @@ Files: package.json, vitest.config.ts, .husky/pre-commit, .lintstagedrc, src/tes
 === Issue 1.8: Créer le fichier de types global ===
 Timestamp: 2026-01-17T17:50:00Z
 Status: COMPLETED
-Commit: pending
+Commit: dc08362
 Notes: Created complete TypeScript types in src/lib/types.ts. Defined Song, AudioFormat, GameConfig, GuessMode, GameState, GameStatus, ApiResponse, SongsListResponse, RandomSongResponse, and GameAction types. All types exported and usable throughout the project.
 Files: src/lib/types.ts
 
