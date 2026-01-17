@@ -254,3 +254,10 @@ Commit: 11413b7
 Notes: Added form validation to GameConfigForm component. Implemented validateForm async function that checks: 1) At least one song exists in the library by fetching /api/songs, 2) Clip duration is within valid range (5-60 seconds). Added validationError state and styled error display with red background. Made handleSubmit async to await validation before redirecting. If validation fails, form submission is blocked and error message is displayed. All 141 tests pass.
 Files: src/components/game/GameConfigForm.tsx
 
+=== Issue 4.8: Persister la configuration ===
+Timestamp: 2026-01-17T19:45:00Z
+Status: COMPLETED
+Commit: b48caa3
+Notes: Added localStorage persistence for game configuration (guessMode, clipDuration). Created loadSavedConfig helper function to load and validate saved config on mount. Added handleGuessModeChange and handleClipDurationChange callback handlers that save to localStorage immediately on every change. Validates guessMode against valid values and clipDuration against valid range (5-60, step 5). Invalid or corrupted localStorage data is gracefully ignored and defaults are used. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
