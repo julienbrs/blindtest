@@ -86,7 +86,12 @@ describe('Timer', () => {
 
     it('displays urgency text when critical', () => {
       render(<Timer duration={5} remaining={1} />)
-      expect(screen.getByText('Vite !')).toBeInTheDocument()
+      expect(screen.getByText('VITE !')).toBeInTheDocument()
+    })
+
+    it('displays warning text when warning (3-2s remaining)', () => {
+      render(<Timer duration={5} remaining={2} />)
+      expect(screen.getByText('Dépêchez-vous !')).toBeInTheDocument()
     })
 
     it('renders a circular progress indicator', () => {
@@ -126,36 +131,50 @@ describe('Timer', () => {
     })
   })
 
-  describe('color transitions', () => {
-    it('uses green color when progress is above 60%', () => {
-      const { container } = render(<Timer duration={10} remaining={8} />) // 80%
+  describe('color transitions based on absolute seconds', () => {
+    it('uses green color when remaining > 5 seconds', () => {
+      const { container } = render(<Timer duration={10} remaining={8} />)
       const progressCircle = getProgressCircle(container)
       const animateData = getAnimateData(progressCircle)
       expect(animateData.stroke).toBe('#22c55e') // green-500
     })
 
-    it('uses yellow color when progress is between 30-60%', () => {
-      const { container } = render(<Timer duration={10} remaining={5} />) // 50%
+    it('uses yellow color when remaining is 5-4 seconds (attention)', () => {
+      const { container } = render(<Timer duration={10} remaining={5} />)
       const progressCircle = getProgressCircle(container)
       const animateData = getAnimateData(progressCircle)
       expect(animateData.stroke).toBe('#facc15') // yellow-400
     })
 
-    it('uses orange color when progress is between 10-30%', () => {
-      const { container } = render(<Timer duration={10} remaining={2} />) // 20%
+    it('uses yellow color at 4 seconds', () => {
+      const { container } = render(<Timer duration={10} remaining={4} />)
+      const progressCircle = getProgressCircle(container)
+      const animateData = getAnimateData(progressCircle)
+      expect(animateData.stroke).toBe('#facc15') // yellow-400
+    })
+
+    it('uses orange color when remaining is 3-2 seconds (warning)', () => {
+      const { container } = render(<Timer duration={10} remaining={3} />)
       const progressCircle = getProgressCircle(container)
       const animateData = getAnimateData(progressCircle)
       expect(animateData.stroke).toBe('#f97316') // orange-500
     })
 
-    it('uses red color when progress is 10% or below', () => {
-      const { container } = render(<Timer duration={10} remaining={1} />) // 10%
+    it('uses orange color at 2 seconds', () => {
+      const { container } = render(<Timer duration={10} remaining={2} />)
+      const progressCircle = getProgressCircle(container)
+      const animateData = getAnimateData(progressCircle)
+      expect(animateData.stroke).toBe('#f97316') // orange-500
+    })
+
+    it('uses red color when remaining is 1 second or less (critical)', () => {
+      const { container } = render(<Timer duration={10} remaining={1} />)
       const progressCircle = getProgressCircle(container)
       const animateData = getAnimateData(progressCircle)
       expect(animateData.stroke).toBe('#ef4444') // red-500
     })
 
-    it('uses red color when progress is 0%', () => {
+    it('uses red color when remaining is 0 seconds', () => {
       const { container } = render(<Timer duration={5} remaining={0} />)
       const progressCircle = getProgressCircle(container)
       const animateData = getAnimateData(progressCircle)
@@ -164,22 +183,43 @@ describe('Timer', () => {
   })
 
   describe('urgency animations', () => {
-    it('applies scale animation when critical (remaining <= 1)', () => {
+    it('applies fast scale animation when critical (remaining <= 1)', () => {
       const { container } = render(<Timer duration={5} remaining={1} />)
       // Find the outer motion.div with the scale animation
       const outerDiv = container.querySelector('[data-animate*="scale"]')
       expect(outerDiv).toBeInTheDocument()
     })
 
-    it('displays glow effect when critical', () => {
-      const { container } = render(<Timer duration={5} remaining={1} />)
-      // Find the glow div with boxShadow animation
-      const glowDiv = container.querySelector('[data-animate*="boxShadow"]')
-      expect(glowDiv).toBeInTheDocument()
+    it('applies blink (opacity) animation when critical (remaining <= 1)', () => {
+      render(<Timer duration={5} remaining={1} />)
+      const numberElement = screen.getByText('1')
+      const animateData = getAnimateData(numberElement)
+      expect(animateData.opacity).toEqual([1, 0.6, 1]) // Clignotement
+      expect(animateData.scale).toEqual([1, 1.2, 1]) // Pulse rapide
     })
 
-    it('does not display glow effect when not critical', () => {
-      const { container } = render(<Timer duration={5} remaining={3} />)
+    it('displays red glow effect when critical', () => {
+      const { container } = render(<Timer duration={5} remaining={1} />)
+      // Find the glow div with boxShadow animation containing red color
+      const glowDivs = container.querySelectorAll('[data-animate*="boxShadow"]')
+      const hasRedGlow = Array.from(glowDivs).some((div) =>
+        div.getAttribute('data-animate')?.includes('239, 68, 68')
+      )
+      expect(hasRedGlow).toBe(true)
+    })
+
+    it('displays orange glow effect when warning (remaining <= 3 but > 1)', () => {
+      const { container } = render(<Timer duration={5} remaining={2} />)
+      // Find the glow div with boxShadow animation containing orange color
+      const glowDivs = container.querySelectorAll('[data-animate*="boxShadow"]')
+      const hasOrangeGlow = Array.from(glowDivs).some((div) =>
+        div.getAttribute('data-animate')?.includes('249, 115, 22')
+      )
+      expect(hasOrangeGlow).toBe(true)
+    })
+
+    it('does not display glow effect when normal (remaining > 5)', () => {
+      const { container } = render(<Timer duration={10} remaining={8} />)
       const glowDiv = container.querySelector('[data-animate*="boxShadow"]')
       expect(glowDiv).not.toBeInTheDocument()
     })
@@ -189,6 +229,22 @@ describe('Timer', () => {
       const numberElement = screen.getByText('2')
       const animateData = getAnimateData(numberElement)
       expect(animateData.opacity).toEqual([1, 0.7, 1])
+    })
+
+    it('applies scale animation to container when warning', () => {
+      const { container } = render(<Timer duration={5} remaining={2} />)
+      const outerDiv = container.querySelector('[data-animate*="scale"]')
+      expect(outerDiv).toBeInTheDocument()
+      const animateData = getAnimateData(outerDiv)
+      expect(animateData.scale).toEqual([1, 1.03, 1]) // Léger pulse
+    })
+
+    it('does not apply scale animation when attention (remaining 5-4s)', () => {
+      const { container } = render(<Timer duration={10} remaining={4} />)
+      // Check that the outer container has empty animate object
+      const outerDiv = container.querySelector('.h-32.w-32')
+      const animateData = getAnimateData(outerDiv)
+      expect(animateData).toEqual({})
     })
   })
 

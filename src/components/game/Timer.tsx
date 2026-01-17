@@ -11,19 +11,25 @@ export function Timer({ duration, remaining }: TimerProps) {
   const progress = (remaining / duration) * 100
   const prefersReducedMotion = useReducedMotion()
 
-  // Color transitions: green (> 60%) → yellow (30-60%) → orange (10-30%) → red (<= 10%)
-  const getProgressColor = (progressPercent: number): string => {
-    if (progressPercent > 60) return '#22c55e' // green-500
-    if (progressPercent > 30) return '#facc15' // yellow-400
-    if (progressPercent > 10) return '#f97316' // orange-500
-    return '#ef4444' // red-500
+  // Color transitions based on absolute seconds (per epic 7.7):
+  // 5-4s = Yellow (Normal)
+  // 3-2s = Orange (Léger pulse)
+  // 1s = Red (Pulse rapide + clignotement)
+  // Also uses percentage-based fallback for long timers
+  const getProgressColor = (remainingSeconds: number): string => {
+    if (remainingSeconds <= 1) return '#ef4444' // red-500 - urgent
+    if (remainingSeconds <= 3) return '#f97316' // orange-500 - warning
+    if (remainingSeconds <= 5) return '#facc15' // yellow-400 - attention
+    return '#22c55e' // green-500 - normal
   }
 
-  // Urgency states
-  const isWarning = remaining <= 3 && remaining > 1
-  const isCritical = remaining <= 1
+  // Urgency states based on absolute seconds
+  // isNormal (remaining > 5): green, no special animation
+  const isAttention = remaining <= 5 && remaining > 3 // 5-4s: yellow, normal
+  const isWarning = remaining <= 3 && remaining > 1 // 3-2s: orange, léger pulse
+  const isCritical = remaining <= 1 // 1s: red, pulse rapide + clignotement
 
-  const progressColor = getProgressColor(progress)
+  const progressColor = getProgressColor(remaining)
   const circumference = 2 * Math.PI * 58 // ~364
 
   return (
@@ -36,18 +42,28 @@ export function Timer({ duration, remaining }: TimerProps) {
             ? {}
             : isCritical
               ? {
-                  scale: [1, 1.05, 1],
+                  scale: [1, 1.1, 1],
                 }
-              : {}
+              : isWarning
+                ? {
+                    scale: [1, 1.03, 1],
+                  }
+                : {}
         }
         transition={
           isCritical
             ? {
-                duration: 0.5,
+                duration: 0.3, // Fast pulse
                 repeat: Infinity,
                 ease: 'easeInOut',
               }
-            : {}
+            : isWarning
+              ? {
+                  duration: 0.6, // Léger pulse
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }
+              : {}
         }
       >
         <svg
@@ -95,7 +111,7 @@ export function Timer({ duration, remaining }: TimerProps) {
           />
         </svg>
 
-        {/* Nombre avec animation */}
+        {/* Nombre avec animation - urgency effects */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center text-5xl font-bold"
           animate={
@@ -104,22 +120,32 @@ export function Timer({ duration, remaining }: TimerProps) {
               : isCritical
                 ? {
                     color: progressColor,
-                    scale: [1, 1.15, 1],
+                    scale: [1, 1.2, 1],
+                    opacity: [1, 0.6, 1], // Clignotement
                   }
                 : isWarning
                   ? {
                       color: progressColor,
                       opacity: [1, 0.7, 1],
                     }
-                  : {
-                      color: progressColor,
-                    }
+                  : isAttention
+                    ? {
+                        color: progressColor,
+                      }
+                    : {
+                        color: progressColor,
+                      }
           }
           transition={
             isCritical
               ? {
                   scale: {
-                    duration: 0.4,
+                    duration: 0.25, // Pulse rapide
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  },
+                  opacity: {
+                    duration: 0.25, // Clignotement rapide
                     repeat: Infinity,
                     ease: 'easeInOut',
                   },
@@ -128,7 +154,7 @@ export function Timer({ duration, remaining }: TimerProps) {
               : isWarning
                 ? {
                     opacity: {
-                      duration: 0.6,
+                      duration: 0.6, // Léger pulse
                       repeat: Infinity,
                       ease: 'easeInOut',
                     },
@@ -140,19 +166,36 @@ export function Timer({ duration, remaining }: TimerProps) {
           {remaining}
         </motion.div>
 
-        {/* Glow effect when critical */}
+        {/* Glow effect - now also shows during warning with orange glow */}
+        {isWarning && !prefersReducedMotion && (
+          <motion.div
+            className="pointer-events-none absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                '0 0 15px rgba(249, 115, 22, 0.2)',
+                '0 0 25px rgba(249, 115, 22, 0.4)',
+                '0 0 15px rgba(249, 115, 22, 0.2)',
+              ],
+            }}
+            transition={{
+              duration: 0.6,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        )}
         {isCritical && !prefersReducedMotion && (
           <motion.div
             className="pointer-events-none absolute inset-0 rounded-full"
             animate={{
               boxShadow: [
-                '0 0 20px rgba(239, 68, 68, 0.3)',
-                '0 0 40px rgba(239, 68, 68, 0.6)',
-                '0 0 20px rgba(239, 68, 68, 0.3)',
+                '0 0 25px rgba(239, 68, 68, 0.4)',
+                '0 0 50px rgba(239, 68, 68, 0.7)',
+                '0 0 25px rgba(239, 68, 68, 0.4)',
               ],
             }}
             transition={{
-              duration: 0.5,
+              duration: 0.3, // Fast pulsing glow
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -161,13 +204,23 @@ export function Timer({ duration, remaining }: TimerProps) {
       </motion.div>
 
       <motion.p
-        className="text-lg"
+        className="text-lg font-medium"
         animate={{
-          color: isCritical ? '#ef4444' : '#e9d5ff', // red-500 or purple-200
+          color: isCritical
+            ? '#ef4444' // red-500
+            : isWarning
+              ? '#f97316' // orange-500
+              : isAttention
+                ? '#facc15' // yellow-400
+                : '#e9d5ff', // purple-200
         }}
         transition={{ duration: 0.3 }}
       >
-        {isCritical ? 'Vite !' : 'Temps pour répondre...'}
+        {isCritical
+          ? 'VITE !'
+          : isWarning
+            ? 'Dépêchez-vous !'
+            : 'Temps pour répondre...'}
       </motion.p>
     </div>
   )
