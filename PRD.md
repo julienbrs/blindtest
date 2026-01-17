@@ -82,7 +82,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 5.7 Créer le composant BuzzerButton
 - [x] 5.8 Ajouter l'animation du buzzer
 - [x] 5.9 Créer le composant Timer
-- [ ] 5.10 Ajouter l'animation du timer
+- [x] 5.10 Ajouter l'animation du timer
 - [ ] 5.11 Créer le composant ScoreDisplay
 - [ ] 5.12 Créer le composant SongReveal
 - [ ] 5.13 Implémenter le blur de la pochette

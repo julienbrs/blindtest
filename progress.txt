@@ -338,3 +338,10 @@ Commit: 5ae53c7
 Notes: Timer component already fully implemented with circular SVG progress indicator, countdown display from N to 0, and urgency indicator (red color + pulse animation when remaining <= 2 seconds). Created comprehensive test suite with 15 tests covering rendering, progress calculation, urgency indicator styling, and edge cases. All 182 tests pass.
 Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
 
+=== Issue 5.10: Ajouter l'animation du timer ===
+Timestamp: 2026-01-17T20:17:00Z
+Status: COMPLETED
+Commit: d84c47d
+Notes: Enhanced Timer component with Framer Motion animations. Added smooth color transitions (green > 60% → yellow 30-60% → orange 10-30% → red <= 10%). Implemented scale pulsing effect when critical (remaining <= 1), opacity pulsing when warning (remaining <= 3), and glowing red halo effect in critical state. Text changes to "Vite !" when critical. Added useReducedMotion support for accessibility. Updated test suite with mocked Framer Motion (19 tests). All 186 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
