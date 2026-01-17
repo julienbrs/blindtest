@@ -87,6 +87,7 @@ function GameContent() {
           <div className="w-full max-w-md lg:max-w-none">
             <GameControls
               status={game.state.status}
+              isRevealed={game.state.isRevealed}
               onValidate={game.actions.validate}
               onReveal={game.actions.reveal}
               onNext={game.actions.nextSong}

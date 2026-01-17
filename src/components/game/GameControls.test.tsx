@@ -5,6 +5,7 @@ import { GameControls } from './GameControls'
 describe('GameControls', () => {
   const defaultProps = {
     status: 'idle' as const,
+    isRevealed: false,
     onValidate: vi.fn(),
     onReveal: vi.fn(),
     onNext: vi.fn(),
@@ -158,6 +159,78 @@ describe('GameControls', () => {
     it('displays current status', () => {
       render(<GameControls {...defaultProps} status="buzzed" />)
       expect(screen.getByText('État: buzzed')).toBeInTheDocument()
+    })
+  })
+
+  describe('Reveal button', () => {
+    it('does not show reveal button when status is idle', () => {
+      render(
+        <GameControls {...defaultProps} status="idle" isRevealed={false} />
+      )
+      expect(screen.queryByText('Révéler la réponse')).not.toBeInTheDocument()
+    })
+
+    it('shows reveal button when status is playing and not revealed', () => {
+      render(
+        <GameControls {...defaultProps} status="playing" isRevealed={false} />
+      )
+      expect(screen.getByText('Révéler la réponse')).toBeInTheDocument()
+    })
+
+    it('shows reveal button when status is buzzed and not revealed', () => {
+      render(
+        <GameControls {...defaultProps} status="buzzed" isRevealed={false} />
+      )
+      expect(screen.getByText('Révéler la réponse')).toBeInTheDocument()
+    })
+
+    it('shows reveal button when status is timer and not revealed', () => {
+      render(
+        <GameControls {...defaultProps} status="timer" isRevealed={false} />
+      )
+      expect(screen.getByText('Révéler la réponse')).toBeInTheDocument()
+    })
+
+    it('does not show reveal button when status is reveal', () => {
+      render(
+        <GameControls {...defaultProps} status="reveal" isRevealed={true} />
+      )
+      expect(screen.queryByText('Révéler la réponse')).not.toBeInTheDocument()
+    })
+
+    it('does not show reveal button when already revealed', () => {
+      render(
+        <GameControls {...defaultProps} status="playing" isRevealed={true} />
+      )
+      expect(screen.queryByText('Révéler la réponse')).not.toBeInTheDocument()
+    })
+
+    it('calls onReveal when reveal button is clicked', () => {
+      render(
+        <GameControls {...defaultProps} status="playing" isRevealed={false} />
+      )
+      fireEvent.click(screen.getByText('Révéler la réponse'))
+      expect(defaultProps.onReveal).toHaveBeenCalledTimes(1)
+    })
+
+    it('reveal button has appropriate styling', () => {
+      render(
+        <GameControls {...defaultProps} status="playing" isRevealed={false} />
+      )
+      const revealButton = screen
+        .getByText('Révéler la réponse')
+        .closest('button')
+      expect(revealButton).toHaveClass('bg-white/10', 'text-purple-200')
+    })
+
+    it('reveal button has eye icon', () => {
+      render(
+        <GameControls {...defaultProps} status="playing" isRevealed={false} />
+      )
+      const revealButton = screen
+        .getByText('Révéler la réponse')
+        .closest('button')
+      expect(revealButton?.querySelector('svg')).toBeInTheDocument()
     })
   })
 })

@@ -4,6 +4,7 @@ import type { GameStatus } from '@/lib/types'
 
 interface GameControlsProps {
   status: GameStatus
+  isRevealed: boolean
   onValidate: (correct: boolean) => void
   onReveal: () => void
   onNext: () => void
@@ -51,10 +52,19 @@ function ArrowRightIcon({ className }: { className?: string }) {
   )
 }
 
+function EyeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+    </svg>
+  )
+}
+
 export function GameControls({
   status,
+  isRevealed,
   onValidate,
-  onReveal: _onReveal,
+  onReveal,
   onNext,
   onPlay,
   onPause,
@@ -62,6 +72,9 @@ export function GameControls({
   const isPlaying = status === 'playing'
   const showValidationButtons = status === 'buzzed' || status === 'timer'
   const showNextButton = status === 'reveal'
+  const showRevealButton =
+    (status === 'playing' || status === 'buzzed' || status === 'timer') &&
+    !isRevealed
 
   return (
     <footer className="mt-6 flex flex-col items-center gap-4">
@@ -94,6 +107,17 @@ export function GameControls({
             Incorrect
           </button>
         </div>
+      )}
+
+      {/* Reveal button - visible during playing/buzzed/timer when not yet revealed */}
+      {showRevealButton && (
+        <button
+          onClick={onReveal}
+          className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-purple-200 transition-colors hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+        >
+          <EyeIcon className="h-5 w-5" />
+          Révéler la réponse
+        </button>
       )}
 
       {/* Play/Pause button - always visible for MJ control */}
