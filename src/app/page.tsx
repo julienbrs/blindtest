@@ -2,13 +2,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-dark-100 p-8">
       <main className="mx-auto max-w-4xl">
-        <h1 className="mb-8 text-4xl font-bold text-white">
+        <h1 className="mb-8 font-heading text-4xl font-bold text-white">
           Blindtest
         </h1>
 
         {/* Color palette demo - Light background */}
         <section className="mb-8 rounded-xl bg-white p-6">
-          <h2 className="mb-4 text-2xl font-semibold text-dark-100">
+          <h2 className="mb-4 font-heading text-2xl font-semibold text-dark-100">
             Palette sur fond clair
           </h2>
           <div className="flex flex-wrap gap-4">
@@ -32,7 +32,7 @@ export default function Home() {
 
         {/* Color palette demo - Dark background */}
         <section className="rounded-xl bg-dark-200 p-6">
-          <h2 className="mb-4 text-2xl font-semibold text-white">
+          <h2 className="mb-4 font-heading text-2xl font-semibold text-white">
             Palette sur fond sombre
           </h2>
           <div className="flex flex-wrap gap-4">
