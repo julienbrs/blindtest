@@ -63,7 +63,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 4.1 Créer le layout principal
 - [x] 4.2 Designer la page d'accueil
 - [x] 4.3 Créer le formulaire de configuration
-- [ ] 4.4 Ajouter le sélecteur de mode de devinette
+- [x] 4.4 Ajouter le sélecteur de mode de devinette
 - [ ] 4.5 Ajouter le slider durée des extraits
 - [ ] 4.6 Afficher le nombre de chansons disponibles
 - [ ] 4.7 Ajouter la validation du formulaire

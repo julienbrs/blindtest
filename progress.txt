@@ -226,3 +226,10 @@ Commit: f9b4dc5
 Notes: Created GameConfigForm component with useState for guessMode (default 'both'), clipDuration (default 20s), and isLoading. Implemented handleSubmit that builds URLSearchParams and redirects to /game with query params. Styled form with backdrop-blur glass effect and sections for mode selector and duration slider (placeholders for 4.4/4.5). Integrated component in homepage replacing placeholder. All 141 tests pass.
 Files: src/components/game/GameConfigForm.tsx, src/app/page.tsx
 
+=== Issue 4.4: Ajouter le sélecteur de mode de devinette ===
+Timestamp: 2026-01-17T19:35:00Z
+Status: COMPLETED
+Commit: c9e1728
+Notes: Added guess mode selector with 3 styled radio button options (title, artist, both). Each option shows label and description. Visual selection state with purple border/background highlight. Radio inputs use sr-only class for accessibility while remaining keyboard navigable via labels. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
