@@ -1,8 +1,101 @@
+'use client'
+
+import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useGameState } from '@/hooks/useGameState'
+import { AudioPlayer } from '@/components/game/AudioPlayer'
+import { BuzzerButton } from '@/components/game/BuzzerButton'
+import { Timer } from '@/components/game/Timer'
+import { ScoreDisplay } from '@/components/game/ScoreDisplay'
+import { SongReveal } from '@/components/game/SongReveal'
+import { GameControls } from '@/components/game/GameControls'
+import type { GameConfig, GuessMode } from '@/lib/types'
+
+function GameContent() {
+  const searchParams = useSearchParams()
+
+  // Parse config from URL parameters
+  const config: GameConfig = {
+    guessMode: (searchParams.get('mode') as GuessMode) || 'both',
+    clipDuration: Number(searchParams.get('duration')) || 20,
+    timerDuration:
+      searchParams.get('noTimer') === 'true'
+        ? 0
+        : Number(searchParams.get('timerDuration')) || 5,
+  }
+
+  const game = useGameState(config)
+
+  return (
+    <main className="flex min-h-screen flex-col p-4">
+      {/* Header avec score */}
+      <header className="mb-6 flex items-center justify-between">
+        <ScoreDisplay
+          score={game.state.score}
+          songsPlayed={game.state.songsPlayed}
+        />
+        <button
+          onClick={game.actions.quit}
+          className="text-purple-300 transition-colors hover:text-white"
+        >
+          Quitter
+        </button>
+      </header>
+
+      {/* Zone principale */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        {/* Pochette / Révélation */}
+        <SongReveal
+          song={game.state.currentSong}
+          isRevealed={game.state.isRevealed}
+          guessMode={config.guessMode}
+        />
+
+        {/* Lecteur audio */}
+        <AudioPlayer
+          songId={game.state.currentSong?.id}
+          isPlaying={game.state.status === 'playing'}
+          maxDuration={config.clipDuration}
+          onEnded={game.actions.clipEnded}
+        />
+
+        {/* Buzzer */}
+        {game.state.status === 'playing' && (
+          <BuzzerButton onBuzz={game.actions.buzz} />
+        )}
+
+        {/* Timer */}
+        {game.state.status === 'timer' && (
+          <Timer
+            duration={config.timerDuration}
+            remaining={game.state.timerRemaining}
+          />
+        )}
+      </div>
+
+      {/* Contrôles du MJ */}
+      <GameControls
+        status={game.state.status}
+        onValidate={game.actions.validate}
+        onReveal={game.actions.reveal}
+        onNext={game.actions.nextSong}
+        onPlay={game.actions.play}
+        onPause={game.actions.pause}
+      />
+    </main>
+  )
+}
+
 export default function GamePage() {
   return (
-    <div className="min-h-screen bg-dark-100 p-8">
-      <h1 className="font-heading text-4xl font-bold text-white">Game</h1>
-      <p className="mt-4 text-dark-800">Game screen placeholder</p>
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-xl text-purple-300">Chargement...</div>
+        </div>
+      }
+    >
+      <GameContent />
+    </Suspense>
   )
 }
