@@ -13,6 +13,10 @@ import {
   getCacheInfo,
   clearCache,
   isCacheInitialized,
+  isFormatSupported,
+  getFormatWarning,
+  getUniversalFormats,
+  getPartialSupportFormats,
 } from './audioScanner'
 import { mkdir, writeFile, rm } from 'fs/promises'
 import { join } from 'path'
@@ -685,6 +689,123 @@ describe('Metadata Cache', () => {
 
       // Arrays should be different instances (old cache replaced)
       expect(songs1).not.toBe(songs2)
+    })
+  })
+})
+
+describe('Format Validation', () => {
+  describe('isFormatSupported', () => {
+    it('should return true for universally supported formats', () => {
+      expect(isFormatSupported('mp3')).toBe(true)
+      expect(isFormatSupported('wav')).toBe(true)
+      expect(isFormatSupported('aac')).toBe(true)
+      expect(isFormatSupported('m4a')).toBe(true)
+    })
+
+    it('should return false for formats with partial support', () => {
+      expect(isFormatSupported('ogg')).toBe(false)
+      expect(isFormatSupported('flac')).toBe(false)
+    })
+
+    it('should be case insensitive', () => {
+      expect(isFormatSupported('MP3')).toBe(true)
+      expect(isFormatSupported('Mp3')).toBe(true)
+      expect(isFormatSupported('OGG')).toBe(false)
+      expect(isFormatSupported('FLAC')).toBe(false)
+    })
+
+    it('should return false for unsupported formats', () => {
+      expect(isFormatSupported('wma')).toBe(false)
+      expect(isFormatSupported('ape')).toBe(false)
+      expect(isFormatSupported('midi')).toBe(false)
+    })
+  })
+
+  describe('getFormatWarning', () => {
+    it('should return warning for OGG format', () => {
+      const warning = getFormatWarning('ogg')
+      expect(warning).toBe('OGG non supporté sur Safari')
+    })
+
+    it('should return warning for FLAC format', () => {
+      const warning = getFormatWarning('flac')
+      expect(warning).toBe(
+        'FLAC peut avoir des problèmes sur anciens navigateurs'
+      )
+    })
+
+    it('should return null for universally supported formats', () => {
+      expect(getFormatWarning('mp3')).toBeNull()
+      expect(getFormatWarning('wav')).toBeNull()
+      expect(getFormatWarning('aac')).toBeNull()
+      expect(getFormatWarning('m4a')).toBeNull()
+    })
+
+    it('should be case insensitive', () => {
+      expect(getFormatWarning('OGG')).toBe('OGG non supporté sur Safari')
+      expect(getFormatWarning('FLAC')).toBe(
+        'FLAC peut avoir des problèmes sur anciens navigateurs'
+      )
+      expect(getFormatWarning('MP3')).toBeNull()
+    })
+
+    it('should return null for unknown formats', () => {
+      expect(getFormatWarning('wma')).toBeNull()
+      expect(getFormatWarning('unknown')).toBeNull()
+    })
+  })
+
+  describe('getUniversalFormats', () => {
+    it('should return all universally supported formats', () => {
+      const formats = getUniversalFormats()
+
+      expect(formats).toContain('mp3')
+      expect(formats).toContain('wav')
+      expect(formats).toContain('aac')
+      expect(formats).toContain('m4a')
+      expect(formats).toHaveLength(4)
+    })
+
+    it('should not include formats with partial support', () => {
+      const formats = getUniversalFormats()
+
+      expect(formats).not.toContain('ogg')
+      expect(formats).not.toContain('flac')
+    })
+
+    it('should return a copy of the array', () => {
+      const formats1 = getUniversalFormats()
+      const formats2 = getUniversalFormats()
+
+      expect(formats1).not.toBe(formats2)
+      expect(formats1).toEqual(formats2)
+    })
+  })
+
+  describe('getPartialSupportFormats', () => {
+    it('should return formats with partial browser support', () => {
+      const formats = getPartialSupportFormats()
+
+      expect(formats).toContain('ogg')
+      expect(formats).toContain('flac')
+      expect(formats).toHaveLength(2)
+    })
+
+    it('should not include universally supported formats', () => {
+      const formats = getPartialSupportFormats()
+
+      expect(formats).not.toContain('mp3')
+      expect(formats).not.toContain('wav')
+      expect(formats).not.toContain('aac')
+      expect(formats).not.toContain('m4a')
+    })
+
+    it('should return a copy of the array', () => {
+      const formats1 = getPartialSupportFormats()
+      const formats2 = getPartialSupportFormats()
+
+      expect(formats1).not.toBe(formats2)
+      expect(formats1).toEqual(formats2)
     })
   })
 })

@@ -264,6 +264,75 @@ export function getCoverFilenames(): string[] {
 }
 
 // ============================================================================
+// FORMAT VALIDATION
+// ============================================================================
+
+/**
+ * Formats with universal browser support (Chrome, Firefox, Safari, Edge)
+ * These formats work reliably across all modern browsers
+ */
+const UNIVERSAL_FORMATS = ['mp3', 'wav', 'aac', 'm4a']
+
+/**
+ * Formats with partial browser support
+ * These may not work on all browsers
+ */
+const PARTIAL_SUPPORT_FORMATS = ['ogg', 'flac']
+
+/**
+ * Checks if an audio format is universally supported by all browsers
+ * @param format - The audio format (e.g., 'mp3', 'ogg')
+ * @returns true if the format is supported by all major browsers
+ */
+export function isFormatSupported(format: string): boolean {
+  return UNIVERSAL_FORMATS.includes(format.toLowerCase())
+}
+
+/**
+ * Returns a warning message for formats that may have browser compatibility issues
+ * @param format - The audio format (e.g., 'mp3', 'ogg')
+ * @returns Warning message if format has issues, null if universally supported
+ *
+ * Browser compatibility notes:
+ * | Format | Chrome | Firefox | Safari | Edge |
+ * |--------|--------|---------|--------|------|
+ * | MP3    | ✅     | ✅      | ✅     | ✅   |
+ * | WAV    | ✅     | ✅      | ✅     | ✅   |
+ * | OGG    | ✅     | ✅      | ❌     | ✅   |
+ * | FLAC   | ✅     | ✅      | ✅*    | ✅   |
+ * | AAC    | ✅     | ✅      | ✅     | ✅   |
+ * | M4A    | ✅     | ✅      | ✅     | ✅   |
+ *
+ * *Safari supports FLAC since macOS 11
+ */
+export function getFormatWarning(format: string): string | null {
+  const lowerFormat = format.toLowerCase()
+
+  if (lowerFormat === 'ogg') {
+    return 'OGG non supporté sur Safari'
+  }
+  if (lowerFormat === 'flac') {
+    return 'FLAC peut avoir des problèmes sur anciens navigateurs'
+  }
+
+  return null
+}
+
+/**
+ * Returns the list of universally supported formats
+ */
+export function getUniversalFormats(): string[] {
+  return [...UNIVERSAL_FORMATS]
+}
+
+/**
+ * Returns the list of formats with partial browser support
+ */
+export function getPartialSupportFormats(): string[] {
+  return [...PARTIAL_SUPPORT_FORMATS]
+}
+
+// ============================================================================
 // METADATA CACHE
 // ============================================================================
 
