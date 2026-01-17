@@ -282,3 +282,10 @@ Commit: 825fc96
 Notes: Created game page with URL parameters parsing (mode, duration, timerDuration, noTimer). Integrated all game components with proper props interfaces: AudioPlayer, BuzzerButton, Timer, ScoreDisplay, SongReveal, GameControls. Added Suspense wrapper for useSearchParams. Updated useGameState hook to return proper state/actions interface for game logic. Responsive flex layout structure. All 141 tests pass.
 Files: src/app/game/page.tsx, src/components/game/GameControls.tsx, src/components/game/AudioPlayer.tsx, src/components/game/BuzzerButton.tsx, src/components/game/Timer.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/SongReveal.tsx, src/hooks/useGameState.ts
 
+=== Issue 5.2: Implémenter le layout de jeu ===
+Timestamp: 2026-01-17T19:55:00Z
+Status: COMPLETED
+Commit: 64473f0
+Notes: Implemented responsive game layout with mobile-first design. Mobile layout: vertical stack with header at top, central zone (cover+audio bar), buzzer/timer, and controls at bottom. Desktop layout (lg+): two-column layout with cover/audio on left side and controls/buzzer/timer on right side (fixed 320px width). Used Tailwind lg: breakpoint for smooth transitions between layouts. Improved quit button styling with hover background effect. All 141 tests pass.
+Files: src/app/game/page.tsx
+

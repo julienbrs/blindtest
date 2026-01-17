@@ -74,7 +74,7 @@ After this task, all subsequent issues run with full feedback loops.
 ### Epic 5: Game Screen (docs/epics/05-game-screen.md)
 
 - [x] 5.1 Créer la page /game
-- [ ] 5.2 Implémenter le layout de jeu
+- [x] 5.2 Implémenter le layout de jeu
 - [ ] 5.3 Créer le composant AudioPlayer
 - [ ] 5.4 Ajouter les contrôles play/pause
 - [ ] 5.5 Afficher la barre de progression audio
