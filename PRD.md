@@ -47,7 +47,7 @@ After this task, all subsequent issues run with full feedback loops.
 
 ### Epic 3: API Routes (docs/epics/03-api-routes.md)
 
-- [ ] 3.1 Créer GET /api/songs
+- [x] 3.1 Créer GET /api/songs
 - [ ] 3.2 Créer GET /api/songs/random
 - [ ] 3.3 Créer GET /api/songs/[id]
 - [ ] 3.4 Créer GET /api/audio/[id]

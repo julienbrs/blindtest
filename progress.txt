@@ -135,3 +135,10 @@ Commit: 3794ba4
 Notes: Created POST /api/songs/rescan endpoint that triggers refreshCache() and returns the song count and last scan timestamp. Endpoint returns success response with songsCount and lastScan, or error response with message if rescan fails. Added 5 comprehensive tests for the endpoint (94 tests total pass).
 Files: src/app/api/songs/rescan/route.ts, src/app/api/songs/rescan/route.test.ts
 
+=== Issue 3.1: Créer GET /api/songs ===
+Timestamp: 2026-01-17T18:21:00Z
+Status: COMPLETED
+Commit: 55c2248
+Notes: Implemented GET /api/songs endpoint using getSongsCache() from audioScanner. Returns JSON response with songs array and total count. Includes proper error handling with 500 status. Created comprehensive test suite with 5 tests (99 tests total pass).
+Files: src/app/api/songs/route.ts, src/app/api/songs/route.test.ts
+
