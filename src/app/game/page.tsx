@@ -23,6 +23,11 @@ function GameContent() {
   )
   const hasInitialized = useRef(false)
 
+  // Preloading state for the next song
+  const [nextSong, setNextSong] = useState<Song | null>(null)
+  const preloadedAudioRef = useRef<HTMLAudioElement | null>(null)
+  const isPrefetchingRef = useRef(false)
+
   // Parse config from URL parameters
   const config: GameConfig = {
     guessMode: (searchParams.get('mode') as GuessMode) || 'both',
@@ -35,9 +40,52 @@ function GameContent() {
 
   const game = useGameState(config)
 
+  // Prefetch the next song during REVEAL state
+  const prefetchNextSong = useCallback(async (excludeIds: string[]) => {
+    if (isPrefetchingRef.current) return
+    isPrefetchingRef.current = true
+
+    const exclude = excludeIds.join(',')
+    const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
+
+    try {
+      const res = await fetch(url)
+
+      if (!res.ok) {
+        // No more songs available - will be handled when transitioning to next song
+        isPrefetchingRef.current = false
+        return
+      }
+
+      const data = (await res.json()) as { song: Song }
+      if (data.song) {
+        setNextSong(data.song)
+        // Preload the audio
+        if (preloadedAudioRef.current) {
+          preloadedAudioRef.current.pause()
+          preloadedAudioRef.current.src = ''
+        }
+        const audio = new Audio(`/api/audio/${data.song.id}`)
+        audio.preload = 'auto'
+        preloadedAudioRef.current = audio
+      }
+    } catch {
+      // Silently fail - will load normally when needed
+    } finally {
+      isPrefetchingRef.current = false
+    }
+  }, [])
+
   // Load a random song from the API
   const loadRandomSong = useCallback(
-    async (excludeIds: string[]) => {
+    async (excludeIds: string[], preloadedSong: Song | null) => {
+      // If we have a preloaded song, use it immediately
+      if (preloadedSong) {
+        game.actions.loadSong(preloadedSong)
+        setNextSong(null)
+        return
+      }
+
       const exclude = excludeIds.join(',')
       const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
 
@@ -81,14 +129,15 @@ function GameContent() {
   // This handles both initial load (after START_GAME) and subsequent loads (after NEXT_SONG)
   useEffect(() => {
     if (game.state.status === 'loading' && !game.state.currentSong) {
-      // Capture playedSongIds to use in microtask
+      // Capture playedSongIds and nextSong to use in microtask
       const playedIds = game.state.playedSongIds
+      const preloadedSong = nextSong
       // Use queueMicrotask to avoid calling setState synchronously in effect
       queueMicrotask(() => {
         // Reset the audioReady state for the new song
         setAudioReadyForSongId(null)
-        // Load a new random song (excluding already played songs)
-        void loadRandomSong(playedIds)
+        // Load a new random song (excluding already played songs), using preloaded if available
+        void loadRandomSong(playedIds, preloadedSong)
       })
     }
   }, [
@@ -96,7 +145,41 @@ function GameContent() {
     game.state.currentSong,
     game.state.playedSongIds,
     loadRandomSong,
+    nextSong,
   ])
+
+  // Prefetch next song during REVEAL state
+  useEffect(() => {
+    if (
+      game.state.status === 'reveal' &&
+      !nextSong &&
+      !isPrefetchingRef.current
+    ) {
+      // Build exclude list: already played songs + current song
+      const excludeIds = [
+        ...game.state.playedSongIds,
+        game.state.currentSong?.id,
+      ].filter((id): id is string => Boolean(id))
+      void prefetchNextSong(excludeIds)
+    }
+  }, [
+    game.state.status,
+    game.state.playedSongIds,
+    game.state.currentSong,
+    nextSong,
+    prefetchNextSong,
+  ])
+
+  // Cleanup preloaded audio on unmount
+  useEffect(() => {
+    return () => {
+      if (preloadedAudioRef.current) {
+        preloadedAudioRef.current.pause()
+        preloadedAudioRef.current.src = ''
+        preloadedAudioRef.current = null
+      }
+    }
+  }, [])
 
   // LOADING → PLAYING transition: Start playback when audio is ready
   // We check that the audio ready signal matches the current song to avoid race conditions
