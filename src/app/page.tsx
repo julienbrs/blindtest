@@ -1,4 +1,5 @@
 import { GameConfigForm } from '@/components/game/GameConfigForm'
+import { LibraryStats } from '@/components/game/LibraryStats'
 
 export default function HomePage() {
   return (
@@ -32,10 +33,8 @@ export default function HomePage() {
       {/* Game configuration form */}
       <GameConfigForm />
 
-      {/* Placeholder for LibraryStats - will be added in issue 4.6 */}
-      <div className="mt-8 text-center text-purple-200">
-        <p className="text-sm">Statistiques de la bibliothèque (à venir)</p>
-      </div>
+      {/* Library stats */}
+      <LibraryStats />
     </main>
   )
 }
