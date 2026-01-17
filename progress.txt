@@ -296,3 +296,17 @@ Commit: 4ad0ad8
 Notes: Implemented full HTML5 audio player component. Audio loads from /api/audio/{songId} endpoint. Play/pause controlled via isPlaying prop with effects. Visual progress bar with gradient (pink to purple). Auto-stop playback when currentTime reaches maxDuration and calls onEnded callback. Uses onLoadStart event to reset state when new song loads, avoiding ESLint set-state-in-effect warning. Time display in mm:ss format. All 141 tests pass.
 Files: src/components/game/AudioPlayer.tsx
 
+=== Issue 5.4: Ajouter les contrôles play/pause ===
+Timestamp: 2026-01-17T19:58:00Z
+Status: COMPLETED
+Commit: 20f8a9c
+Notes: Added styled play/pause toggle button to GameControls component. Created PlayIcon and PauseIcon SVG components. Button toggles between play/pause states based on game status ('playing'). Added keyboard accessibility with focus:ring styling and aria-label for screen readers.
+Files: src/components/game/GameControls.tsx
+
+=== Issue 5.5: Afficher la barre de progression audio ===
+Timestamp: 2026-01-17T20:00:00Z
+Status: COMPLETED
+Commit: 7af8109
+Notes: Enhanced audio progress bar with visual improvements. Added subtle pulsing animation during playback (animate-pulse-subtle). Implemented color change from pink/purple gradient to orange/red when 5 seconds or less remaining. Increased bar height from h-2 to h-3 for better visibility. Time display turns red and bold when near end. Added CSS keyframes animation to globals.css. All 141 tests pass.
+Files: src/components/game/AudioPlayer.tsx, src/app/globals.css
+
