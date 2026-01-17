@@ -95,7 +95,7 @@ After this task, all subsequent issues run with full feedback loops.
 
 ### Epic 6: Game Logic (docs/epics/06-game-logic.md)
 
-- [ ] 6.1 Créer le hook useGameState
+- [x] 6.1 Créer le hook useGameState
 - [ ] 6.2 Définir les états du jeu
 - [ ] 6.3 Implémenter la transition IDLE → LOADING
 - [ ] 6.4 Implémenter la transition LOADING → PLAYING

@@ -408,3 +408,10 @@ Commit: 773a94a
 Notes: Created GameRecap component showing final game stats (score, songs played, correct answers, success rate). Added confetti animation for good scores (>=50%) with lazy initialization to avoid impure render calls. Dynamic messages based on performance (from "Score parfait !" to "La prochaine fois sera meilleure !"). Integrated with game page to display when status is 'ended'. Added "Nouvelle partie" and "Retour à l'accueil" buttons. Created 17 comprehensive tests. All 274 tests pass. Respects prefers-reduced-motion for accessibility.
 Files: src/components/game/GameRecap.tsx, src/components/game/GameRecap.test.tsx, src/app/game/page.tsx
 
+=== Issue 6.1: Créer le hook useGameState ===
+Timestamp: 2026-01-17T21:00:00Z
+Status: COMPLETED
+Commit: c2bc523
+Notes: Implemented useGameState hook with useReducer-based state machine for game logic. Added gameReducer with all state transitions (START_GAME, LOAD_SONG, PLAY, BUZZ, TICK_TIMER, VALIDATE, REVEAL, NEXT_SONG, END_GAME, RESET, CLIP_ENDED). Timer countdown effect auto-ticks every second when in timer state. All actions memoized with useCallback for performance. Added CLIP_ENDED action type to types.ts for proper clip end handling. Created comprehensive test suite with 47 tests covering all actions, state transitions, timer countdown, and immutability. All 321 tests pass.
+Files: src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/lib/types.ts
+
