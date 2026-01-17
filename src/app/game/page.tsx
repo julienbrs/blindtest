@@ -1,7 +1,7 @@
 'use client'
 
-import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useGameState } from '@/hooks/useGameState'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
@@ -13,6 +13,8 @@ import type { GameConfig, GuessMode } from '@/lib/types'
 
 function GameContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false)
 
   // Parse config from URL parameters
   const config: GameConfig = {
@@ -35,12 +37,38 @@ function GameContent() {
           songsPlayed={game.state.songsPlayed}
         />
         <button
-          onClick={game.actions.quit}
+          onClick={() => setShowQuitConfirm(true)}
           className="rounded-lg px-3 py-2 text-purple-300 transition-colors hover:bg-white/10 hover:text-white"
         >
           Quitter
         </button>
       </header>
+
+      {/* Quit confirmation modal */}
+      {showQuitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 max-w-sm rounded-xl bg-purple-900 p-6">
+            <h3 className="mb-4 text-xl font-bold">Quitter la partie ?</h3>
+            <p className="mb-6 text-purple-200">
+              Votre score ne sera pas sauvegardé.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowQuitConfirm(false)}
+                className="flex-1 rounded-lg bg-white/10 py-2 transition-colors hover:bg-white/20"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className="flex-1 rounded-lg bg-red-600 py-2 transition-colors hover:bg-red-500"
+              >
+                Quitter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content area - Mobile: vertical stack, Desktop: two columns */}
       <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:gap-8">
