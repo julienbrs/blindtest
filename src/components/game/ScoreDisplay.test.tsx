@@ -1,8 +1,46 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+
+// Mock framer-motion
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({
+      children,
+      className,
+      initial,
+      animate: _animate,
+      ...props
+    }: React.HTMLAttributes<HTMLDivElement> & {
+      initial?: object | boolean
+      animate?: object
+    }) => {
+      // Apply initial styles for testing the animation effect
+      const style =
+        typeof initial === 'object'
+          ? { color: (initial as { color?: string }).color }
+          : {}
+      return (
+        <div className={className} style={style} {...props}>
+          {children}
+        </div>
+      )
+    },
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  useReducedMotion: vi.fn(() => false),
+}))
+
 import { ScoreDisplay } from './ScoreDisplay'
+import { useReducedMotion } from 'framer-motion'
 
 describe('ScoreDisplay', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(useReducedMotion).mockReturnValue(false)
+  })
+
   describe('score display', () => {
     it('renders score with label', () => {
       render(<ScoreDisplay score={5} songsPlayed={3} />)
@@ -83,6 +121,53 @@ describe('ScoreDisplay', () => {
     })
   })
 
+  describe('score pop animation', () => {
+    it('animates score when it increases', async () => {
+      const { rerender } = render(<ScoreDisplay score={0} songsPlayed={0} />)
+
+      // Score increases
+      rerender(<ScoreDisplay score={1} songsPlayed={1} />)
+
+      // The new score should be rendered (animation starts)
+      expect(screen.getByText('1')).toBeInTheDocument()
+    })
+
+    it('renders score with initial green color during animation', () => {
+      vi.mocked(useReducedMotion).mockReturnValue(false)
+
+      const { rerender, container } = render(
+        <ScoreDisplay score={0} songsPlayed={0} />
+      )
+
+      // Score increases - animation should apply green color initially
+      rerender(<ScoreDisplay score={1} songsPlayed={1} />)
+
+      // Check that the score element exists and has the expected styling
+      const scoreValue = container.querySelector('.text-2xl')
+      expect(scoreValue).toBeInTheDocument()
+      // In the mock, initial styles are applied, so color should be green
+      expect(scoreValue).toHaveStyle({ color: '#22c55e' })
+    })
+
+    it('disables animation when reduced motion is preferred', () => {
+      vi.mocked(useReducedMotion).mockReturnValue(true)
+
+      const { rerender, container } = render(
+        <ScoreDisplay score={0} songsPlayed={0} />
+      )
+
+      // Score increases
+      rerender(<ScoreDisplay score={1} songsPlayed={1} />)
+
+      // Score should still be displayed
+      expect(screen.getByText('1')).toBeInTheDocument()
+
+      // No special styling should be applied when reduced motion is preferred
+      const scoreValue = container.querySelector('.text-2xl')
+      expect(scoreValue).not.toHaveStyle({ color: '#22c55e' })
+    })
+  })
+
   describe('styling', () => {
     it('has glass-effect background on score section', () => {
       const { container } = render(<ScoreDisplay score={5} songsPlayed={3} />)
@@ -99,6 +184,13 @@ describe('ScoreDisplay', () => {
 
       const scoreValue = container.querySelector('.text-2xl')
       expect(scoreValue).toBeInTheDocument()
+    })
+
+    it('has relative positioning for score container', () => {
+      const { container } = render(<ScoreDisplay score={5} songsPlayed={3} />)
+
+      const scoreContainer = container.querySelector('.relative')
+      expect(scoreContainer).toBeInTheDocument()
     })
   })
 })

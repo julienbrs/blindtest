@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useGameState } from '@/hooks/useGameState'
+import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { Timer } from '@/components/game/Timer'
@@ -11,6 +12,7 @@ import { ScoreDisplay } from '@/components/game/ScoreDisplay'
 import { SongReveal } from '@/components/game/SongReveal'
 import { GameControls } from '@/components/game/GameControls'
 import { GameRecap } from '@/components/game/GameRecap'
+import { CorrectAnswerFlash } from '@/components/game/CorrectAnswerFlash'
 import { Button } from '@/components/ui/Button'
 import type { GameConfig, GuessMode, Song } from '@/lib/types'
 
@@ -50,6 +52,12 @@ function GameContent() {
   const hasInitialized = useRef(false)
   // Track if replay was triggered
   const [shouldReplay, setShouldReplay] = useState(false)
+  // Track correct answer flash animation
+  const [showCorrectFlash, setShowCorrectFlash] = useState(false)
+
+  // Celebration effects for correct answers
+  const { celebrate, cleanup: cleanupCelebration } =
+    useCorrectAnswerCelebration()
 
   // Preloading state for the next song
   const [nextSong, setNextSong] = useState<Song | null>(null)
@@ -198,7 +206,7 @@ function GameContent() {
     prefetchNextSong,
   ])
 
-  // Cleanup preloaded audio on unmount
+  // Cleanup preloaded audio and celebration on unmount
   useEffect(() => {
     return () => {
       if (preloadedAudioRef.current) {
@@ -206,8 +214,9 @@ function GameContent() {
         preloadedAudioRef.current.src = ''
         preloadedAudioRef.current = null
       }
+      cleanupCelebration()
     }
-  }, [])
+  }, [cleanupCelebration])
 
   // LOADING → PLAYING transition: Start playback when audio is ready
   // We check that the audio ready signal matches the current song to avoid race conditions
@@ -241,6 +250,23 @@ function GameContent() {
   const handleReplayComplete = useCallback(() => {
     setShouldReplay(false)
   }, [])
+
+  // Handle validation with celebration on correct answers
+  const handleValidate = useCallback(
+    (correct: boolean) => {
+      if (correct) {
+        // Trigger confetti and green flash
+        celebrate()
+        setShowCorrectFlash(true)
+        // Clear the flash after animation completes
+        setTimeout(() => {
+          setShowCorrectFlash(false)
+        }, 500)
+      }
+      game.actions.validate(correct)
+    },
+    [celebrate, game.actions]
+  )
 
   const handleNewGame = () => {
     // Reload the page with same config to start a new game
@@ -412,7 +438,7 @@ function GameContent() {
             <GameControls
               status={game.state.status}
               isRevealed={game.state.isRevealed}
-              onValidate={game.actions.validate}
+              onValidate={handleValidate}
               onReveal={game.actions.reveal}
               onNext={game.actions.nextSong}
               onPlay={game.actions.play}
@@ -422,6 +448,9 @@ function GameContent() {
           </div>
         </div>
       </div>
+
+      {/* Green flash overlay for correct answers */}
+      <CorrectAnswerFlash show={showCorrectFlash} />
     </main>
   )
 }
