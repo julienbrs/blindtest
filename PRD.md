@@ -10,7 +10,7 @@ These issues must run before feedback loops (Husky, Vitest) can be set up.
 
 ### Epic 1: Setup (docs/epics/01-setup.md)
 - [x] 1.1 Initialiser le projet Next.js
-- [ ] 1.2 Configurer Tailwind CSS
+- [x] 1.2 Configurer Tailwind CSS
 - [ ] 1.3 Définir la palette de couleurs festive
 - [ ] 1.4 Configurer les fonts
 - [ ] 1.5 Créer la structure des dossiers
