@@ -11,6 +11,9 @@ const validGuessModes: GuessMode[] = ['title', 'artist', 'both']
 interface SavedConfig {
   guessMode: GuessMode
   clipDuration: number
+  timerDuration: number
+  noTimer: boolean
+  randomStartPoint: boolean
 }
 
 function loadSavedConfig(): SavedConfig | null {
@@ -24,6 +27,9 @@ function loadSavedConfig(): SavedConfig | null {
     const result: SavedConfig = {
       guessMode: 'both',
       clipDuration: 20,
+      timerDuration: 5,
+      noTimer: false,
+      randomStartPoint: false,
     }
 
     // Validate guessMode
@@ -42,6 +48,25 @@ function loadSavedConfig(): SavedConfig | null {
       config.clipDuration % 5 === 0
     ) {
       result.clipDuration = config.clipDuration
+    }
+
+    // Validate timerDuration (must be between 3-30)
+    if (
+      typeof config.timerDuration === 'number' &&
+      config.timerDuration >= 3 &&
+      config.timerDuration <= 30
+    ) {
+      result.timerDuration = config.timerDuration
+    }
+
+    // Validate noTimer (must be boolean)
+    if (typeof config.noTimer === 'boolean') {
+      result.noTimer = config.noTimer
+    }
+
+    // Validate randomStartPoint (must be boolean)
+    if (typeof config.randomStartPoint === 'boolean') {
+      result.randomStartPoint = config.randomStartPoint
     }
 
     return result
@@ -73,6 +98,10 @@ export function GameConfigForm() {
   const router = useRouter()
   const [guessMode, setGuessMode] = useState<GuessMode>('both')
   const [clipDuration, setClipDuration] = useState(20)
+  const [timerDuration, setTimerDuration] = useState(5)
+  const [noTimer, setNoTimer] = useState(false)
+  const [randomStartPoint, setRandomStartPoint] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [hasMounted, setHasMounted] = useState(false)
@@ -85,31 +114,50 @@ export function GameConfigForm() {
       /* eslint-disable react-hooks/set-state-in-effect -- Hydrating from localStorage on mount is standard */
       setGuessMode(savedConfig.guessMode)
       setClipDuration(savedConfig.clipDuration)
+      setTimerDuration(savedConfig.timerDuration)
+      setNoTimer(savedConfig.noTimer)
+      setRandomStartPoint(savedConfig.randomStartPoint)
       /* eslint-enable react-hooks/set-state-in-effect */
     }
     setHasMounted(true)
   }, [])
 
   // Save config to localStorage whenever it changes (after mount)
-  const saveConfig = useCallback((mode: GuessMode, duration: number) => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        guessMode: mode,
-        clipDuration: duration,
-      })
-    )
-  }, [])
+  const saveConfig = useCallback(
+    (config: {
+      guessMode: GuessMode
+      clipDuration: number
+      timerDuration: number
+      noTimer: boolean
+      randomStartPoint: boolean
+    }) => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+    },
+    []
+  )
+
+  // Helper to get current config for saving
+  const getCurrentConfig = useCallback(
+    (overrides?: Partial<SavedConfig>): SavedConfig => ({
+      guessMode,
+      clipDuration,
+      timerDuration,
+      noTimer,
+      randomStartPoint,
+      ...overrides,
+    }),
+    [guessMode, clipDuration, timerDuration, noTimer, randomStartPoint]
+  )
 
   // Handler for guess mode changes - saves immediately
   const handleGuessModeChange = useCallback(
     (newMode: GuessMode) => {
       setGuessMode(newMode)
       if (hasMounted) {
-        saveConfig(newMode, clipDuration)
+        saveConfig(getCurrentConfig({ guessMode: newMode }))
       }
     },
-    [hasMounted, clipDuration, saveConfig]
+    [hasMounted, saveConfig, getCurrentConfig]
   )
 
   // Handler for clip duration changes - saves immediately
@@ -117,10 +165,43 @@ export function GameConfigForm() {
     (newDuration: number) => {
       setClipDuration(newDuration)
       if (hasMounted) {
-        saveConfig(guessMode, newDuration)
+        saveConfig(getCurrentConfig({ clipDuration: newDuration }))
       }
     },
-    [hasMounted, guessMode, saveConfig]
+    [hasMounted, saveConfig, getCurrentConfig]
+  )
+
+  // Handler for timer duration changes - saves immediately
+  const handleTimerDurationChange = useCallback(
+    (newDuration: number) => {
+      setTimerDuration(newDuration)
+      if (hasMounted) {
+        saveConfig(getCurrentConfig({ timerDuration: newDuration }))
+      }
+    },
+    [hasMounted, saveConfig, getCurrentConfig]
+  )
+
+  // Handler for no-timer toggle - saves immediately
+  const handleNoTimerChange = useCallback(
+    (newValue: boolean) => {
+      setNoTimer(newValue)
+      if (hasMounted) {
+        saveConfig(getCurrentConfig({ noTimer: newValue }))
+      }
+    },
+    [hasMounted, saveConfig, getCurrentConfig]
+  )
+
+  // Handler for random start point toggle - saves immediately
+  const handleRandomStartPointChange = useCallback(
+    (newValue: boolean) => {
+      setRandomStartPoint(newValue)
+      if (hasMounted) {
+        saveConfig(getCurrentConfig({ randomStartPoint: newValue }))
+      }
+    },
+    [hasMounted, saveConfig, getCurrentConfig]
   )
 
   const validateForm = async (): Promise<boolean> => {
@@ -163,6 +244,8 @@ export function GameConfigForm() {
     const params = new URLSearchParams({
       mode: guessMode,
       duration: clipDuration.toString(),
+      timer: noTimer ? '0' : timerDuration.toString(),
+      randomStart: randomStartPoint ? '1' : '0',
     })
 
     router.push(`/game?${params.toString()}`)
@@ -238,6 +321,111 @@ export function GameConfigForm() {
             <span>5s</span>
             <span>30s</span>
             <span>60s</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Paramètres avancés */}
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex w-full items-center justify-center gap-2 text-purple-300 transition-colors hover:text-white"
+        >
+          <span
+            className={`transform transition-transform duration-200 ${showAdvanced ? 'rotate-90' : ''}`}
+          >
+            ▶
+          </span>
+          Paramètres avancés
+        </button>
+
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            showAdvanced ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="space-y-4 rounded-xl border border-white/20 bg-white/5 p-6">
+            {/* Timer duration */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-purple-200">Temps pour répondre</span>
+                <span className="font-bold">
+                  {noTimer ? 'Illimité' : `${timerDuration}s`}
+                </span>
+              </div>
+
+              <input
+                type="range"
+                min={3}
+                max={30}
+                step={1}
+                value={timerDuration}
+                onChange={(e) =>
+                  handleTimerDurationChange(Number(e.target.value))
+                }
+                disabled={noTimer}
+                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/20 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-400 [&::-webkit-slider-thumb]:shadow-lg"
+              />
+
+              <div className="flex justify-between text-xs text-purple-300">
+                <span>3s</span>
+                <span>15s</span>
+                <span>30s</span>
+              </div>
+            </div>
+
+            {/* No timer toggle */}
+            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 p-3 transition-colors hover:bg-white/10">
+              <div>
+                <div className="font-medium">Mode sans timer</div>
+                <div className="text-sm text-purple-200">
+                  Temps illimité pour répondre
+                </div>
+              </div>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={noTimer}
+                  onChange={(e) => handleNoTimerChange(e.target.checked)}
+                  className="sr-only"
+                />
+                <div
+                  className={`h-6 w-11 rounded-full transition-colors ${noTimer ? 'bg-purple-500' : 'bg-white/20'}`}
+                >
+                  <div
+                    className={`h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${noTimer ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`}
+                  />
+                </div>
+              </div>
+            </label>
+
+            {/* Random start point toggle */}
+            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 p-3 transition-colors hover:bg-white/10">
+              <div>
+                <div className="font-medium">Départ aléatoire</div>
+                <div className="text-sm text-purple-200">
+                  Commencer à un point aléatoire de la chanson
+                </div>
+              </div>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={randomStartPoint}
+                  onChange={(e) =>
+                    handleRandomStartPointChange(e.target.checked)
+                  }
+                  className="sr-only"
+                />
+                <div
+                  className={`h-6 w-11 rounded-full transition-colors ${randomStartPoint ? 'bg-purple-500' : 'bg-white/20'}`}
+                >
+                  <div
+                    className={`h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${randomStartPoint ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`}
+                  />
+                </div>
+              </div>
+            </label>
           </div>
         </div>
       </div>
