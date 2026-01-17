@@ -75,6 +75,13 @@ export function AudioPlayer({
   }
 
   const progress = (currentTime / maxDuration) * 100
+  const remainingTime = maxDuration - currentTime
+  const isNearEnd = remainingTime <= 5 && remainingTime > 0
+
+  // Determine bar gradient based on remaining time
+  const barGradient = isNearEnd
+    ? 'bg-gradient-to-r from-orange-500 to-red-500'
+    : 'bg-gradient-to-r from-pink-500 to-purple-500'
 
   return (
     <div className="w-full max-w-md">
@@ -87,17 +94,25 @@ export function AudioPlayer({
       />
 
       {/* Progress bar */}
-      <div className="h-2 overflow-hidden rounded-full bg-white/20">
+      <div className="h-3 overflow-hidden rounded-full bg-white/20 shadow-inner">
         <div
-          className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-200"
+          className={`h-full transition-all duration-200 ${barGradient} ${
+            isPlaying ? 'animate-pulse-subtle' : ''
+          }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
         />
       </div>
 
       {/* Time display */}
-      <div className="mt-2 flex justify-between text-sm text-purple-300">
-        <span>{formatTime(currentTime)}</span>
-        <span>{formatTime(maxDuration)}</span>
+      <div className="mt-2 flex justify-between text-sm">
+        <span className="text-purple-300">{formatTime(currentTime)}</span>
+        <span
+          className={
+            isNearEnd ? 'text-red-400 font-semibold' : 'text-purple-300'
+          }
+        >
+          {formatTime(maxDuration)}
+        </span>
       </div>
     </div>
   )

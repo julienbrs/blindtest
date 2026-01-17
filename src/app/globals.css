@@ -39,3 +39,18 @@ h6 {
   background-size: 200% 200%;
   animation: gradient-shift 15s ease infinite;
 }
+
+/* Subtle pulsing animation for audio progress bar */
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 1.5s ease-in-out infinite;
+}
