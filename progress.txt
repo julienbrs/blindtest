@@ -43,3 +43,17 @@ Commit: e8cd85d
 Notes: Created .env.local with AUDIO_FOLDER_PATH pointing to test-audio. Updated /api/songs route to use environment variable. Build confirms .env.local is loaded.
 Files: .env.local, src/app/api/songs/route.ts
 
+=== Issue 1.7: Configurer ESLint et Prettier ===
+Timestamp: 2026-01-17T16:35:00Z
+Status: COMPLETED
+Commit: b91108a
+Notes: Added custom ESLint rules. Created .prettierrc with project settings. Added format script. Ran Prettier on all files.
+Files: eslint.config.mjs, .prettierrc, package.json
+
+=== BOOTSTRAP.FEEDBACK: Install Vitest, Husky, lint-staged and configure pre-commit hooks ===
+Timestamp: 2026-01-17T17:40:00Z
+Status: COMPLETED
+Commit: pending
+Notes: Installed vitest, @vitejs/plugin-react, jsdom, @testing-library/react, husky, and lint-staged. Created vitest.config.ts with jsdom environment and React plugin. Created .husky/pre-commit hook running lint-staged, typecheck, and test. Created .lintstagedrc for Prettier formatting. Added typecheck and test scripts to package.json. Created src/test/setup.ts. All feedback loops verified working.
+Files: package.json, vitest.config.ts, .husky/pre-commit, .lintstagedrc, src/test/setup.ts
+

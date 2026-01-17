@@ -20,7 +20,7 @@ These issues must run before feedback loops (Husky, Vitest) can be set up.
 
 ### Feedback Loop Setup
 
-- [ ] BOOTSTRAP.FEEDBACK: Install Vitest, Husky, lint-staged and configure pre-commit hooks
+- [x] BOOTSTRAP.FEEDBACK: Install Vitest, Husky, lint-staged and configure pre-commit hooks
 
 After this task, all subsequent issues run with full feedback loops.
 
