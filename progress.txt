@@ -156,3 +156,10 @@ Commit: 854586d
 Notes: Implemented GET /api/songs/[id] endpoint to return a specific song by ID. Added ID format validation (12 hex characters). Returns 404 for unknown song IDs, 400 for invalid ID format. Created comprehensive test suite with 8 tests (115 tests total pass).
 Files: src/app/api/songs/[id]/route.ts, src/app/api/songs/[id]/route.test.ts
 
+=== Issue 3.4: Créer GET /api/audio/[id] ===
+Timestamp: 2026-01-17T18:36:00Z
+Status: COMPLETED
+Commit: eeda086
+Notes: Implemented GET /api/audio/[id] endpoint for streaming audio files. Added Range Request support (HTTP 206) for seeking in audio players. MIME types defined for all supported audio formats (mp3, wav, ogg, flac, m4a, aac). ID validation (12 hex characters). Created comprehensive test suite with 7 tests (122 tests total pass).
+Files: src/app/api/audio/[id]/route.ts, src/app/api/audio/[id]/route.test.ts
+
