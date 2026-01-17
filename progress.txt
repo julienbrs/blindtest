@@ -394,3 +394,10 @@ Commit: 103e97a
 Notes: Added quit button confirmation modal to game page. Button in header now opens modal with warning message. Modal has Cancel button to dismiss and Quit button to navigate home. Used useState for modal visibility and useRouter for navigation. Created comprehensive test suite with 8 tests covering modal rendering, button interactions, navigation, and styling. All 252 tests pass.
 Files: src/app/game/page.tsx, src/app/game/page.test.tsx
 
+=== Issue 5.18: Afficher le numéro de la chanson ===
+Timestamp: 2026-01-17T20:52:00Z
+Status: COMPLETED
+Commit: d5af4b2
+Notes: Added current song number display ("Chanson N") to ScoreDisplay component. Song number is calculated as songsPlayed + 1 by default, with optional currentSongNumber prop override. Displayed prominently in white with font-semibold, while songs played count is shown in smaller secondary text below. Added 5 new tests for song number display functionality. All 257 tests pass.
+Files: src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx
+
