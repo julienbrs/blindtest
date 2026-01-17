@@ -7,6 +7,7 @@ interface AudioPlayerProps {
   isPlaying: boolean
   maxDuration: number
   onEnded: () => void
+  onReady?: (songId: string) => void
 }
 
 export function AudioPlayer({
@@ -14,6 +15,7 @@ export function AudioPlayer({
   isPlaying,
   maxDuration,
   onEnded,
+  onReady,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -61,6 +63,10 @@ export function AudioPlayer({
 
   const handleCanPlay = () => {
     setIsLoaded(true)
+    // Notify parent that audio is ready to play, passing the song ID
+    if (songId) {
+      onReady?.(songId)
+    }
   }
 
   const handleLoadStart = () => {

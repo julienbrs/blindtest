@@ -17,6 +17,10 @@ function GameContent() {
   const router = useRouter()
   const [showQuitConfirm, setShowQuitConfirm] = useState(false)
   const [allSongsPlayed, setAllSongsPlayed] = useState(false)
+  // Track which song ID triggered the audio ready state
+  const [audioReadyForSongId, setAudioReadyForSongId] = useState<string | null>(
+    null
+  )
   const hasInitialized = useRef(false)
 
   // Parse config from URL parameters
@@ -83,6 +87,28 @@ function GameContent() {
     game.state.playedSongIds,
     loadRandomSong,
   ])
+
+  // LOADING → PLAYING transition: Start playback when audio is ready
+  // We check that the audio ready signal matches the current song to avoid race conditions
+  useEffect(() => {
+    if (
+      game.state.status === 'loading' &&
+      game.state.currentSong &&
+      audioReadyForSongId === game.state.currentSong.id
+    ) {
+      game.actions.play()
+    }
+  }, [
+    game.state.status,
+    game.state.currentSong,
+    audioReadyForSongId,
+    game.actions,
+  ])
+
+  // Callback when audio is ready to play - receives songId from AudioPlayer
+  const handleAudioReady = useCallback((songId: string) => {
+    setAudioReadyForSongId(songId)
+  }, [])
 
   const handleNewGame = () => {
     // Reload the page with same config to start a new game
@@ -166,6 +192,7 @@ function GameContent() {
             isPlaying={game.state.status === 'playing'}
             maxDuration={config.clipDuration}
             onEnded={game.actions.clipEnded}
+            onReady={handleAudioReady}
           />
         </div>
 

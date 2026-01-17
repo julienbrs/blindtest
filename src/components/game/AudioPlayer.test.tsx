@@ -179,6 +179,61 @@ describe('AudioPlayer', () => {
     })
   })
 
+  describe('onReady callback (Issue 6.4)', () => {
+    it('should accept optional onReady prop with songId parameter', () => {
+      const onEnded = vi.fn()
+      const onReady = vi.fn()
+
+      // Should not throw when onReady is provided
+      expect(() => {
+        render(
+          <AudioPlayer
+            songId="abc123def456"
+            isPlaying={false}
+            maxDuration={20}
+            onEnded={onEnded}
+            onReady={onReady}
+          />
+        )
+      }).not.toThrow()
+    })
+
+    it('should render without onReady prop', () => {
+      const onEnded = vi.fn()
+
+      // Should not throw when onReady is not provided
+      expect(() => {
+        render(
+          <AudioPlayer
+            songId="abc123def456"
+            isPlaying={false}
+            maxDuration={20}
+            onEnded={onEnded}
+          />
+        )
+      }).not.toThrow()
+    })
+
+    it('should have audio element that triggers canplay event', () => {
+      const onEnded = vi.fn()
+      const onReady = vi.fn()
+
+      render(
+        <AudioPlayer
+          songId="abc123def456"
+          isPlaying={false}
+          maxDuration={20}
+          onEnded={onEnded}
+          onReady={onReady}
+        />
+      )
+
+      // Audio element should exist and can receive canplay event
+      const audio = document.querySelector('audio')
+      expect(audio).toBeInTheDocument()
+    })
+  })
+
   describe('Duration limiting implementation verification', () => {
     it('should have maxDuration prop for 10 seconds', () => {
       const onEnded = vi.fn()

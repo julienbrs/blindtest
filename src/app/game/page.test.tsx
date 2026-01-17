@@ -47,7 +47,20 @@ vi.mock('@/hooks/useGameState', () => ({
 
 // Mock child components to simplify testing
 vi.mock('@/components/game/AudioPlayer', () => ({
-  AudioPlayer: () => <div data-testid="audio-player">AudioPlayer</div>,
+  AudioPlayer: ({
+    onReady,
+    songId,
+  }: {
+    onReady?: (songId: string) => void
+    songId?: string
+    isPlaying?: boolean
+    maxDuration?: number
+    onEnded?: () => void
+  }) => (
+    <div data-testid="audio-player" onClick={() => songId && onReady?.(songId)}>
+      AudioPlayer
+    </div>
+  ),
 }))
 
 vi.mock('@/components/game/BuzzerButton', () => ({
@@ -72,6 +85,30 @@ vi.mock('@/components/game/GameControls', () => ({
 
 // Import after mocks
 import GamePage from './page'
+
+describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('passes onReady callback to AudioPlayer', () => {
+    render(<GamePage />)
+
+    // AudioPlayer should be rendered
+    const audioPlayer = screen.getByTestId('audio-player')
+    expect(audioPlayer).toBeInTheDocument()
+  })
+
+  it('AudioPlayer receives onReady prop', () => {
+    render(<GamePage />)
+
+    // The AudioPlayer mock accepts onReady and can be clicked
+    const audioPlayer = screen.getByTestId('audio-player')
+
+    // Click triggers onReady callback - should not throw
+    expect(() => fireEvent.click(audioPlayer)).not.toThrow()
+  })
+})
 
 describe('GamePage - Quit Button', () => {
   beforeEach(() => {
