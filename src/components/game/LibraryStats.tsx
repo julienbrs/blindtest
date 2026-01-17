@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { MusicalNoteIcon, UserGroupIcon } from '@heroicons/react/24/solid'
 
 interface Stats {
   totalSongs: number
@@ -54,13 +55,20 @@ export function LibraryStats() {
 
   return (
     <div className="mt-8 text-center text-purple-200">
-      <p className="text-lg">
-        <span className="font-bold text-white">{stats.totalSongs}</span>{' '}
-        chansons
-        {' de '}
-        <span className="font-bold text-white">{stats.totalArtists}</span>{' '}
-        artistes
-      </p>
+      <div className="flex items-center justify-center gap-6 text-lg">
+        <span className="flex items-center gap-2">
+          <MusicalNoteIcon className="h-5 w-5 text-pink-400" />
+          <span className="font-bold text-white">{stats.totalSongs}</span>{' '}
+          chansons
+        </span>
+        <span className="flex items-center gap-2">
+          <UserGroupIcon className="h-5 w-5 text-purple-400" />
+          <span className="font-bold text-white">
+            {stats.totalArtists}
+          </span>{' '}
+          artistes
+        </span>
+      </div>
       <p className="mt-1 text-sm">prêtes à vous tester !</p>
     </div>
   )

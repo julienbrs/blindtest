@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { ArrowRightOnRectangleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
 import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
@@ -349,7 +350,9 @@ function GameContent() {
           onClick={() => setShowQuitConfirm(true)}
           variant="secondary"
           size="sm"
+          className="flex items-center gap-2"
         >
+          <ArrowRightOnRectangleIcon className="h-4 w-4" />
           Quitter
         </Button>
       </header>
@@ -376,16 +379,18 @@ function GameContent() {
                   onClick={() => setShowQuitConfirm(false)}
                   variant="secondary"
                   size="md"
-                  className="flex-1"
+                  className="flex flex-1 items-center justify-center gap-2"
                 >
+                  <XMarkIcon className="h-5 w-5" />
                   Annuler
                 </Button>
                 <Button
                   onClick={() => router.push('/')}
                   variant="danger"
                   size="md"
-                  className="flex-1"
+                  className="flex flex-1 items-center justify-center gap-2"
                 >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
                   Quitter
                 </Button>
               </div>

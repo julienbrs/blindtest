@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import {
+  TrophyIcon,
+  MusicalNoteIcon,
+  CheckCircleIcon,
+  ChartBarIcon,
+  HomeIcon,
+  PlayIcon,
+} from '@heroicons/react/24/solid'
 import { Button } from '@/components/ui/Button'
 
 interface ConfettiParticle {
@@ -136,24 +144,28 @@ export function GameRecap({
         <div className="mb-8 grid grid-cols-2 gap-4">
           {/* Score */}
           <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
+            <TrophyIcon className="mx-auto mb-1 h-5 w-5 text-yellow-400" />
             <div className="text-sm text-purple-300">Score</div>
             <div className="text-4xl font-bold text-white">{score}</div>
           </div>
 
           {/* Songs played */}
           <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
+            <MusicalNoteIcon className="mx-auto mb-1 h-5 w-5 text-pink-400" />
             <div className="text-sm text-purple-300">Chansons jouées</div>
             <div className="text-4xl font-bold text-white">{songsPlayed}</div>
           </div>
 
           {/* Correct answers */}
           <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
+            <CheckCircleIcon className="mx-auto mb-1 h-5 w-5 text-green-400" />
             <div className="text-sm text-purple-300">Bonnes réponses</div>
             <div className="text-4xl font-bold text-green-400">{score}</div>
           </div>
 
           {/* Success rate */}
           <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
+            <ChartBarIcon className="mx-auto mb-1 h-5 w-5 text-purple-400" />
             <div className="text-sm text-purple-300">Taux de réussite</div>
             <div
               className={`text-4xl font-bold ${
@@ -167,10 +179,24 @@ export function GameRecap({
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3">
-          <Button onClick={onNewGame} variant="primary" size="lg" fullWidth>
+          <Button
+            onClick={onNewGame}
+            variant="primary"
+            size="lg"
+            fullWidth
+            className="flex items-center justify-center gap-2"
+          >
+            <PlayIcon className="h-5 w-5" />
             Nouvelle partie
           </Button>
-          <Button onClick={onHome} variant="secondary" size="md" fullWidth>
+          <Button
+            onClick={onHome}
+            variant="secondary"
+            size="md"
+            fullWidth
+            className="flex items-center justify-center gap-2"
+          >
+            <HomeIcon className="h-5 w-5" />
             Retour à l&apos;accueil
           </Button>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { MusicalNoteIcon } from '@heroicons/react/24/solid'
 import type { Song, GuessMode } from '@/lib/types'
 
 interface SongRevealProps {
@@ -32,7 +33,7 @@ export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
         />
         {!isRevealed && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-6xl">🎵</span>
+            <MusicalNoteIcon className="h-16 w-16 text-white/80" />
           </div>
         )}
       </div>

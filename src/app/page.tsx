@@ -1,6 +1,11 @@
 'use client'
 
 import { motion, useReducedMotion } from 'framer-motion'
+import {
+  MusicalNoteIcon,
+  MicrophoneIcon,
+  SpeakerWaveIcon,
+} from '@heroicons/react/24/solid'
 import { GameConfigForm } from '@/components/game/GameConfigForm'
 import { LibraryStats } from '@/components/game/LibraryStats'
 
@@ -48,22 +53,22 @@ export default function HomePage() {
 
       {/* Decorative music icons */}
       <motion.div
-        className="mb-8 flex items-center gap-4 text-4xl opacity-60"
+        className="mb-8 flex items-center gap-4 opacity-60"
         variants={fadeUpVariants}
         transition={{ duration: 0.5 }}
       >
-        <span className="animate-bounce" style={{ animationDelay: '0s' }}>
-          🎵
-        </span>
-        <span
-          className="animate-bounce"
+        <MusicalNoteIcon
+          className="h-10 w-10 animate-bounce text-pink-400"
+          style={{ animationDelay: '0s' }}
+        />
+        <SpeakerWaveIcon
+          className="h-10 w-10 animate-bounce text-purple-400"
           style={{ animationDelay: '0.2s', animationDuration: '1.2s' }}
-        >
-          🎶
-        </span>
-        <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>
-          🎤
-        </span>
+        />
+        <MicrophoneIcon
+          className="h-10 w-10 animate-bounce text-yellow-400"
+          style={{ animationDelay: '0.4s' }}
+        />
       </motion.div>
 
       {/* Game configuration form */}

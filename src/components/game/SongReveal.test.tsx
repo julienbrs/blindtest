@@ -73,13 +73,18 @@ describe('SongReveal', () => {
     it('shows music note icon when not revealed', () => {
       render(<SongReveal song={mockSong} isRevealed={false} guessMode="both" />)
 
-      expect(screen.getByText('🎵')).toBeInTheDocument()
+      // MusicalNoteIcon from Heroicons is rendered as an SVG
+      const icon = document.querySelector('svg')
+      expect(icon).toBeInTheDocument()
+      expect(icon).toHaveClass('h-16', 'w-16', 'text-white/80')
     })
 
     it('hides music note icon when revealed', () => {
       render(<SongReveal song={mockSong} isRevealed={true} guessMode="both" />)
 
-      expect(screen.queryByText('🎵')).not.toBeInTheDocument()
+      // The music note icon should not be present when revealed
+      const icon = document.querySelector('.h-16.w-16')
+      expect(icon).not.toBeInTheDocument()
     })
   })
 

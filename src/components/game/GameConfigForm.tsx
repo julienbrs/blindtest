@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  PlayIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/solid'
 import type { GuessMode } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -302,7 +308,10 @@ export function GameConfigForm() {
 
       {/* Durée des extraits */}
       <Card className="p-6">
-        <h2 className="mb-4 text-xl font-semibold">Durée des extraits</h2>
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
+          <ClockIcon className="h-5 w-5 text-purple-400" />
+          Durée des extraits
+        </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-purple-200">Durée</span>
@@ -334,11 +343,10 @@ export function GameConfigForm() {
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="flex w-full items-center justify-center gap-2 text-purple-300 transition-colors hover:text-white"
         >
-          <span
-            className={`transform transition-transform duration-200 ${showAdvanced ? 'rotate-90' : ''}`}
-          >
-            ▶
-          </span>
+          <ChevronRightIcon
+            className={`h-4 w-4 transform transition-transform duration-200 ${showAdvanced ? 'rotate-90' : ''}`}
+          />
+          <Cog6ToothIcon className="h-4 w-4" />
           Paramètres avancés
         </button>
 
@@ -440,7 +448,14 @@ export function GameConfigForm() {
       )}
 
       {/* Bouton démarrer */}
-      <Button type="submit" disabled={isLoading} size="lg" fullWidth>
+      <Button
+        type="submit"
+        disabled={isLoading}
+        size="lg"
+        fullWidth
+        className="flex items-center justify-center gap-2"
+      >
+        <PlayIcon className="h-5 w-5" />
         {isLoading ? 'Chargement...' : 'Nouvelle Partie'}
       </Button>
     </form>
