@@ -555,3 +555,10 @@ Commit: 559b316
 Notes: Implemented visual feedback effects for incorrect answers. Created IncorrectAnswerFlash component with subtle red flash overlay (0.2 max opacity, lower than correct answer's 0.3 to avoid being punitive). Created useWrongAnswerEffect hook that triggers a shake animation on the main game container. Shake uses Framer Motion's animate prop with x keyframes [-10, 10, -10, 10, 0] over 400ms. Both effects integrated in game page's handleValidate function. All effects respect prefers-reduced-motion accessibility setting. Created 17 comprehensive tests (8 for IncorrectAnswerFlash, 9 for useWrongAnswerEffect hook). All 491 tests pass.
 Files: src/components/game/IncorrectAnswerFlash.tsx, src/components/game/IncorrectAnswerFlash.test.tsx, src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts, src/app/game/page.tsx
 
+=== Issue 7.7: Styliser le timer avec urgence ===
+Timestamp: 2026-01-18T03:25:00Z
+Status: COMPLETED
+Commit: 9f57045
+Notes: Enhanced Timer component with urgency-based styling using absolute second thresholds per epic 7.7 specs. Colors: green (>5s), yellow (5-4s), orange (3-2s), red (1s). Animations: no pulse (>3s), léger pulse (3-2s with 0.6s duration), pulse rapide + clignotement (1s with 0.25s duration). Added orange glow for warning state and intense red glow for critical state. Text changes to "Dépêchez-vous !" at 3-2s and "VITE !" at 1s. All effects respect prefers-reduced-motion accessibility setting. Updated test suite with 7 additional tests for new urgency states. All 498 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
