@@ -12,7 +12,7 @@ interface SongRevealProps {
 export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
   if (!song) {
     return (
-      <div className="flex h-64 w-64 items-center justify-center rounded-2xl bg-white/10">
+      <div className="flex h-64 w-64 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-sm">
         <p className="text-purple-300">Chargement...</p>
       </div>
     )
@@ -21,7 +21,7 @@ export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Pochette */}
-      <div className="relative h-64 w-64 overflow-hidden rounded-2xl shadow-2xl">
+      <div className="relative h-64 w-64 overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
         <Image
           src={`/api/cover/${song.id}`}
           alt="Pochette album"

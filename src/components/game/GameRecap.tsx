@@ -120,7 +120,7 @@ export function GameRecap({
       {/* Recap card */}
       <motion.div
         {...animationProps}
-        className="w-full max-w-md rounded-2xl bg-gradient-to-br from-purple-900 to-indigo-900 p-6 shadow-2xl md:p-8"
+        className="w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-br from-purple-900 to-indigo-900 p-6 shadow-[0_25px_60px_rgba(0,0,0,0.4)] backdrop-blur-sm md:p-8"
       >
         {/* Title */}
         <h2 className="mb-6 text-center font-heading text-3xl font-bold text-white md:text-4xl">
@@ -135,25 +135,25 @@ export function GameRecap({
         {/* Stats grid */}
         <div className="mb-8 grid grid-cols-2 gap-4">
           {/* Score */}
-          <div className="rounded-xl bg-white/10 p-4 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
             <div className="text-sm text-purple-300">Score</div>
             <div className="text-4xl font-bold text-white">{score}</div>
           </div>
 
           {/* Songs played */}
-          <div className="rounded-xl bg-white/10 p-4 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
             <div className="text-sm text-purple-300">Chansons jouées</div>
             <div className="text-4xl font-bold text-white">{songsPlayed}</div>
           </div>
 
           {/* Correct answers */}
-          <div className="rounded-xl bg-white/10 p-4 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
             <div className="text-sm text-purple-300">Bonnes réponses</div>
             <div className="text-4xl font-bold text-green-400">{score}</div>
           </div>
 
           {/* Success rate */}
-          <div className="rounded-xl bg-white/10 p-4 text-center">
+          <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-center shadow-lg backdrop-blur-sm">
             <div className="text-sm text-purple-300">Taux de réussite</div>
             <div
               className={`text-4xl font-bold ${

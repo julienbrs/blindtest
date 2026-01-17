@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { GuessMode } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
 
 const STORAGE_KEY = 'blindtest_config'
 
@@ -255,7 +256,7 @@ export function GameConfigForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
       {/* Mode de devinette */}
-      <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
+      <Card className="p-6">
         <h2 className="mb-4 text-xl font-semibold">Que deviner ?</h2>
         <div className="space-y-3">
           {modes.map((mode) => (
@@ -297,10 +298,10 @@ export function GameConfigForm() {
             </label>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Durée des extraits */}
-      <div className="rounded-xl bg-white/10 p-6 backdrop-blur-sm">
+      <Card className="p-6">
         <h2 className="mb-4 text-xl font-semibold">Durée des extraits</h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -324,7 +325,7 @@ export function GameConfigForm() {
             <span>60s</span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Paramètres avancés */}
       <div className="space-y-4">
@@ -346,7 +347,7 @@ export function GameConfigForm() {
             showAdvanced ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="space-y-4 rounded-xl border border-white/20 bg-white/5 p-6">
+          <Card className="space-y-4 p-6">
             {/* Timer duration */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -427,7 +428,7 @@ export function GameConfigForm() {
                 </div>
               </div>
             </label>
-          </div>
+          </Card>
         </div>
       </div>
 
