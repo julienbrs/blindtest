@@ -373,3 +373,10 @@ Commit: 8b36486
 Notes: Added validation buttons (Correct/Incorrect) to GameControls component. Created CheckIcon and XIcon SVG components. Green "Correct" button calls onValidate(true), red "Incorrect" button calls onValidate(false). Buttons only visible when status is 'buzzed' or 'timer'. Created comprehensive test suite with 15 tests covering button visibility, callbacks, and styling. All 227 tests pass.
 Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx
 
+=== Issue 5.15: Créer le bouton "Chanson suivante" ===
+Timestamp: 2026-01-17T20:45:00Z
+Status: COMPLETED
+Commit: b2e3c05
+Notes: Added "Chanson suivante" button to GameControls component. Button is visible only when status is 'reveal'. Created ArrowRightIcon SVG component for button arrow. Styled with pink-purple gradient matching app theme (bg-gradient-to-r from-pink-500 to-purple-600). Button calls onNext callback to load the next song. Added 8 comprehensive tests for visibility, callback, styling, and icon presence. All 235 tests pass.
+Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx
+

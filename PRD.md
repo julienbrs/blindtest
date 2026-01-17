@@ -87,7 +87,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 5.12 Créer le composant SongReveal
 - [x] 5.13 Implémenter le blur de la pochette
 - [x] 5.14 Créer les boutons de validation
-- [ ] 5.15 Créer le bouton "Chanson suivante"
+- [x] 5.15 Créer le bouton "Chanson suivante"
 - [ ] 5.16 Créer le bouton "Révéler la réponse"
 - [ ] 5.17 Ajouter un bouton "Quitter la partie"
 - [ ] 5.18 Afficher le numéro de la chanson
