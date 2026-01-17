@@ -60,7 +60,7 @@ After this task, all subsequent issues run with full feedback loops.
 
 ### Epic 4: Homepage (docs/epics/04-homepage.md)
 
-- [ ] 4.1 Créer le layout principal
+- [x] 4.1 Créer le layout principal
 - [ ] 4.2 Designer la page d'accueil
 - [ ] 4.3 Créer le formulaire de configuration
 - [ ] 4.4 Ajouter le sélecteur de mode de devinette

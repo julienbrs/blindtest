@@ -205,3 +205,10 @@ Commit: b588cbd
 Notes: Updated POST /api/songs/rescan endpoint to return scanDuration and human-readable message as per epic specs. Response now includes success, songsFound, scanDuration, and message fields. Added test for scan duration measurement accuracy. All 141 tests pass.
 Files: src/app/api/songs/rescan/route.ts, src/app/api/songs/rescan/route.test.ts
 
+=== Issue 4.1: Créer le layout principal ===
+Timestamp: 2026-01-17T19:30:00Z
+Status: COMPLETED
+Commit: d041f24
+Notes: Updated layout.tsx with festive gradient background (from-indigo-950 via-purple-900 to-pink-900), min-h-screen flex container structure, and updated SEO metadata. Added CSS font variables for Poppins (headings) and Inter (body), heading font styles, and gradient-shift animation for animated background effect. All 141 tests pass.
+Files: src/app/layout.tsx, src/app/globals.css
+
