@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createReadStream, statSync } from 'fs'
+import { Readable } from 'stream'
 import { getSongsCache } from '@/lib/audioScanner'
 import type { AudioFormat } from '@/lib/types'
 
@@ -16,8 +17,15 @@ const MIME_TYPES: Record<AudioFormat, string> = {
 }
 
 /**
+ * Default high water mark for streaming (64KB chunks)
+ * Optimized for audio streaming performance
+ */
+const STREAM_HIGH_WATER_MARK = 64 * 1024
+
+/**
  * GET /api/audio/[id]
  * Streams an audio file with Range Request support for seeking
+ * Optimized for memory efficiency - uses true streaming instead of buffering
  */
 export async function GET(
   request: NextRequest,
@@ -79,16 +87,17 @@ export async function GET(
 
       const chunkSize = end - start + 1
 
-      const stream = createReadStream(filePath, { start, end })
-      const chunks: Uint8Array[] = []
+      // Create a file stream for the requested range with optimized chunk size
+      const nodeStream = createReadStream(filePath, {
+        start,
+        end,
+        highWaterMark: STREAM_HIGH_WATER_MARK,
+      })
 
-      for await (const chunk of stream) {
-        chunks.push(chunk)
-      }
+      // Convert Node.js stream to Web ReadableStream for true streaming
+      const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>
 
-      const buffer = Buffer.concat(chunks)
-
-      return new NextResponse(buffer, {
+      return new NextResponse(webStream, {
         status: 206,
         headers: {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
@@ -99,17 +108,15 @@ export async function GET(
       })
     }
 
-    // Full file request
-    const stream = createReadStream(filePath)
-    const chunks: Uint8Array[] = []
+    // Full file request - use true streaming to avoid loading entire file into memory
+    const nodeStream = createReadStream(filePath, {
+      highWaterMark: STREAM_HIGH_WATER_MARK,
+    })
 
-    for await (const chunk of stream) {
-      chunks.push(chunk)
-    }
+    // Convert Node.js stream to Web ReadableStream
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>
 
-    const buffer = Buffer.concat(chunks)
-
-    return new NextResponse(buffer, {
+    return new NextResponse(webStream, {
       headers: {
         'Content-Length': fileSize.toString(),
         'Content-Type': mimeType,
