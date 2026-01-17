@@ -39,7 +39,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 2.3 Extraire les métadonnées ID3
 - [x] 2.4 Extraire les pochettes d'album
 - [x] 2.5 Générer des IDs uniques pour les chansons
-- [ ] 2.6 Créer un cache des métadonnées
+- [x] 2.6 Créer un cache des métadonnées
 - [ ] 2.7 Gérer les fichiers sans métadonnées
 - [ ] 2.8 Valider les formats audio supportés
 - [ ] 2.9 Gérer les erreurs de lecture

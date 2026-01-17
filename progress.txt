@@ -99,3 +99,11 @@ Commit: 6214d84
 Notes: Validated the generateSongId function implementation (added in issue 2.3). Function uses MD5 hash of file path truncated to 12 hex characters, ensuring deterministic and unique IDs. Same file always generates the same ID, different files generate different IDs. Tests already covered in audioScanner.test.ts (3 tests for generateSongId).
 Files: PRD.md (marked complete)
 
+
+=== Issue 2.6: Créer un cache des métadonnées ===
+Timestamp: 2026-01-17T18:05:00Z
+Status: COMPLETED
+Commit: 08c8b5d
+Notes: Implemented in-memory metadata cache with getSongsCache(), refreshCache(), getCacheInfo(), clearCache(), and isCacheInitialized() functions. First call triggers scan, subsequent calls use cache. Created 10 comprehensive tests for cache functionality (47 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
