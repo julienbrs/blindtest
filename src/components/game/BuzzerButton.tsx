@@ -1,4 +1,3 @@
-// Placeholder - will be fully implemented in Epic 5
 'use client'
 
 interface BuzzerButtonProps {
@@ -9,7 +8,8 @@ interface BuzzerButtonProps {
 export function BuzzerButton({ onBuzz, disabled = false }: BuzzerButtonProps) {
   const handleClick = () => {
     if (!disabled) {
-      if ('vibrate' in navigator) {
+      // Trigger mobile vibration if supported
+      if (typeof navigator.vibrate === 'function') {
         navigator.vibrate(100)
       }
       onBuzz()
