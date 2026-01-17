@@ -27,10 +27,43 @@ export function GameConfigForm() {
   const [guessMode, setGuessMode] = useState<GuessMode>('both')
   const [clipDuration, setClipDuration] = useState(20)
   const [isLoading, setIsLoading] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = async (): Promise<boolean> => {
+    // Check that there are songs available
+    try {
+      const res = await fetch('/api/songs')
+      const data = await res.json()
+      if (data.total === 0) {
+        setValidationError(
+          'Aucune chanson disponible. Vérifiez votre dossier audio.'
+        )
+        return false
+      }
+    } catch {
+      setValidationError('Impossible de vérifier la bibliothèque.')
+      return false
+    }
+
+    // Validate parameters
+    if (clipDuration < 5 || clipDuration > 60) {
+      setValidationError('La durée doit être entre 5 et 60 secondes.')
+      return false
+    }
+
+    setValidationError(null)
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+
+    const isValid = await validateForm()
+    if (!isValid) {
+      setIsLoading(false)
+      return
+    }
 
     // Store config in query params for the game page
     const params = new URLSearchParams({
@@ -112,6 +145,13 @@ export function GameConfigForm() {
           </div>
         </div>
       </div>
+
+      {/* Validation error message */}
+      {validationError && (
+        <div className="rounded-lg bg-red-500/20 p-4 text-center text-red-200">
+          {validationError}
+        </div>
+      )}
 
       {/* Bouton démarrer */}
       <button
