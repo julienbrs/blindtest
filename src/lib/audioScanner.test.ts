@@ -17,6 +17,10 @@ import {
   getFormatWarning,
   getUniversalFormats,
   getPartialSupportFormats,
+  classifyReadError,
+  getReadErrorMessage,
+  safeExtractMetadata,
+  batchExtractMetadata,
 } from './audioScanner'
 import { mkdir, writeFile, rm } from 'fs/promises'
 import { join } from 'path'
@@ -806,6 +810,192 @@ describe('Format Validation', () => {
 
       expect(formats1).not.toBe(formats2)
       expect(formats1).toEqual(formats2)
+    })
+  })
+})
+
+describe('Error Handling', () => {
+  let testDir: string
+
+  beforeEach(async () => {
+    testDir = join(tmpdir(), `error-test-${Date.now()}`)
+    await mkdir(testDir, { recursive: true })
+  })
+
+  afterEach(async () => {
+    vi.restoreAllMocks()
+    try {
+      await rm(testDir, { recursive: true, force: true })
+    } catch {
+      // Ignore cleanup errors
+    }
+  })
+
+  describe('classifyReadError', () => {
+    it('should classify ENOENT errors as FILE_NOT_FOUND', () => {
+      const error = new Error('ENOENT: no such file or directory')
+      expect(classifyReadError(error)).toBe('FILE_NOT_FOUND')
+    })
+
+    it('should classify error with ENOENT code as FILE_NOT_FOUND', () => {
+      const error = new Error('Something failed') as NodeJS.ErrnoException
+      error.code = 'ENOENT'
+      expect(classifyReadError(error)).toBe('FILE_NOT_FOUND')
+    })
+
+    it('should classify EACCES errors as PERMISSION_DENIED', () => {
+      const error = new Error('EACCES: permission denied')
+      expect(classifyReadError(error)).toBe('PERMISSION_DENIED')
+    })
+
+    it('should classify error with EACCES code as PERMISSION_DENIED', () => {
+      const error = new Error('Something failed') as NodeJS.ErrnoException
+      error.code = 'EACCES'
+      expect(classifyReadError(error)).toBe('PERMISSION_DENIED')
+    })
+
+    it('should classify corrupt file errors as CORRUPTED_FILE', () => {
+      expect(classifyReadError(new Error('corrupt file data'))).toBe(
+        'CORRUPTED_FILE'
+      )
+      expect(classifyReadError(new Error('invalid header'))).toBe(
+        'CORRUPTED_FILE'
+      )
+      expect(classifyReadError(new Error('Unexpected end of file'))).toBe(
+        'CORRUPTED_FILE'
+      )
+      expect(classifyReadError(new Error('Bad file descriptor'))).toBe(
+        'CORRUPTED_FILE'
+      )
+      expect(classifyReadError(new Error('failed to parse'))).toBe(
+        'CORRUPTED_FILE'
+      )
+    })
+
+    it('should classify unknown errors as UNKNOWN_ERROR', () => {
+      expect(classifyReadError(new Error('Something went wrong'))).toBe(
+        'UNKNOWN_ERROR'
+      )
+      expect(classifyReadError('string error')).toBe('UNKNOWN_ERROR')
+      expect(classifyReadError(null)).toBe('UNKNOWN_ERROR')
+      expect(classifyReadError(undefined)).toBe('UNKNOWN_ERROR')
+    })
+  })
+
+  describe('getReadErrorMessage', () => {
+    it('should return French message for FILE_NOT_FOUND', () => {
+      const message = getReadErrorMessage('FILE_NOT_FOUND', '/path/to/file.mp3')
+      expect(message).toBe('Fichier non trouvé: /path/to/file.mp3')
+    })
+
+    it('should return French message for PERMISSION_DENIED', () => {
+      const message = getReadErrorMessage(
+        'PERMISSION_DENIED',
+        '/path/to/file.mp3'
+      )
+      expect(message).toBe('Permission refusée: /path/to/file.mp3')
+    })
+
+    it('should return French message for CORRUPTED_FILE', () => {
+      const message = getReadErrorMessage('CORRUPTED_FILE', '/path/to/file.mp3')
+      expect(message).toBe('Fichier corrompu ou invalide: /path/to/file.mp3')
+    })
+
+    it('should return French message for UNKNOWN_ERROR', () => {
+      const message = getReadErrorMessage('UNKNOWN_ERROR', '/path/to/file.mp3')
+      expect(message).toBe(
+        'Erreur inconnue lors de la lecture: /path/to/file.mp3'
+      )
+    })
+  })
+
+  describe('safeExtractMetadata', () => {
+    it('should return song on successful extraction', async () => {
+      const testFile = join(testDir, 'Artist - Title.mp3')
+      await writeFile(testFile, '')
+
+      const result = await safeExtractMetadata(testFile)
+
+      expect(result.song).not.toBeNull()
+      expect(result.song!.artist).toBe('Artist')
+      expect(result.song!.title).toBe('Title')
+      expect(result.error).toBeNull()
+      expect(result.errorMessage).toBeNull()
+    })
+
+    it('should handle non-existent file gracefully', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const result = await safeExtractMetadata('/non/existent/file.mp3')
+
+      expect(result.song).toBeNull()
+      // Error type may vary based on internal extractMetadata behavior
+      expect(result.error).not.toBeNull()
+      expect(result.errorMessage).not.toBeNull()
+    })
+
+    it('should not throw on errors', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      // Should not throw
+      await expect(
+        safeExtractMetadata('/non/existent/file.mp3')
+      ).resolves.toBeDefined()
+    })
+  })
+
+  describe('batchExtractMetadata', () => {
+    it('should process multiple files and return songs', async () => {
+      const file1 = join(testDir, 'Artist1 - Song1.mp3')
+      const file2 = join(testDir, 'Artist2 - Song2.mp3')
+      await writeFile(file1, '')
+      await writeFile(file2, '')
+
+      const result = await batchExtractMetadata([file1, file2])
+
+      expect(result.songs).toHaveLength(2)
+      expect(result.songs[0].artist).toBe('Artist1')
+      expect(result.songs[1].artist).toBe('Artist2')
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('should continue processing after errors', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const validFile = join(testDir, 'Artist - Title.mp3')
+      await writeFile(validFile, '')
+      const invalidFile = '/non/existent/file.mp3'
+
+      const result = await batchExtractMetadata([invalidFile, validFile])
+
+      expect(result.songs).toHaveLength(1)
+      expect(result.songs[0].artist).toBe('Artist')
+      expect(result.errors).toHaveLength(1)
+      expect(result.errors[0].filePath).toBe(invalidFile)
+    })
+
+    it('should return empty arrays for empty input', async () => {
+      const result = await batchExtractMetadata([])
+
+      expect(result.songs).toHaveLength(0)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('should collect all errors from failed files', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const result = await batchExtractMetadata([
+        '/non/existent/file1.mp3',
+        '/non/existent/file2.mp3',
+        '/non/existent/file3.mp3',
+      ])
+
+      expect(result.songs).toHaveLength(0)
+      expect(result.errors).toHaveLength(3)
     })
   })
 })

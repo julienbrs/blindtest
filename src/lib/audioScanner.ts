@@ -264,6 +264,166 @@ export function getCoverFilenames(): string[] {
 }
 
 // ============================================================================
+// ERROR HANDLING
+// ============================================================================
+
+/**
+ * Error types that can occur during audio file reading
+ */
+export type AudioReadErrorType =
+  | 'FILE_NOT_FOUND'
+  | 'PERMISSION_DENIED'
+  | 'CORRUPTED_FILE'
+  | 'UNKNOWN_ERROR'
+
+/**
+ * Result of a safe metadata extraction attempt
+ */
+export interface SafeExtractResult {
+  song: Song | null
+  error: AudioReadErrorType | null
+  errorMessage: string | null
+}
+
+/**
+ * Classifies an error into an AudioReadErrorType
+ * @param error - The error to classify
+ * @returns The classified error type
+ */
+export function classifyReadError(error: unknown): AudioReadErrorType {
+  if (error instanceof Error) {
+    const message = error.message
+    const code = (error as NodeJS.ErrnoException).code
+
+    // Check for ENOENT (file not found)
+    if (code === 'ENOENT' || message.includes('ENOENT')) {
+      return 'FILE_NOT_FOUND'
+    }
+
+    // Check for EACCES (permission denied)
+    if (code === 'EACCES' || message.includes('EACCES')) {
+      return 'PERMISSION_DENIED'
+    }
+
+    // Check for corrupted file indicators
+    if (
+      message.includes('corrupt') ||
+      message.includes('invalid') ||
+      message.includes('Unexpected end of file') ||
+      message.includes('Bad file descriptor') ||
+      message.includes('header') ||
+      message.includes('parse')
+    ) {
+      return 'CORRUPTED_FILE'
+    }
+  }
+
+  return 'UNKNOWN_ERROR'
+}
+
+/**
+ * Returns a user-friendly error message for an error type
+ * @param errorType - The classified error type
+ * @param filePath - The path to the file that caused the error
+ * @returns A human-readable error message
+ */
+export function getReadErrorMessage(
+  errorType: AudioReadErrorType,
+  filePath: string
+): string {
+  switch (errorType) {
+    case 'FILE_NOT_FOUND':
+      return `Fichier non trouvé: ${filePath}`
+    case 'PERMISSION_DENIED':
+      return `Permission refusée: ${filePath}`
+    case 'CORRUPTED_FILE':
+      return `Fichier corrompu ou invalide: ${filePath}`
+    case 'UNKNOWN_ERROR':
+      return `Erreur inconnue lors de la lecture: ${filePath}`
+  }
+}
+
+/**
+ * Safely extracts metadata from an audio file, handling all error types gracefully
+ * This is a wrapper around extractMetadata that provides detailed error classification
+ *
+ * @param filePath - The absolute path to the audio file
+ * @returns Object containing the song (if successful) and any error information
+ */
+export async function safeExtractMetadata(
+  filePath: string
+): Promise<SafeExtractResult> {
+  try {
+    const song = await extractMetadata(filePath)
+
+    // extractMetadata returns null if it catches an error internally
+    if (song === null) {
+      return {
+        song: null,
+        error: 'UNKNOWN_ERROR',
+        errorMessage: getReadErrorMessage('UNKNOWN_ERROR', filePath),
+      }
+    }
+
+    return {
+      song,
+      error: null,
+      errorMessage: null,
+    }
+  } catch (error) {
+    const errorType = classifyReadError(error)
+    const errorMessage = getReadErrorMessage(errorType, filePath)
+
+    // Log the error for debugging
+    if (errorType === 'FILE_NOT_FOUND') {
+      console.warn(errorMessage)
+    } else if (errorType === 'PERMISSION_DENIED') {
+      console.warn(errorMessage)
+    } else if (errorType === 'CORRUPTED_FILE') {
+      console.warn(errorMessage)
+    } else {
+      console.error(
+        errorMessage,
+        error instanceof Error ? error.message : error
+      )
+    }
+
+    return {
+      song: null,
+      error: errorType,
+      errorMessage,
+    }
+  }
+}
+
+/**
+ * Extracts metadata from multiple files, continuing after errors
+ * Returns only successful extractions, filtering out failed files
+ *
+ * @param filePaths - Array of file paths to process
+ * @returns Object with successful songs array and any errors encountered
+ */
+export async function batchExtractMetadata(filePaths: string[]): Promise<{
+  songs: Song[]
+  errors: Array<{ filePath: string; error: AudioReadErrorType }>
+}> {
+  const songs: Song[] = []
+  const errors: Array<{ filePath: string; error: AudioReadErrorType }> = []
+
+  for (const filePath of filePaths) {
+    const result = await safeExtractMetadata(filePath)
+
+    if (result.song) {
+      songs.push(result.song)
+    } else if (result.error) {
+      errors.push({ filePath, error: result.error })
+    }
+  }
+
+  return { songs, errors }
+}
+
+// ============================================================================
 // FORMAT VALIDATION
 // ============================================================================
 
