@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useGameState } from '@/hooks/useGameState'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
@@ -10,12 +10,14 @@ import { ScoreDisplay } from '@/components/game/ScoreDisplay'
 import { SongReveal } from '@/components/game/SongReveal'
 import { GameControls } from '@/components/game/GameControls'
 import { GameRecap } from '@/components/game/GameRecap'
-import type { GameConfig, GuessMode } from '@/lib/types'
+import type { GameConfig, GuessMode, Song } from '@/lib/types'
 
 function GameContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [showQuitConfirm, setShowQuitConfirm] = useState(false)
+  const [allSongsPlayed, setAllSongsPlayed] = useState(false)
+  const hasInitialized = useRef(false)
 
   // Parse config from URL parameters
   const config: GameConfig = {
@@ -28,6 +30,59 @@ function GameContent() {
   }
 
   const game = useGameState(config)
+
+  // Load a random song from the API
+  const loadRandomSong = useCallback(
+    async (excludeIds: string[]) => {
+      const exclude = excludeIds.join(',')
+      const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
+
+      try {
+        const res = await fetch(url)
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            // No more songs available
+            setAllSongsPlayed(true)
+            game.actions.quit()
+          }
+          return
+        }
+
+        const data = (await res.json()) as { song: Song }
+        if (data.song) {
+          game.actions.loadSong(data.song)
+        } else {
+          // No song returned
+          setAllSongsPlayed(true)
+          game.actions.quit()
+        }
+      } catch {
+        // Network error - end the game
+        game.actions.quit()
+      }
+    },
+    [game.actions]
+  )
+
+  // IDLE → LOADING transition: Start game automatically when page loads
+  useEffect(() => {
+    if (game.state.status === 'idle' && !hasInitialized.current) {
+      hasInitialized.current = true
+      game.actions.startGame()
+      // Schedule the fetch for the next event loop iteration to avoid
+      // the "setState in effect" warning. The fetch is async anyway.
+      const playedIds = game.state.playedSongIds
+      queueMicrotask(() => {
+        void loadRandomSong(playedIds)
+      })
+    }
+  }, [
+    game.state.status,
+    game.actions,
+    game.state.playedSongIds,
+    loadRandomSong,
+  ])
 
   const handleNewGame = () => {
     // Reload the page with same config to start a new game
@@ -46,6 +101,7 @@ function GameContent() {
         songsPlayed={game.state.songsPlayed}
         onNewGame={handleNewGame}
         onHome={handleHome}
+        allSongsPlayed={allSongsPlayed}
       />
     )
   }
@@ -116,6 +172,14 @@ function GameContent() {
         {/* Right column (Mobile: bottom area, Desktop: right side) */}
         {/* Contains: Buzzer/Timer + Game Controls */}
         <div className="flex flex-col items-center justify-center gap-6 lg:w-80 lg:flex-shrink-0">
+          {/* Loading indicator - visible during loading state */}
+          {game.state.status === 'loading' && (
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
+              <p className="text-purple-300">Chargement...</p>
+            </div>
+          )}
+
           {/* Buzzer - visible during playing state */}
           {game.state.status === 'playing' && (
             <div className="flex items-center justify-center">

@@ -16,14 +16,22 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/hooks/useGameState', () => ({
   useGameState: () => ({
     state: {
-      status: 'idle',
-      currentSong: null,
+      // Use 'playing' status to avoid triggering the useEffect that calls startGame
+      status: 'playing',
+      currentSong: {
+        id: 'test123abc',
+        title: 'Test Song',
+        artist: 'Test Artist',
+      },
       score: 0,
       songsPlayed: 0,
+      playedSongIds: [],
       isRevealed: false,
       timerRemaining: 5,
     },
     actions: {
+      startGame: vi.fn(),
+      loadSong: vi.fn(),
       quit: vi.fn(),
       buzz: vi.fn(),
       validate: vi.fn(),
@@ -32,6 +40,7 @@ vi.mock('@/hooks/useGameState', () => ({
       play: vi.fn(),
       pause: vi.fn(),
       clipEnded: vi.fn(),
+      reset: vi.fn(),
     },
   }),
 }))
