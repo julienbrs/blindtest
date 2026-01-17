@@ -485,3 +485,10 @@ Commit: 809130a
 Notes: Verified and documented no-repeat song functionality. playedSongIds is tracked in useGameState via TICK_TIMER, VALIDATE, REVEAL, and CLIP_ENDED actions. The game page passes playedSongIds as exclude parameter to /api/songs/random endpoint. API filters excluded songs and returns 404 when all songs played. Added 9 comprehensive tests verifying: multi-round tracking, timer expiry tracking, reveal tracking, clipEnded tracking, preservation on game end, clearing on reset/new game, and exclude parameter construction. All 351 tests pass.
 Files: src/hooks/useGameState.test.ts
 
+=== Issue 6.12: Détecter la fin de la bibliothèque ===
+Timestamp: 2026-01-18T00:30:00Z
+Status: COMPLETED
+Commit: 9e73f47
+Notes: Verified library end detection functionality already implemented in game page. When API returns 404 (all songs played), allSongsPlayed state is set to true and game.actions.quit() is called. GameRecap component displays "Félicitations !" title and "Vous avez écouté toute la bibliothèque !" message when allSongsPlayed prop is true. Added 11 comprehensive tests: 7 tests in GameRecap.test.tsx for library completion UI (congratulations title, completion message, priority over score messages, stats display, new game button, home button), 4 tests in page.test.tsx for GameRecap rendering when game ends. All 362 tests pass.
+Files: src/components/game/GameRecap.test.tsx, src/app/game/page.test.tsx
+
