@@ -177,3 +177,10 @@ Commit: 873d4f2
 Notes: Added comprehensive Range Request test suite with 11 new tests. Tests verify: 206 Partial Content status, Content-Range header format, Accept-Ranges header, start-only ranges (bytes=512-), exact byte ranges, edge cases (first byte, last byte, middle ranges), 416 Range Not Satisfiable for invalid ranges, correct byte content verification for seeking simulation, MIME types for all audio formats. All 133 tests pass.
 Files: src/app/api/audio/[id]/route.test.ts
 
+=== Issue 3.7: Ajouter les headers CORS appropriés ===
+Timestamp: 2026-01-17T18:45:00Z
+Status: COMPLETED
+Commit: 9f73a55
+Notes: Configured CORS headers in next.config.ts for all API routes. Added Access-Control-Allow-Origin: * for cross-origin requests, Access-Control-Allow-Methods for GET/POST/OPTIONS, Access-Control-Allow-Headers for Content-Type and Range headers, and Access-Control-Expose-Headers for Content-Range and Accept-Ranges to support Range Requests from cross-origin clients. All 133 tests pass.
+Files: next.config.ts
+
