@@ -359,3 +359,10 @@ Commit: e093909
 Notes: Implemented SongReveal component with Next.js Image for album cover display. Added blur effect (blur-xl scale-110) when song not revealed with smooth 500ms transition. Music note icon overlay when blurred. Title/artist display based on guessMode (title/artist/both). Album name shown when available. Added fade-in animation to globals.css. Added cleanup to test setup for proper test isolation. Created comprehensive test suite with 18 tests. All 212 tests pass.
 Files: src/components/game/SongReveal.tsx, src/components/game/SongReveal.test.tsx, src/app/globals.css, src/test/setup.ts
 
+=== Issue 5.13: Implémenter le blur de la pochette ===
+Timestamp: 2026-01-17T20:40:00Z
+Status: COMPLETED
+Commit: 77b820e
+Notes: Blur effect for album cover was fully implemented in issue 5.12. Verified all acceptance criteria: blur-xl (24px) makes cover unreadable when not revealed, transition-all duration-500 provides smooth 500ms transition to clear state, CSS blur filter uses hardware acceleration for optimal performance. Tests already exist verifying blur classes are applied when isRevealed=false and removed when isRevealed=true. All 212 tests pass.
+Files: src/components/game/SongReveal.tsx (no changes - verification only)
+
