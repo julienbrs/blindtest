@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useGameState } from '@/hooks/useGameState'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
+import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { Timer } from '@/components/game/Timer'
@@ -13,6 +14,7 @@ import { SongReveal } from '@/components/game/SongReveal'
 import { GameControls } from '@/components/game/GameControls'
 import { GameRecap } from '@/components/game/GameRecap'
 import { CorrectAnswerFlash } from '@/components/game/CorrectAnswerFlash'
+import { IncorrectAnswerFlash } from '@/components/game/IncorrectAnswerFlash'
 import { Button } from '@/components/ui/Button'
 import type { GameConfig, GuessMode, Song } from '@/lib/types'
 
@@ -54,10 +56,19 @@ function GameContent() {
   const [shouldReplay, setShouldReplay] = useState(false)
   // Track correct answer flash animation
   const [showCorrectFlash, setShowCorrectFlash] = useState(false)
+  // Track incorrect answer flash animation
+  const [showIncorrectFlash, setShowIncorrectFlash] = useState(false)
 
   // Celebration effects for correct answers
   const { celebrate, cleanup: cleanupCelebration } =
     useCorrectAnswerCelebration()
+
+  // Wrong answer effects (shake)
+  const {
+    isShaking,
+    triggerShake,
+    cleanup: cleanupShake,
+  } = useWrongAnswerEffect()
 
   // Preloading state for the next song
   const [nextSong, setNextSong] = useState<Song | null>(null)
@@ -215,8 +226,9 @@ function GameContent() {
         preloadedAudioRef.current = null
       }
       cleanupCelebration()
+      cleanupShake()
     }
-  }, [cleanupCelebration])
+  }, [cleanupCelebration, cleanupShake])
 
   // LOADING → PLAYING transition: Start playback when audio is ready
   // We check that the audio ready signal matches the current song to avoid race conditions
@@ -251,7 +263,7 @@ function GameContent() {
     setShouldReplay(false)
   }, [])
 
-  // Handle validation with celebration on correct answers
+  // Handle validation with celebration on correct answers and shake on incorrect
   const handleValidate = useCallback(
     (correct: boolean) => {
       if (correct) {
@@ -262,10 +274,18 @@ function GameContent() {
         setTimeout(() => {
           setShowCorrectFlash(false)
         }, 500)
+      } else {
+        // Trigger shake and red flash for incorrect answer
+        triggerShake()
+        setShowIncorrectFlash(true)
+        // Clear the flash after animation completes
+        setTimeout(() => {
+          setShowIncorrectFlash(false)
+        }, 300)
       }
       game.actions.validate(correct)
     },
-    [celebrate, game.actions]
+    [celebrate, triggerShake, game.actions]
   )
 
   const handleNewGame = () => {
@@ -309,8 +329,16 @@ function GameContent() {
     )
   }
 
+  // Shake animation for incorrect answers
+  const shakeAnimation = isShaking
+    ? { x: [-10, 10, -10, 10, 0], transition: { duration: 0.4 } }
+    : {}
+
   return (
-    <main className="flex min-h-screen flex-col p-4 lg:p-6">
+    <motion.main
+      className="flex min-h-screen flex-col p-4 lg:p-6"
+      animate={shouldReduceMotion ? {} : shakeAnimation}
+    >
       {/* Header avec score - Full width on all breakpoints */}
       <header className="mb-4 flex items-center justify-between lg:mb-6">
         <ScoreDisplay
@@ -451,7 +479,10 @@ function GameContent() {
 
       {/* Green flash overlay for correct answers */}
       <CorrectAnswerFlash show={showCorrectFlash} />
-    </main>
+
+      {/* Red flash overlay for incorrect answers */}
+      <IncorrectAnswerFlash show={showIncorrectFlash} />
+    </motion.main>
   )
 }
 
