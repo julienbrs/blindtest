@@ -457,3 +457,10 @@ Commit: 0eb9c90
 Notes: Verified timer end behavior already implemented in useGameState hook. TICK_TIMER action (lines 38-53) handles: timer decrement each tick, transition to 'reveal' when timer reaches 0, timerRemaining set to 0, isRevealed set to true, songsPlayed incremented, currentSong.id added to playedSongIds, score NOT incremented (timeout = no points). Tests already comprehensive in useGameState.test.ts (lines 221-339): transitions to reveal at 0, reveals answer, increments songsPlayed, adds song to playedSongIds, no score increment on timeout, timer stops in non-timer state. All 336 tests pass.
 Files: src/hooks/useGameState.ts (verified), src/hooks/useGameState.test.ts (verified)
 
+=== Issue 6.8: Implémenter la validation de réponse ===
+Timestamp: 2026-01-18T00:10:00Z
+Status: COMPLETED
+Commit: 9518800
+Notes: Verified VALIDATE action already fully implemented in useGameState hook (lines 55-65). VALIDATE action handles: transition to 'reveal' status, isRevealed set to true, score incremented by 1 if correct (action.correct ? state.score + 1 : state.score), songsPlayed incremented, currentSong.id added to playedSongIds. GameControls component has Correct/Incorrect buttons (lines 95-109) that call onValidate(true) and onValidate(false) respectively. Comprehensive tests already exist in useGameState.test.ts (lines 341-406) testing: transitions to reveal, increments score when correct, no score increment when incorrect, increments songsPlayed, adds song id to playedSongIds, sets isRevealed to true. GameControls.test.tsx (lines 44-106) tests button visibility and callbacks. All 336 tests pass.
+Files: src/hooks/useGameState.ts (verified), src/hooks/useGameState.test.ts (verified), src/components/game/GameControls.tsx (verified), src/components/game/GameControls.test.tsx (verified)
+
