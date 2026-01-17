@@ -513,3 +513,10 @@ Commit: 200927b
 Notes: Implemented replay functionality to allow re-listening to the current song clip. Added REPLAY action type to GameAction. Implemented REPLAY action handler in useGameState reducer that transitions from reveal to playing state without resetting the timer. Added replay() action to hook interface. Added shouldReplay and onReplayComplete props to AudioPlayer for audio reset (resets currentTime to 0 and starts playback). Added "Rejouer l'extrait" button to GameControls component (visible only in reveal state). Wired up replay in game page with state management. Created 17 comprehensive tests (8 for REPLAY action in useGameState, 9 for replay button in GameControls). All 403 tests pass.
 Files: src/lib/types.ts, src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/components/game/AudioPlayer.tsx, src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx, src/app/game/page.tsx
 
+=== Issue 7.1: Créer le fond d'écran festif ===
+Timestamp: 2026-01-18T01:27:00Z
+Status: COMPLETED
+Commit: 8e9edc4
+Notes: Created FestiveBackground component with animated gradient (-45deg from indigo to purple to pink) and 6 floating orbs with blur effect. Added CSS animations (animate-gradient-shift, animate-float-orb) for smooth 15-32s animations. Used useSyncExternalStore for proper media query subscription to respect prefers-reduced-motion. Orbs have varied positions, sizes (180-300px), and animation delays for natural movement. Added vignette overlay for depth. Integrated component in layout.tsx as fixed background behind content. Created 10 comprehensive tests. All 413 tests pass.
+Files: src/components/ui/FestiveBackground.tsx, src/components/ui/FestiveBackground.test.tsx, src/app/globals.css, src/app/layout.tsx
+
