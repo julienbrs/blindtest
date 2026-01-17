@@ -191,3 +191,10 @@ Commit: 8d39e44
 Notes: Implemented GET /api/stats endpoint returning library statistics including totalSongs, totalArtists, totalAlbums, totalDuration (rounded integer), totalDurationFormatted (human-readable like "10h 0min"), formats breakdown by type, songsWithCover count, and lastScan timestamp. Created comprehensive test suite with 7 tests. All 140 tests pass.
 Files: src/app/api/stats/route.ts, src/app/api/stats/route.test.ts
 
+=== Issue 3.9: Optimiser le streaming audio ===
+Timestamp: 2026-01-17T18:52:00Z
+Status: COMPLETED
+Commit: 7a09bdc
+Notes: Optimized audio streaming to use true streaming via Readable.toWeb() instead of buffering the entire file in memory. Added 64KB highWaterMark for optimal chunk sizes. Both Range Requests and full file requests now stream without loading the entire file into memory. Memory stays stable even with large audio files.
+Files: src/app/api/audio/[id]/route.ts
+
