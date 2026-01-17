@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useGameState } from '@/hooks/useGameState'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
@@ -13,9 +14,33 @@ import { GameRecap } from '@/components/game/GameRecap'
 import { Button } from '@/components/ui/Button'
 import type { GameConfig, GuessMode, Song } from '@/lib/types'
 
+// Animation variants for game state transitions
+const fadeSlideUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+}
+
+const fadeScale = {
+  initial: { opacity: 0, scale: 0.9 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.9 },
+}
+
+const fadeIn = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+}
+
+// Transition presets
+const quickTransition = { duration: 0.2, ease: 'easeOut' as const }
+const smoothTransition = { duration: 0.3, ease: 'easeOut' as const }
+
 function GameContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const shouldReduceMotion = useReducedMotion()
   const [showQuitConfirm, setShowQuitConfirm] = useState(false)
   const [allSongsPlayed, setAllSongsPlayed] = useState(false)
   // Track which song ID triggered the audio ready state
@@ -226,16 +251,35 @@ function GameContent() {
     router.push('/')
   }
 
+  // Get animation props based on reduced motion preference
+  const getAnimationProps = (
+    variants: typeof fadeSlideUp | typeof fadeScale | typeof fadeIn,
+    transition = smoothTransition
+  ) => {
+    if (shouldReduceMotion) {
+      return {}
+    }
+    return {
+      variants,
+      initial: 'initial',
+      animate: 'animate',
+      exit: 'exit',
+      transition,
+    }
+  }
+
   // Show recap screen when game is ended
   if (game.state.status === 'ended') {
     return (
-      <GameRecap
-        score={game.state.score}
-        songsPlayed={game.state.songsPlayed}
-        onNewGame={handleNewGame}
-        onHome={handleHome}
-        allSongsPlayed={allSongsPlayed}
-      />
+      <motion.div key="game-recap" {...getAnimationProps(fadeScale)}>
+        <GameRecap
+          score={game.state.score}
+          songsPlayed={game.state.songsPlayed}
+          onNewGame={handleNewGame}
+          onHome={handleHome}
+          allSongsPlayed={allSongsPlayed}
+        />
+      </motion.div>
     )
   }
 
@@ -257,34 +301,44 @@ function GameContent() {
       </header>
 
       {/* Quit confirmation modal */}
-      {showQuitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 max-w-sm rounded-xl bg-purple-900 p-6">
-            <h3 className="mb-4 text-xl font-bold">Quitter la partie ?</h3>
-            <p className="mb-6 text-purple-200">
-              Votre score ne sera pas sauvegardé.
-            </p>
-            <div className="flex gap-4">
-              <Button
-                onClick={() => setShowQuitConfirm(false)}
-                variant="secondary"
-                size="md"
-                className="flex-1"
-              >
-                Annuler
-              </Button>
-              <Button
-                onClick={() => router.push('/')}
-                variant="danger"
-                size="md"
-                className="flex-1"
-              >
-                Quitter
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showQuitConfirm && (
+          <motion.div
+            key="quit-modal-overlay"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            {...getAnimationProps(fadeIn, quickTransition)}
+          >
+            <motion.div
+              key="quit-modal-content"
+              className="mx-4 max-w-sm rounded-xl bg-purple-900 p-6"
+              {...getAnimationProps(fadeScale)}
+            >
+              <h3 className="mb-4 text-xl font-bold">Quitter la partie ?</h3>
+              <p className="mb-6 text-purple-200">
+                Votre score ne sera pas sauvegardé.
+              </p>
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => setShowQuitConfirm(false)}
+                  variant="secondary"
+                  size="md"
+                  className="flex-1"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={() => router.push('/')}
+                  variant="danger"
+                  size="md"
+                  className="flex-1"
+                >
+                  Quitter
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main content area - Mobile: vertical stack, Desktop: two columns */}
       <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:gap-8">
@@ -313,30 +367,45 @@ function GameContent() {
         {/* Right column (Mobile: bottom area, Desktop: right side) */}
         {/* Contains: Buzzer/Timer + Game Controls */}
         <div className="flex flex-col items-center justify-center gap-6 lg:w-80 lg:flex-shrink-0">
-          {/* Loading indicator - visible during loading state */}
-          {game.state.status === 'loading' && (
-            <div className="flex flex-col items-center justify-center gap-3">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
-              <p className="text-purple-300">Chargement...</p>
-            </div>
-          )}
+          {/* Animated state transitions for loading/buzzer/timer */}
+          <AnimatePresence mode="wait">
+            {/* Loading indicator - visible during loading state */}
+            {game.state.status === 'loading' && (
+              <motion.div
+                key="loading"
+                className="flex flex-col items-center justify-center gap-3"
+                {...getAnimationProps(fadeIn, quickTransition)}
+              >
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
+                <p className="text-purple-300">Chargement...</p>
+              </motion.div>
+            )}
 
-          {/* Buzzer - visible during playing state */}
-          {game.state.status === 'playing' && (
-            <div className="flex items-center justify-center">
-              <BuzzerButton onBuzz={game.actions.buzz} />
-            </div>
-          )}
+            {/* Buzzer - visible during playing state */}
+            {game.state.status === 'playing' && (
+              <motion.div
+                key="buzzer"
+                className="flex items-center justify-center"
+                {...getAnimationProps(fadeSlideUp)}
+              >
+                <BuzzerButton onBuzz={game.actions.buzz} />
+              </motion.div>
+            )}
 
-          {/* Timer - visible during timer state */}
-          {game.state.status === 'timer' && (
-            <div className="flex items-center justify-center">
-              <Timer
-                duration={config.timerDuration}
-                remaining={game.state.timerRemaining}
-              />
-            </div>
-          )}
+            {/* Timer - visible during timer state */}
+            {game.state.status === 'timer' && (
+              <motion.div
+                key="timer"
+                className="flex items-center justify-center"
+                {...getAnimationProps(fadeScale)}
+              >
+                <Timer
+                  duration={config.timerDuration}
+                  remaining={game.state.timerRemaining}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Contrôles du MJ */}
           <div className="w-full max-w-md lg:max-w-none">

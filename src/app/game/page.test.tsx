@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 // Mock next/navigation
 const mockPush = vi.fn()
@@ -191,7 +191,7 @@ describe('GamePage - Quit Button', () => {
     expect(quitButtons.length).toBe(2)
   })
 
-  it('closes modal when cancel button is clicked', () => {
+  it('closes modal when cancel button is clicked', async () => {
     render(<GamePage />)
 
     const quitButton = screen.getByRole('button', { name: /quitter/i })
@@ -200,7 +200,10 @@ describe('GamePage - Quit Button', () => {
     const cancelButton = screen.getByRole('button', { name: /annuler/i })
     fireEvent.click(cancelButton)
 
-    expect(screen.queryByText('Quitter la partie ?')).not.toBeInTheDocument()
+    // Wait for AnimatePresence exit animation to complete
+    await waitFor(() => {
+      expect(screen.queryByText('Quitter la partie ?')).not.toBeInTheDocument()
+    })
   })
 
   it('navigates to home when modal quit button is clicked', () => {
