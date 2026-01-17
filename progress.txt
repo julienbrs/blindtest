@@ -71,3 +71,10 @@ Commit: 7c28f25
 Notes: Installed music-metadata package (v11.10.6) for reading ID3 tags from audio files. Added import and export in audioScanner.ts to verify the library works. Updated ESLint config to ignore underscore-prefixed unused variables. All feedback loops pass.
 Files: package.json, package-lock.json, src/lib/audioScanner.ts, eslint.config.mjs
 
+=== Issue 2.2: Créer le scanner de dossier audio ===
+Timestamp: 2026-01-17T17:52:00Z
+Status: COMPLETED
+Commit: 2c6c289
+Notes: Implemented scanAudioFolder function that recursively scans directories for audio files. Supports mp3, wav, ogg, flac, m4a, aac formats. Ignores hidden directories and special folders (@eaDir, __MACOSX). Handles permission errors and non-existent folders gracefully. Added getSupportedExtensions utility. Created comprehensive test suite with 10 passing tests.
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+

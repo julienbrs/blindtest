@@ -35,7 +35,7 @@ After this task, all subsequent issues run with full feedback loops.
 ### Epic 2: Backend Audio (docs/epics/02-backend-audio.md)
 
 - [x] 2.1 Installer music-metadata
-- [ ] 2.2 Créer le scanner de dossier audio
+- [x] 2.2 Créer le scanner de dossier audio
 - [ ] 2.3 Extraire les métadonnées ID3
 - [ ] 2.4 Extraire les pochettes d'album
 - [ ] 2.5 Générer des IDs uniques pour les chansons
