@@ -9,6 +9,7 @@ import { Timer } from '@/components/game/Timer'
 import { ScoreDisplay } from '@/components/game/ScoreDisplay'
 import { SongReveal } from '@/components/game/SongReveal'
 import { GameControls } from '@/components/game/GameControls'
+import { GameRecap } from '@/components/game/GameRecap'
 import type { GameConfig, GuessMode } from '@/lib/types'
 
 function GameContent() {
@@ -27,6 +28,27 @@ function GameContent() {
   }
 
   const game = useGameState(config)
+
+  const handleNewGame = () => {
+    // Reload the page with same config to start a new game
+    window.location.reload()
+  }
+
+  const handleHome = () => {
+    router.push('/')
+  }
+
+  // Show recap screen when game is ended
+  if (game.state.status === 'ended') {
+    return (
+      <GameRecap
+        score={game.state.score}
+        songsPlayed={game.state.songsPlayed}
+        onNewGame={handleNewGame}
+        onHome={handleHome}
+      />
+    )
+  }
 
   return (
     <main className="flex min-h-screen flex-col p-4 lg:p-6">
