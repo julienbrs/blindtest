@@ -665,4 +665,201 @@ describe('useGameState', () => {
       expect(typeof result.current.dispatch).toBe('function')
     })
   })
+
+  describe('playedSongIds tracking (no repeat in session)', () => {
+    const song1: Song = { ...mockSong, id: 'song1id12345' }
+    const song2: Song = { ...mockSong, id: 'song2id67890' }
+    const song3: Song = { ...mockSong, id: 'song3id11111' }
+
+    it('tracks played songs across multiple rounds via validate', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      // Play first song and validate correct
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+      expect(result.current.state.playedSongIds).toHaveLength(1)
+
+      // Go to next song
+      act(() => {
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(false)
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+      expect(result.current.state.playedSongIds).toContain(song2.id)
+      expect(result.current.state.playedSongIds).toHaveLength(2)
+
+      // Third song
+      act(() => {
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song3)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+      expect(result.current.state.playedSongIds).toContain(song2.id)
+      expect(result.current.state.playedSongIds).toContain(song3.id)
+      expect(result.current.state.playedSongIds).toHaveLength(3)
+    })
+
+    it('tracks played songs when timer expires', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+
+      // Let timer expire
+      act(() => {
+        vi.advanceTimersByTime(5000)
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+
+      // Next song with timer expiry
+      act(() => {
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      act(() => {
+        vi.advanceTimersByTime(5000)
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+      expect(result.current.state.playedSongIds).toContain(song2.id)
+      expect(result.current.state.playedSongIds).toHaveLength(2)
+    })
+
+    it('tracks played songs when reveal button is used', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.reveal()
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+
+      act(() => {
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.reveal()
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+      expect(result.current.state.playedSongIds).toContain(song2.id)
+    })
+
+    it('tracks played songs when clip ends without buzz', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.clipEnded()
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+
+      act(() => {
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.clipEnded()
+      })
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+      expect(result.current.state.playedSongIds).toContain(song2.id)
+    })
+
+    it('preserves playedSongIds when game ends', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+        result.current.actions.quit()
+      })
+
+      expect(result.current.state.status).toBe('ended')
+      expect(result.current.state.playedSongIds).toContain(song1.id)
+      expect(result.current.state.playedSongIds).toContain(song2.id)
+      expect(result.current.state.playedSongIds).toHaveLength(2)
+    })
+
+    it('clears playedSongIds on reset', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.playedSongIds).toHaveLength(2)
+
+      act(() => {
+        result.current.actions.reset()
+      })
+      expect(result.current.state.playedSongIds).toEqual([])
+    })
+
+    it('clears playedSongIds on start new game', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.playedSongIds).toHaveLength(1)
+
+      act(() => {
+        result.current.actions.startGame()
+      })
+      expect(result.current.state.playedSongIds).toEqual([])
+    })
+
+    it('provides playedSongIds for exclude parameter construction', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+
+      // Simulate a game session with multiple songs
+      act(() => {
+        result.current.actions.loadSong(song1)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+
+      // The exclude parameter would be constructed as:
+      const excludeParam = result.current.state.playedSongIds.join(',')
+      expect(excludeParam).toBe('song1id12345,song2id67890')
+    })
+  })
 })
