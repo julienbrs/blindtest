@@ -57,3 +57,10 @@ Commit: fd32217
 Notes: Installed vitest, @vitejs/plugin-react, jsdom, @testing-library/react, husky, and lint-staged. Created vitest.config.ts with jsdom environment and React plugin. Created .husky/pre-commit hook running lint-staged, typecheck, and test. Created .lintstagedrc for Prettier formatting. Added typecheck and test scripts to package.json. Created src/test/setup.ts. All feedback loops verified working.
 Files: package.json, vitest.config.ts, .husky/pre-commit, .lintstagedrc, src/test/setup.ts
 
+=== Issue 1.8: Créer le fichier de types global ===
+Timestamp: 2026-01-17T17:50:00Z
+Status: COMPLETED
+Commit: pending
+Notes: Created complete TypeScript types in src/lib/types.ts. Defined Song, AudioFormat, GameConfig, GuessMode, GameState, GameStatus, ApiResponse, SongsListResponse, RandomSongResponse, and GameAction types. All types exported and usable throughout the project.
+Files: src/lib/types.ts
+

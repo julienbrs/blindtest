@@ -30,7 +30,7 @@ After this task, all subsequent issues run with full feedback loops.
 
 ### Epic 1: Setup - Continued (docs/epics/01-setup.md)
 
-- [ ] 1.8 Créer le fichier de types global
+- [x] 1.8 Créer le fichier de types global
 
 ### Epic 2: Backend Audio (docs/epics/02-backend-audio.md)
 
