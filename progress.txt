@@ -324,3 +324,10 @@ Commit: 5cc2f50
 Notes: Implemented BuzzerButton component with large tactile-friendly size (h-40 w-40 md:h-48 md:w-48), red gradient styling with glow shadow effect, visual press effects (active:scale-95, hover:scale-105), mobile vibration support using navigator.vibrate when available, and focus ring for keyboard accessibility. Fixed vibrate check to use typeof for safer detection. Created comprehensive test suite with 12 tests verifying all acceptance criteria. All 167 tests pass.
 Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
 
+=== Issue 5.8: Ajouter l'animation du buzzer ===
+Timestamp: 2026-01-17T20:10:00Z
+Status: COMPLETED
+Commit: cd86abf
+Notes: Added Framer Motion animations to BuzzerButton component. Implemented whileTap (scale 0.9) and whileHover (scale 1.05) for smooth press/hover effects. Added justBuzzed state with glowing box-shadow animation on press (60px to 100px to 60px). Created shockwave effect with expanding circle that fades out when buzzer is pressed. Used useCallback for handleClick optimization. Updated tests for animation state verification. All 167 tests pass.
+Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
+
