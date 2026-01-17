@@ -142,3 +142,10 @@ Commit: 55c2248
 Notes: Implemented GET /api/songs endpoint using getSongsCache() from audioScanner. Returns JSON response with songs array and total count. Includes proper error handling with 500 status. Created comprehensive test suite with 5 tests (99 tests total pass).
 Files: src/app/api/songs/route.ts, src/app/api/songs/route.test.ts
 
+=== Issue 3.2: Créer GET /api/songs/random ===
+Timestamp: 2026-01-17T18:25:00Z
+Status: COMPLETED
+Commit: a58f422
+Notes: Implemented GET /api/songs/random endpoint for selecting random songs. Added support for exclude query parameter to filter out already-played songs. Returns 404 when no songs available or all songs excluded. Created comprehensive test suite with 8 tests including uniform distribution verification (107 tests total pass).
+Files: src/app/api/songs/random/route.ts, src/app/api/songs/random/route.test.ts
+
