@@ -310,3 +310,10 @@ Commit: 7af8109
 Notes: Enhanced audio progress bar with visual improvements. Added subtle pulsing animation during playback (animate-pulse-subtle). Implemented color change from pink/purple gradient to orange/red when 5 seconds or less remaining. Increased bar height from h-2 to h-3 for better visibility. Time display turns red and bold when near end. Added CSS keyframes animation to globals.css. All 141 tests pass.
 Files: src/components/game/AudioPlayer.tsx, src/app/globals.css
 
+=== Issue 5.6: Limiter la lecture à la durée configurée ===
+Timestamp: 2026-01-17T20:04:00Z
+Status: COMPLETED
+Commit: 343bed3
+Notes: Verified duration limiting already implemented in AudioPlayer component via useEffect that checks currentTime >= maxDuration and pauses audio while calling onEnded callback. Added @testing-library/jest-dom for improved test assertions. Created AudioPlayer.test.tsx with 14 comprehensive tests verifying maxDuration prop, progress capping with Math.min(progress, 100), time formatting, and styling. All 155 tests pass.
+Files: src/components/game/AudioPlayer.test.tsx, src/test/setup.ts, package.json
+
