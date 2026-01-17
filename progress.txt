@@ -240,3 +240,10 @@ Commit: 3b0a30b
 Notes: Added range slider for clip duration (5-60 seconds, step 5). Displays current duration value in real-time with large bold text. Styled slider thumb with gradient from pink-500 to purple-500 matching theme. Added min/max labels (5s, 30s, 60s) below the slider. Removed underscore prefix from setClipDuration to enable functionality. All 141 tests pass.
 Files: src/components/game/GameConfigForm.tsx
 
+=== Issue 4.6: Afficher le nombre de chansons disponibles ===
+Timestamp: 2026-01-17T19:38:00Z
+Status: COMPLETED
+Commit: c755858
+Notes: Created LibraryStats component that fetches stats from /api/stats endpoint. Displays total songs and total artists count from the music library. Shows loading state with animated pulse while fetching data. Handles errors gracefully with user-friendly French error message. Integrated component in homepage replacing placeholder. All 141 tests pass.
+Files: src/components/game/LibraryStats.tsx, src/app/page.tsx
+
