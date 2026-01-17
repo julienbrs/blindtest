@@ -380,3 +380,17 @@ Commit: b2e3c05
 Notes: Added "Chanson suivante" button to GameControls component. Button is visible only when status is 'reveal'. Created ArrowRightIcon SVG component for button arrow. Styled with pink-purple gradient matching app theme (bg-gradient-to-r from-pink-500 to-purple-600). Button calls onNext callback to load the next song. Added 8 comprehensive tests for visibility, callback, styling, and icon presence. All 235 tests pass.
 Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx
 
+=== Issue 5.16: Créer le bouton "Révéler la réponse" ===
+Timestamp: 2026-01-17T20:47:00Z
+Status: COMPLETED
+Commit: 4c1ffcd
+Notes: Added "Révéler la réponse" button to GameControls component. Created EyeIcon SVG component. Button visible during playing/buzzed/timer states when not yet revealed. Added isRevealed prop to GameControlsProps interface. Updated game page to pass isRevealed prop. Created 9 comprehensive tests for reveal button functionality. All 244 tests pass.
+Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx, src/app/game/page.tsx
+
+=== Issue 5.17: Ajouter un bouton "Quitter la partie" ===
+Timestamp: 2026-01-17T20:49:00Z
+Status: COMPLETED
+Commit: 103e97a
+Notes: Added quit button confirmation modal to game page. Button in header now opens modal with warning message. Modal has Cancel button to dismiss and Quit button to navigate home. Used useState for modal visibility and useRouter for navigation. Created comprehensive test suite with 8 tests covering modal rendering, button interactions, navigation, and styling. All 252 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx
+
