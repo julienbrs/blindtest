@@ -74,16 +74,26 @@ function GameContent() {
     if (game.state.status === 'idle' && !hasInitialized.current) {
       hasInitialized.current = true
       game.actions.startGame()
-      // Schedule the fetch for the next event loop iteration to avoid
-      // the "setState in effect" warning. The fetch is async anyway.
+    }
+  }, [game.state.status, game.actions])
+
+  // LOADING state handler: Load a random song when in loading state with no current song
+  // This handles both initial load (after START_GAME) and subsequent loads (after NEXT_SONG)
+  useEffect(() => {
+    if (game.state.status === 'loading' && !game.state.currentSong) {
+      // Capture playedSongIds to use in microtask
       const playedIds = game.state.playedSongIds
+      // Use queueMicrotask to avoid calling setState synchronously in effect
       queueMicrotask(() => {
+        // Reset the audioReady state for the new song
+        setAudioReadyForSongId(null)
+        // Load a new random song (excluding already played songs)
         void loadRandomSong(playedIds)
       })
     }
   }, [
     game.state.status,
-    game.actions,
+    game.state.currentSong,
     game.state.playedSongIds,
     loadRandomSong,
   ])

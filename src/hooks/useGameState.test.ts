@@ -501,6 +501,28 @@ describe('useGameState', () => {
       expect(result.current.state.isRevealed).toBe(false)
     })
 
+    it('resets timerRemaining to config timerDuration', () => {
+      const configWithTimer10 = { ...mockConfig, timerDuration: 10 }
+      const { result } = renderHook(() => useGameState(configWithTimer10))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      // Timer is 10, after some time it decreases
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(result.current.state.timerRemaining).toBe(7)
+      // Validate and go to next song
+      act(() => {
+        result.current.actions.validate(true)
+        result.current.actions.nextSong()
+      })
+      // Timer should be reset to config value
+      expect(result.current.state.timerRemaining).toBe(10)
+    })
+
     it('preserves score and songsPlayed', () => {
       const { result } = renderHook(() => useGameState(mockConfig))
       act(() => {

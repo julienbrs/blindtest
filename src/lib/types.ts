@@ -141,7 +141,7 @@ export type GameAction =
   | { type: 'TICK_TIMER' }
   | { type: 'VALIDATE'; correct: boolean }
   | { type: 'REVEAL' }
-  | { type: 'NEXT_SONG' }
+  | { type: 'NEXT_SONG'; timerDuration: number }
   | { type: 'END_GAME' }
   | { type: 'RESET' }
   | { type: 'CLIP_ENDED' }

@@ -306,3 +306,75 @@ describe('GamePage - BUZZED → TIMER transition (Issue 6.6)', () => {
     )
   })
 })
+
+describe('GamePage - REVEAL → LOADING transition (Issue 6.10)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+  })
+
+  it('shows loading indicator when status is loading', () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+
+    render(<GamePage />)
+
+    expect(screen.getByText('Chargement...')).toBeInTheDocument()
+  })
+
+  it('shows loading spinner animation when status is loading', () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+
+    render(<GamePage />)
+
+    // Check for the spinner element with animation class
+    const spinnerContainer = screen.getByText('Chargement...').parentElement
+    expect(spinnerContainer?.querySelector('.animate-spin')).toBeInTheDocument()
+  })
+
+  it('does not show loading indicator when status is playing', () => {
+    mockGameState.status = 'playing'
+    mockGameState.currentSong = {
+      id: 'test123abc',
+      title: 'Test Song',
+      artist: 'Test Artist',
+    }
+
+    render(<GamePage />)
+
+    expect(screen.queryByText('Chargement...')).not.toBeInTheDocument()
+  })
+
+  it('does not show loading indicator when status is reveal', () => {
+    mockGameState.status = 'reveal'
+    mockGameState.currentSong = {
+      id: 'test123abc',
+      title: 'Test Song',
+      artist: 'Test Artist',
+    }
+    mockGameState.isRevealed = true
+
+    render(<GamePage />)
+
+    expect(screen.queryByText('Chargement...')).not.toBeInTheDocument()
+  })
+
+  it('hides buzzer during loading state', () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+
+    render(<GamePage />)
+
+    expect(screen.queryByTestId('buzzer-button')).not.toBeInTheDocument()
+  })
+
+  it('hides timer during loading state', () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+
+    render(<GamePage />)
+
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument()
+  })
+})

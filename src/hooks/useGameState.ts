@@ -85,6 +85,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         status: 'loading',
         currentSong: null,
         isRevealed: false,
+        timerRemaining: action.timerDuration,
       }
 
     case 'END_GAME':
@@ -170,7 +171,10 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
 
   const reveal = useCallback(() => dispatch({ type: 'REVEAL' }), [])
 
-  const nextSong = useCallback(() => dispatch({ type: 'NEXT_SONG' }), [])
+  const nextSong = useCallback(
+    () => dispatch({ type: 'NEXT_SONG', timerDuration: config.timerDuration }),
+    [config.timerDuration]
+  )
 
   const quit = useCallback(() => dispatch({ type: 'END_GAME' }), [])
 
