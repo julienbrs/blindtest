@@ -478,3 +478,10 @@ Commit: 4b55d35
 Notes: Implemented REVEAL → LOADING transition when clicking "Chanson suivante". Updated NEXT_SONG action in useGameState reducer to reset timerRemaining to config.timerDuration (added timerDuration param to action type). Added effect in game page that detects when status is 'loading' with no currentSong and triggers loadRandomSong. Unified loading behavior for both initial game start and subsequent song transitions. Reset audioReadyForSongId to null when loading new song to prevent race conditions. Added 7 new tests for REVEAL → LOADING behavior (1 in useGameState.test.ts for timer reset, 6 in page.test.tsx for loading state UI). All 343 tests pass.
 Files: src/hooks/useGameState.ts, src/lib/types.ts, src/app/game/page.tsx, src/hooks/useGameState.test.ts, src/app/game/page.test.tsx
 
+=== Issue 6.11: Gérer la liste des chansons déjà jouées ===
+Timestamp: 2026-01-18T00:25:00Z
+Status: COMPLETED
+Commit: 809130a
+Notes: Verified and documented no-repeat song functionality. playedSongIds is tracked in useGameState via TICK_TIMER, VALIDATE, REVEAL, and CLIP_ENDED actions. The game page passes playedSongIds as exclude parameter to /api/songs/random endpoint. API filters excluded songs and returns 404 when all songs played. Added 9 comprehensive tests verifying: multi-round tracking, timer expiry tracking, reveal tracking, clipEnded tracking, preservation on game end, clearing on reset/new game, and exclude parameter construction. All 351 tests pass.
+Files: src/hooks/useGameState.test.ts
+
