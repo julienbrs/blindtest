@@ -1,21 +1,57 @@
+'use client'
+
+import { motion, useReducedMotion } from 'framer-motion'
 import { GameConfigForm } from '@/components/game/GameConfigForm'
 import { LibraryStats } from '@/components/game/LibraryStats'
 
 export default function HomePage() {
+  const shouldReduceMotion = useReducedMotion()
+
+  const fadeUpVariants = shouldReduceMotion
+    ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
+    : {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 },
+      }
+
+  const containerVariants = shouldReduceMotion
+    ? { hidden: {}, visible: {} }
+    : {
+        hidden: {},
+        visible: {
+          transition: {
+            staggerChildren: 0.15,
+          },
+        },
+      }
+
   return (
-    <main className="flex flex-1 flex-col items-center justify-center p-4">
+    <motion.main
+      className="flex flex-1 flex-col items-center justify-center p-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Logo / Titre */}
-      <div className="mb-8 text-center">
+      <motion.div
+        className="mb-8 text-center"
+        variants={fadeUpVariants}
+        transition={{ duration: 0.5 }}
+      >
         <h1 className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 bg-clip-text text-5xl font-extrabold text-transparent md:text-7xl">
           Blindtest
         </h1>
         <p className="mt-2 text-lg text-purple-200">
           Testez vos connaissances musicales !
         </p>
-      </div>
+      </motion.div>
 
       {/* Decorative music icons */}
-      <div className="mb-8 flex items-center gap-4 text-4xl opacity-60">
+      <motion.div
+        className="mb-8 flex items-center gap-4 text-4xl opacity-60"
+        variants={fadeUpVariants}
+        transition={{ duration: 0.5 }}
+      >
         <span className="animate-bounce" style={{ animationDelay: '0s' }}>
           🎵
         </span>
@@ -28,13 +64,21 @@ export default function HomePage() {
         <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>
           🎤
         </span>
-      </div>
+      </motion.div>
 
       {/* Game configuration form */}
-      <GameConfigForm />
+      <motion.div
+        variants={fadeUpVariants}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <GameConfigForm />
+      </motion.div>
 
       {/* Library stats */}
-      <LibraryStats />
-    </main>
+      <motion.div variants={fadeUpVariants} transition={{ duration: 0.5 }}>
+        <LibraryStats />
+      </motion.div>
+    </motion.main>
   )
 }
