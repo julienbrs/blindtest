@@ -101,7 +101,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 6.4 Implémenter la transition LOADING → PLAYING
 - [x] 6.5 Implémenter la transition PLAYING → BUZZED
 - [x] 6.6 Implémenter la transition BUZZED → TIMER
-- [ ] 6.7 Implémenter la fin du timer
+- [x] 6.7 Implémenter la fin du timer
 - [ ] 6.8 Implémenter la validation de réponse
 - [ ] 6.9 Implémenter la transition vers REVEAL
 - [ ] 6.10 Implémenter la transition REVEAL → LOADING

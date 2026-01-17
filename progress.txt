@@ -450,3 +450,10 @@ Commit: e2fe970
 Notes: Verified and documented BUZZED → TIMER transition. In current implementation, BUZZ action transitions directly to 'timer' state (skipping transient 'buzzed' state as noted in epic). Timer starts immediately when status changes to 'timer'. Timer component is rendered conditionally when game.state.status === 'timer'. Added 6 comprehensive tests verifying: Timer renders in timer state, Timer hidden in playing state, Buzzer hidden in timer state, countdown visible via timerRemaining, immediate transition (no intermediate buzzed state), and proper props passing. Refactored test mock to support dynamic state modification. All 336 tests pass.
 Files: src/app/game/page.test.tsx
 
+=== Issue 6.7: Implémenter la fin du timer ===
+Timestamp: 2026-01-18T00:05:00Z
+Status: COMPLETED
+Commit: 0eb9c90
+Notes: Verified timer end behavior already implemented in useGameState hook. TICK_TIMER action (lines 38-53) handles: timer decrement each tick, transition to 'reveal' when timer reaches 0, timerRemaining set to 0, isRevealed set to true, songsPlayed incremented, currentSong.id added to playedSongIds, score NOT incremented (timeout = no points). Tests already comprehensive in useGameState.test.ts (lines 221-339): transitions to reveal at 0, reveals answer, increments songsPlayed, adds song to playedSongIds, no score increment on timeout, timer stops in non-timer state. All 336 tests pass.
+Files: src/hooks/useGameState.ts (verified), src/hooks/useGameState.test.ts (verified)
+
