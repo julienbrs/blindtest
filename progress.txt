@@ -275,3 +275,10 @@ Commit: 251665e
 Notes: Installed framer-motion for smooth page entry animations. Converted homepage to client component with staggered fade-up animations. Title appears first, then music icons, form, and finally stats. Implemented prefers-reduced-motion support via useReducedMotion hook - animations are completely disabled when user has reduced motion preference. No flash of unstyled content. All 141 tests pass.
 Files: package.json, package-lock.json, src/app/page.tsx
 
+=== Issue 5.1: Créer la page /game ===
+Timestamp: 2026-01-17T19:52:00Z
+Status: COMPLETED
+Commit: 825fc96
+Notes: Created game page with URL parameters parsing (mode, duration, timerDuration, noTimer). Integrated all game components with proper props interfaces: AudioPlayer, BuzzerButton, Timer, ScoreDisplay, SongReveal, GameControls. Added Suspense wrapper for useSearchParams. Updated useGameState hook to return proper state/actions interface for game logic. Responsive flex layout structure. All 141 tests pass.
+Files: src/app/game/page.tsx, src/components/game/GameControls.tsx, src/components/game/AudioPlayer.tsx, src/components/game/BuzzerButton.tsx, src/components/game/Timer.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/SongReveal.tsx, src/hooks/useGameState.ts
+
