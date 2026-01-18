@@ -22,13 +22,22 @@ export default function HomePage() {
 
   const handleEmptyLibrary = useCallback(
     (isEmpty: boolean, audioFolderPath: string | null) => {
-      setEmptyLibraryState({ isEmpty, audioFolderPath })
+      setEmptyLibraryState((prev) => {
+        // Only update if values actually changed to prevent infinite loops
+        if (
+          prev.isEmpty === isEmpty &&
+          prev.audioFolderPath === audioFolderPath
+        ) {
+          return prev
+        }
+        return { isEmpty, audioFolderPath }
+      })
     },
     []
   )
 
   const handleLoadingChange = useCallback((loading: boolean) => {
-    setIsLoading(loading)
+    setIsLoading((prev) => (prev === loading ? prev : loading))
   }, [])
 
   const fadeUpVariants = shouldReduceMotion
