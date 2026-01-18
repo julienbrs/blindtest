@@ -10,6 +10,7 @@ interface AudioPlayerProps {
   onReady?: (songId: string) => void
   shouldReplay?: boolean
   onReplayComplete?: () => void
+  volume?: number
 }
 
 export function AudioPlayer({
@@ -20,11 +21,19 @@ export function AudioPlayer({
   onReady,
   shouldReplay,
   onReplayComplete,
+  volume = 0.7,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const prevSongIdRef = useRef<string | undefined>(undefined)
+
+  // Apply volume changes in real-time
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = Math.max(0, Math.min(1, volume))
+    }
+  }, [volume])
 
   // Memoize onEnded to avoid unnecessary effect re-runs
   const handleEnded = useCallback(() => {

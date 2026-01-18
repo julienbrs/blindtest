@@ -87,22 +87,34 @@ vi.mock('@/hooks/useWrongAnswerEffect', () => ({
   }),
 }))
 
+// Track volume passed to AudioPlayer
+let lastVolumeReceived: number | undefined
+
 // Mock child components to simplify testing
 vi.mock('@/components/game/AudioPlayer', () => ({
   AudioPlayer: ({
     onReady,
     songId,
+    volume,
   }: {
     onReady?: (songId: string) => void
     songId?: string
     isPlaying?: boolean
     maxDuration?: number
     onEnded?: () => void
-  }) => (
-    <div data-testid="audio-player" onClick={() => songId && onReady?.(songId)}>
-      AudioPlayer
-    </div>
-  ),
+    volume?: number
+  }) => {
+    lastVolumeReceived = volume
+    return (
+      <div
+        data-testid="audio-player"
+        onClick={() => songId && onReady?.(songId)}
+        data-volume={volume}
+      >
+        AudioPlayer
+      </div>
+    )
+  },
 }))
 
 vi.mock('@/components/game/BuzzerButton', () => ({
@@ -168,6 +180,8 @@ function resetMockState() {
   // Reset SFX mock state
   mockSfxIsMuted = false
   mockSfxSetMuted.mockClear()
+  // Reset volume tracking
+  lastVolumeReceived = undefined
 }
 
 describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
@@ -704,5 +718,153 @@ describe('GamePage - SFX Mute Toggle (Issue 8.7)', () => {
 
     // AudioPlayer should still be rendered regardless of SFX mute state
     expect(screen.getByTestId('audio-player')).toBeInTheDocument()
+  })
+})
+
+describe('GamePage - Music Volume Control (Issue 8.8)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+    // Clear localStorage mock
+    Storage.prototype.getItem = vi.fn(() => null)
+    Storage.prototype.setItem = vi.fn()
+  })
+
+  it('renders volume slider in header', () => {
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    expect(volumeSlider).toBeInTheDocument()
+  })
+
+  it('volume slider has proper range 0-1 with step 0.1', () => {
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    expect(volumeSlider).toHaveAttribute('min', '0')
+    expect(volumeSlider).toHaveAttribute('max', '1')
+    expect(volumeSlider).toHaveAttribute('step', '0.1')
+  })
+
+  it('volume slider shows percentage label', () => {
+    render(<GamePage />)
+
+    const volumePercentage = screen.getByTestId('music-volume-percentage')
+    expect(volumePercentage).toBeInTheDocument()
+    // Default is 70%
+    expect(volumePercentage).toHaveTextContent('70%')
+  })
+
+  it('changing volume updates percentage display', () => {
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    fireEvent.change(volumeSlider, { target: { value: '0.5' } })
+
+    const volumePercentage = screen.getByTestId('music-volume-percentage')
+    expect(volumePercentage).toHaveTextContent('50%')
+  })
+
+  it('changing volume saves to localStorage', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    fireEvent.change(volumeSlider, { target: { value: '0.3' } })
+
+    expect(setItemSpy).toHaveBeenCalledWith('music_volume', '0.3')
+  })
+
+  it('loads volume from localStorage on mount', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
+      if (key === 'music_volume') return '0.4'
+      return null
+    })
+
+    render(<GamePage />)
+
+    const volumePercentage = screen.getByTestId('music-volume-percentage')
+    expect(volumePercentage).toHaveTextContent('40%')
+  })
+
+  it('passes volume prop to AudioPlayer', () => {
+    render(<GamePage />)
+
+    const audioPlayer = screen.getByTestId('audio-player')
+    // Default volume 0.7 should be passed
+    expect(audioPlayer).toHaveAttribute('data-volume', '0.7')
+  })
+
+  it('AudioPlayer receives updated volume when slider changes', () => {
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    fireEvent.change(volumeSlider, { target: { value: '0.5' } })
+
+    // Check the tracked volume
+    expect(lastVolumeReceived).toBe(0.5)
+  })
+
+  it('volume control has proper accessibility label', () => {
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    expect(volumeSlider).toHaveAttribute('aria-label', 'Volume de la musique')
+  })
+
+  it('handles invalid localStorage value gracefully', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
+      if (key === 'music_volume') return 'invalid'
+      return null
+    })
+
+    // Should not throw and use default volume
+    expect(() => render(<GamePage />)).not.toThrow()
+
+    const volumePercentage = screen.getByTestId('music-volume-percentage')
+    // Should use default 70%
+    expect(volumePercentage).toHaveTextContent('70%')
+  })
+
+  it('handles out-of-range localStorage value gracefully', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
+      if (key === 'music_volume') return '1.5'
+      return null
+    })
+
+    // Should not throw and use default volume for out-of-range value
+    expect(() => render(<GamePage />)).not.toThrow()
+
+    const volumePercentage = screen.getByTestId('music-volume-percentage')
+    // Should use default 70% since 1.5 is out of range
+    expect(volumePercentage).toHaveTextContent('70%')
+  })
+
+  it('volume control shows 0% at minimum', () => {
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    fireEvent.change(volumeSlider, { target: { value: '0' } })
+
+    const volumePercentage = screen.getByTestId('music-volume-percentage')
+    expect(volumePercentage).toHaveTextContent('0%')
+  })
+
+  it('volume control shows 100% at maximum', () => {
+    render(<GamePage />)
+
+    const volumeSlider = screen.getByTestId('music-volume-slider')
+    fireEvent.change(volumeSlider, { target: { value: '1' } })
+
+    const volumePercentage = screen.getByTestId('music-volume-percentage')
+    expect(volumePercentage).toHaveTextContent('100%')
+  })
+
+  it('volume control is inside a styled container with music icon', () => {
+    render(<GamePage />)
+
+    const volumeControl = screen.getByTestId('music-volume-control')
+    expect(volumeControl).toBeInTheDocument()
+    expect(volumeControl).toHaveClass('flex', 'items-center', 'gap-2')
   })
 })

@@ -1,6 +1,12 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import { AudioPlayer } from './AudioPlayer'
+
+// Store original HTMLMediaElement prototype methods
+const originalVolumeSetter = Object.getOwnPropertyDescriptor(
+  HTMLMediaElement.prototype,
+  'volume'
+)?.set
 
 describe('AudioPlayer', () => {
   afterEach(() => {
@@ -293,6 +299,148 @@ describe('AudioPlayer', () => {
 
       // onEnded should be a function that can be called
       expect(typeof onEnded).toBe('function')
+    })
+  })
+
+  describe('Volume control (Issue 8.8)', () => {
+    let volumeSetterSpy: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      volumeSetterSpy = vi.fn()
+      Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+        set: volumeSetterSpy,
+        configurable: true,
+      })
+    })
+
+    afterEach(() => {
+      cleanup()
+      // Restore original volume setter
+      if (originalVolumeSetter) {
+        Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+          set: originalVolumeSetter,
+          configurable: true,
+        })
+      }
+    })
+
+    it('should accept optional volume prop', () => {
+      const onEnded = vi.fn()
+
+      // Should not throw when volume is provided
+      expect(() => {
+        render(
+          <AudioPlayer
+            songId="abc123def456"
+            isPlaying={false}
+            maxDuration={20}
+            onEnded={onEnded}
+            volume={0.5}
+          />
+        )
+      }).not.toThrow()
+    })
+
+    it('should render without volume prop (uses default 0.7)', () => {
+      const onEnded = vi.fn()
+
+      // Should not throw when volume is not provided
+      expect(() => {
+        render(
+          <AudioPlayer
+            songId="abc123def456"
+            isPlaying={false}
+            maxDuration={20}
+            onEnded={onEnded}
+          />
+        )
+      }).not.toThrow()
+
+      // Default volume should be applied
+      expect(volumeSetterSpy).toHaveBeenCalledWith(0.7)
+    })
+
+    it('should apply volume to audio element', () => {
+      const onEnded = vi.fn()
+
+      render(
+        <AudioPlayer
+          songId="abc123def456"
+          isPlaying={false}
+          maxDuration={20}
+          onEnded={onEnded}
+          volume={0.5}
+        />
+      )
+
+      // Volume should be set to 0.5
+      expect(volumeSetterSpy).toHaveBeenCalledWith(0.5)
+    })
+
+    it('should clamp volume to range 0-1 (minimum)', () => {
+      const onEnded = vi.fn()
+
+      render(
+        <AudioPlayer
+          songId="abc123def456"
+          isPlaying={false}
+          maxDuration={20}
+          onEnded={onEnded}
+          volume={-0.5}
+        />
+      )
+
+      // Volume should be clamped to 0
+      expect(volumeSetterSpy).toHaveBeenCalledWith(0)
+    })
+
+    it('should clamp volume to range 0-1 (maximum)', () => {
+      const onEnded = vi.fn()
+
+      render(
+        <AudioPlayer
+          songId="abc123def456"
+          isPlaying={false}
+          maxDuration={20}
+          onEnded={onEnded}
+          volume={1.5}
+        />
+      )
+
+      // Volume should be clamped to 1
+      expect(volumeSetterSpy).toHaveBeenCalledWith(1)
+    })
+
+    it('should accept volume at 0 (muted)', () => {
+      const onEnded = vi.fn()
+
+      render(
+        <AudioPlayer
+          songId="abc123def456"
+          isPlaying={false}
+          maxDuration={20}
+          onEnded={onEnded}
+          volume={0}
+        />
+      )
+
+      expect(volumeSetterSpy).toHaveBeenCalledWith(0)
+    })
+
+    it('should accept volume at 1 (max)', () => {
+      const onEnded = vi.fn()
+
+      render(
+        <AudioPlayer
+          songId="abc123def456"
+          isPlaying={false}
+          maxDuration={20}
+          onEnded={onEnded}
+          volume={1}
+        />
+      )
+
+      expect(volumeSetterSpy).toHaveBeenCalledWith(1)
     })
   })
 })

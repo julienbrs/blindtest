@@ -8,6 +8,7 @@ import {
   XMarkIcon,
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
+  MusicalNoteIcon,
 } from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
@@ -65,6 +66,8 @@ function GameContent() {
   const [showCorrectFlash, setShowCorrectFlash] = useState(false)
   // Track incorrect answer flash animation
   const [showIncorrectFlash, setShowIncorrectFlash] = useState(false)
+  // Music volume (0-1)
+  const [musicVolume, setMusicVolume] = useState(0.7)
 
   // Sound effects hook - must be before effects that use it
   const sfx = useSoundEffects()
@@ -110,12 +113,33 @@ function GameContent() {
     }
   }, [sfx])
 
+  // Load music volume from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('music_volume')
+    if (saved !== null) {
+      const vol = parseFloat(saved)
+      if (!isNaN(vol) && vol >= 0 && vol <= 1) {
+        setMusicVolume(vol)
+      }
+    }
+  }, [])
+
   // Handle SFX mute toggle with localStorage persistence
   const handleToggleSfxMute = useCallback(() => {
     const newMuted = !sfx.isMuted
     sfx.setMuted(newMuted)
     localStorage.setItem('sfx_muted', JSON.stringify(newMuted))
   }, [sfx])
+
+  // Handle music volume change with localStorage persistence
+  const handleMusicVolumeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const vol = parseFloat(e.target.value)
+      setMusicVolume(vol)
+      localStorage.setItem('music_volume', vol.toString())
+    },
+    []
+  )
 
   // Prefetch the next song during REVEAL state
   const prefetchNextSong = useCallback(async (excludeIds: string[]) => {
@@ -376,6 +400,33 @@ function GameContent() {
           songsPlayed={game.state.songsPlayed}
         />
         <div className="flex items-center gap-2">
+          {/* Music Volume Slider */}
+          <div
+            className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5"
+            data-testid="music-volume-control"
+          >
+            <MusicalNoteIcon
+              className="h-4 w-4 text-purple-300"
+              aria-hidden="true"
+            />
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={musicVolume}
+              onChange={handleMusicVolumeChange}
+              className="w-16 cursor-pointer accent-purple-500 sm:w-24"
+              aria-label="Volume de la musique"
+              data-testid="music-volume-slider"
+            />
+            <span
+              className="w-8 text-xs text-purple-300"
+              data-testid="music-volume-percentage"
+            >
+              {Math.round(musicVolume * 100)}%
+            </span>
+          </div>
           {/* SFX Mute Toggle Button */}
           <Button
             onClick={handleToggleSfxMute}
@@ -471,6 +522,7 @@ function GameContent() {
             onReady={handleAudioReady}
             shouldReplay={shouldReplay}
             onReplayComplete={handleReplayComplete}
+            volume={musicVolume}
           />
         </div>
 
