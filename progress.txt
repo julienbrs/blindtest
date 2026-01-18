@@ -639,3 +639,10 @@ Commit: a0b38a1
 Notes: Added music volume slider control in game header. Implemented volume prop in AudioPlayer component with real-time volume changes via useEffect. Volume is clamped to 0-1 range for safety. Added MusicalNoteIcon and percentage display (0-100%). Volume state is persisted in localStorage as music_volume. Volume slider uses step of 0.1 for smooth control. Added 7 tests for AudioPlayer volume prop and 15 tests for game page volume control UI. All 617 tests pass.
 Files: src/components/game/AudioPlayer.tsx, src/components/game/AudioPlayer.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
 
+=== Issue 9.1: Adapter le layout pour mobile ===
+Timestamp: 2026-01-18T11:22:00Z
+Status: COMPLETED
+Commit: fe8db77
+Notes: Implemented mobile-first responsive layout from 320px to 1920px. Added responsive sizing to all game components: homepage (title, icons, padding), game page (header, controls, volume slider), SongReveal (cover 48→64 responsive), Timer (circle 24→32 responsive), BuzzerButton (32→48 responsive), GameControls (buttons, spacing), ScoreDisplay (compact on mobile). Volume slider hidden on very small screens. No horizontal overflow. Updated 5 test files for new responsive class selectors. All 617 tests pass.
+Files: src/app/page.tsx, src/app/game/page.tsx, src/components/game/SongReveal.tsx, src/components/game/Timer.tsx, src/components/game/BuzzerButton.tsx, src/components/game/GameControls.tsx, src/components/game/ScoreDisplay.tsx, test files
+
