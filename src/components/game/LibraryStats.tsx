@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { MusicalNoteIcon, UserGroupIcon } from '@heroicons/react/24/solid'
 
 interface Stats {
@@ -30,12 +30,14 @@ export function LibraryStats({
     audioFolderPath: null,
   })
 
-  // Notify parent when loading state changes
-  useEffect(() => {
-    onLoadingChange?.(stats.isLoading)
-  }, [stats.isLoading, onLoadingChange])
+  // Track if we've already fetched to prevent duplicate calls
+  const hasFetched = useRef(false)
 
   useEffect(() => {
+    // Prevent duplicate fetches (React StrictMode, re-mounts, etc.)
+    if (hasFetched.current) return
+    hasFetched.current = true
+
     async function fetchStats() {
       try {
         const res = await fetch('/api/stats')
@@ -51,6 +53,7 @@ export function LibraryStats({
                 audioFolderPath: data.audioFolderPath || 'Non défini',
               }))
               onEmptyLibrary?.(true, data.audioFolderPath || 'Non défini')
+              onLoadingChange?.(false)
               return
             }
           }
@@ -66,16 +69,19 @@ export function LibraryStats({
           audioFolderPath: null,
         })
         onEmptyLibrary?.(false, null)
+        onLoadingChange?.(false)
       } catch {
         setStats((prev) => ({
           ...prev,
           isLoading: false,
           error: 'Impossible de charger les statistiques',
         }))
+        onLoadingChange?.(false)
       }
     }
     fetchStats()
-  }, [onEmptyLibrary])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (stats.isLoading) {
     return (
