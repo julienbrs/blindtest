@@ -10,9 +10,11 @@ import {
 import { GameConfigForm } from '@/components/game/GameConfigForm'
 import { LibraryStats } from '@/components/game/LibraryStats'
 import { EmptyLibraryError } from '@/components/game/EmptyLibraryError'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 export default function HomePage() {
   const shouldReduceMotion = useReducedMotion()
+  const [isLoading, setIsLoading] = useState(true)
   const [emptyLibraryState, setEmptyLibraryState] = useState<{
     isEmpty: boolean
     audioFolderPath: string | null
@@ -24,6 +26,10 @@ export default function HomePage() {
     },
     []
   )
+
+  const handleLoadingChange = useCallback((loading: boolean) => {
+    setIsLoading(loading)
+  }, [])
 
   const fadeUpVariants = shouldReduceMotion
     ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
@@ -42,6 +48,22 @@ export default function HomePage() {
           },
         },
       }
+
+  // Show global loading screen during initial library fetch
+  if (isLoading) {
+    return (
+      <>
+        <LoadingScreen message="Chargement de la bibliothèque..." />
+        {/* Hidden LibraryStats to trigger data fetch */}
+        <div className="hidden">
+          <LibraryStats
+            onEmptyLibrary={handleEmptyLibrary}
+            onLoadingChange={handleLoadingChange}
+          />
+        </div>
+      </>
+    )
+  }
 
   return (
     <motion.main
@@ -114,7 +136,10 @@ export default function HomePage() {
         transition={{ duration: 0.5 }}
         className={`w-full max-w-md px-2 sm:px-0 ${emptyLibraryState.isEmpty ? 'hidden' : ''}`}
       >
-        <LibraryStats onEmptyLibrary={handleEmptyLibrary} />
+        <LibraryStats
+          onEmptyLibrary={handleEmptyLibrary}
+          onLoadingChange={handleLoadingChange}
+        />
       </motion.div>
     </motion.main>
   )

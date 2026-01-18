@@ -14,9 +14,13 @@ interface Stats {
 
 interface LibraryStatsProps {
   onEmptyLibrary?: (isEmpty: boolean, audioFolderPath: string | null) => void
+  onLoadingChange?: (isLoading: boolean) => void
 }
 
-export function LibraryStats({ onEmptyLibrary }: LibraryStatsProps = {}) {
+export function LibraryStats({
+  onEmptyLibrary,
+  onLoadingChange,
+}: LibraryStatsProps = {}) {
   const [stats, setStats] = useState<Stats>({
     totalSongs: 0,
     totalArtists: 0,
@@ -25,6 +29,11 @@ export function LibraryStats({ onEmptyLibrary }: LibraryStatsProps = {}) {
     isEmpty: false,
     audioFolderPath: null,
   })
+
+  // Notify parent when loading state changes
+  useEffect(() => {
+    onLoadingChange?.(stats.isLoading)
+  }, [stats.isLoading, onLoadingChange])
 
   useEffect(() => {
     async function fetchStats() {
