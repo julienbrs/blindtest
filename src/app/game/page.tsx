@@ -82,6 +82,8 @@ function GameContent() {
   const hasInitialized = useRef(false)
   // Track if we're currently loading a song (to prevent duplicate loads)
   const isLoadingSongRef = useRef(false)
+  // AbortController for cancelling pending fetch operations
+  const loadAbortControllerRef = useRef<AbortController | null>(null)
   // Track if replay was triggered
   const [shouldReplay, setShouldReplay] = useState(false)
   // Track correct answer flash animation
@@ -223,11 +225,18 @@ function GameContent() {
 
   // Check if an audio file is accessible via HEAD request
   const checkAudioFileAccessible = useCallback(
-    async (songId: string): Promise<boolean> => {
+    async (songId: string, signal?: AbortSignal): Promise<boolean> => {
       try {
-        const res = await fetch(`/api/audio/${songId}`, { method: 'HEAD' })
+        const res = await fetch(`/api/audio/${songId}`, {
+          method: 'HEAD',
+          signal,
+        })
         return res.ok
-      } catch {
+      } catch (error) {
+        // If aborted, propagate the error so caller can handle it
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw error
+        }
         return false
       }
     },
@@ -238,17 +247,39 @@ function GameContent() {
   // If the audio file is not accessible, auto-skip and try another song
   // Uses fetchWithRetry for network resilience with timeout and retry
   const loadRandomSong = useCallback(
-    async (excludeIds: string[], preloadedSong: Song | null) => {
+    async (
+      excludeIds: string[],
+      preloadedSong: Song | null,
+      signal?: AbortSignal
+    ) => {
+      // Check if aborted before starting
+      if (signal?.aborted) {
+        return
+      }
+
       // Clear any previous network error
       setNetworkError({ show: false })
 
       // If we have a preloaded song, verify it's still accessible
       if (preloadedSong) {
-        const isAccessible = await checkAudioFileAccessible(preloadedSong.id)
-        if (isAccessible) {
-          game.actions.loadSong(preloadedSong)
-          setNextSong(null)
-          return
+        try {
+          const isAccessible = await checkAudioFileAccessible(
+            preloadedSong.id,
+            signal
+          )
+          // Check abort after async operation
+          if (signal?.aborted) return
+
+          if (isAccessible) {
+            game.actions.loadSong(preloadedSong)
+            setNextSong(null)
+            return
+          }
+        } catch (error) {
+          // If aborted, stop processing
+          if (error instanceof Error && error.name === 'AbortError') {
+            return
+          }
         }
         // Preloaded song is not accessible, add to exclude list and load normally
         console.warn(
@@ -263,7 +294,10 @@ function GameContent() {
 
       try {
         // Use fetchWithRetry with 10s timeout and 3 retries
-        const res = await fetchWithRetry(url, {}, 3, 10000)
+        const res = await fetchWithRetry(url, { signal }, 3, 10000)
+
+        // Check abort after async operation
+        if (signal?.aborted) return
 
         if (!res.ok) {
           if (res.status === 404) {
@@ -275,16 +309,27 @@ function GameContent() {
         }
 
         const data = (await res.json()) as { song: Song }
+
+        // Check abort after async operation
+        if (signal?.aborted) return
+
         if (data.song) {
           // Verify the audio file is accessible before loading
-          const isAccessible = await checkAudioFileAccessible(data.song.id)
+          const isAccessible = await checkAudioFileAccessible(
+            data.song.id,
+            signal
+          )
+
+          // Check abort after async operation
+          if (signal?.aborted) return
+
           if (!isAccessible) {
             // Audio file not accessible - add to exclude list and retry
             console.warn(
               `Audio file for song "${data.song.title}" not accessible, skipping...`
             )
             // Recursively call to get another song with updated exclude list
-            await loadRandomSong([...excludeIds, data.song.id], null)
+            await loadRandomSong([...excludeIds, data.song.id], null, signal)
             return
           }
           game.actions.loadSong(data.song)
@@ -294,6 +339,11 @@ function GameContent() {
           game.actions.quit()
         }
       } catch (error) {
+        // If aborted, stop processing silently
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
+
         // Network error - show toast with retry option
         const isNetworkError = error instanceof NetworkError
         const message = isNetworkError
@@ -352,6 +402,15 @@ function GameContent() {
     }
     isLoadingSongRef.current = true
 
+    // Abort any previous pending load operation
+    if (loadAbortControllerRef.current) {
+      loadAbortControllerRef.current.abort()
+    }
+
+    // Create new AbortController for this load operation
+    const abortController = new AbortController()
+    loadAbortControllerRef.current = abortController
+
     // Capture values for the async function
     const playedIds = game.state.playedSongIds
     const preloadedSong = nextSong
@@ -360,9 +419,13 @@ function GameContent() {
     setAudioReadyForSongId(null)
 
     // Load a new random song (excluding already played songs), using preloaded if available
-    void loadRandomSong(playedIds, preloadedSong)
-    // Note: we intentionally don't reset isLoadingSongRef here
-    // It will be reset when status changes away from 'loading' or currentSong is set
+    void loadRandomSong(playedIds, preloadedSong, abortController.signal)
+
+    // Cleanup: abort the operation when effect is cleaned up (component unmount or deps change)
+    return () => {
+      abortController.abort()
+      isLoadingSongRef.current = false
+    }
   }, [
     game.state.status,
     game.state.currentSong,

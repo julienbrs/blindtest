@@ -22,7 +22,7 @@ export class NetworkError extends Error {
 /**
  * Fetch with timeout - aborts the request if it takes longer than the specified timeout
  * @param url - URL to fetch
- * @param options - Fetch options
+ * @param options - Fetch options (signal will be combined with timeout)
  * @param timeout - Timeout in milliseconds (default: 10000ms = 10s)
  */
 export async function fetchWithTimeout(
@@ -30,18 +30,35 @@ export async function fetchWithTimeout(
   options: RequestInit = {},
   timeout = 10000
 ): Promise<Response> {
-  const controller = new AbortController()
-  const id = setTimeout(() => controller.abort(), timeout)
+  const timeoutController = new AbortController()
+  const id = setTimeout(() => timeoutController.abort(), timeout)
+
+  // If an external signal is provided, listen for its abort event
+  const externalSignal = options.signal
+  if (externalSignal?.aborted) {
+    clearTimeout(id)
+    throw new DOMException('The operation was aborted.', 'AbortError')
+  }
+
+  // Create abort handler for external signal
+  const onExternalAbort = () => {
+    timeoutController.abort()
+  }
+  externalSignal?.addEventListener('abort', onExternalAbort)
 
   try {
     const response = await fetch(url, {
       ...options,
-      signal: controller.signal,
+      signal: timeoutController.signal,
     })
     clearTimeout(id)
     return response
   } catch (error) {
     clearTimeout(id)
+    // If external signal was aborted, propagate as AbortError (not NetworkError)
+    if (externalSignal?.aborted) {
+      throw new DOMException('The operation was aborted.', 'AbortError')
+    }
     if (error instanceof Error && error.name === 'AbortError') {
       throw new NetworkError('TIMEOUT', 'La requête a expiré')
     }
@@ -49,6 +66,8 @@ export async function fetchWithTimeout(
       'NETWORK_ERROR',
       'Impossible de contacter le serveur'
     )
+  } finally {
+    externalSignal?.removeEventListener('abort', onExternalAbort)
   }
 }
 
@@ -75,6 +94,10 @@ export async function fetchWithRetry(
       // This allows handling 404, 400, etc. without retrying
       return res
     } catch (error) {
+      // If aborted, propagate immediately without retrying
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw error
+      }
       lastError = error instanceof Error ? error : new Error(String(error))
       // Only retry on network errors, not on successful responses
       if (i < retries - 1) {
