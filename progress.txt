@@ -576,3 +576,10 @@ Commit: 1714084
 Notes: Implemented dark theme feature with smooth transitions. Created ThemeContext for dark/festive theme state management with localStorage persistence. Created ThemeToggle component with animated sun/moon icons using Framer Motion (spring animation on knob). Created ThemedLayout wrapper component that applies theme class and passes isDark to FestiveBackground. Enhanced FestiveBackground with darker gradient (#0f0a1f, #1a1333, #0d0d1a) and darker orb colors for dark mode. Added dark theme toggle in GameConfigForm advanced settings section. All theme changes use 500ms transitions for smooth switching. Created comprehensive test suites (7 tests for ThemeContext, 8 tests for ThemeToggle, 6 dark theme tests for FestiveBackground). All 519 tests pass.
 Files: src/contexts/ThemeContext.tsx, src/contexts/ThemeContext.test.tsx, src/components/ui/ThemeToggle.tsx, src/components/ui/ThemeToggle.test.tsx, src/components/layout/ThemedLayout.tsx, src/components/ui/FestiveBackground.tsx, src/components/ui/FestiveBackground.test.tsx, src/components/game/GameConfigForm.tsx, src/app/layout.tsx
 
+=== Issue 7.10: Ajouter des particules de fond ===
+Timestamp: 2026-01-18T04:20:00Z
+Status: COMPLETED
+Commit: c98864b
+Notes: Installed @tsparticles/react and @tsparticles/slim for background particles. Created BackgroundParticles component with subtle floating particles that adapt to dark/festive theme. Particles have opacity animation, twinkle effect, and colors that match the theme (pink/purple/gold in festive mode, indigo/purple/slate in dark mode). Integrated component in ThemedLayout below FestiveBackground. All effects respect prefers-reduced-motion accessibility setting. Created comprehensive test suite (8 tests). All 527 tests pass.
+Files: package.json, package-lock.json, src/components/ui/BackgroundParticles.tsx, src/components/ui/BackgroundParticles.test.tsx, src/components/layout/ThemedLayout.tsx
+
