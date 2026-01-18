@@ -9,11 +9,14 @@ import {
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
   MusicalNoteIcon,
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
 } from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
 import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { Timer } from '@/components/game/Timer'
@@ -68,6 +71,13 @@ function GameContent() {
   const [showIncorrectFlash, setShowIncorrectFlash] = useState(false)
   // Music volume (0-1)
   const [musicVolume, setMusicVolume] = useState(0.7)
+
+  // Fullscreen mode
+  const {
+    isFullscreen,
+    toggleFullscreen,
+    isSupported: isFullscreenSupported,
+  } = useFullscreen()
 
   // Sound effects hook - must be before effects that use it
   const sfx = useSoundEffects()
@@ -447,6 +457,27 @@ function GameContent() {
             )}
             <span className="hidden sm:inline">SFX</span>
           </Button>
+          {/* Fullscreen Toggle Button - only show if supported */}
+          {isFullscreenSupported && (
+            <Button
+              onClick={toggleFullscreen}
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-1 sm:gap-2"
+              aria-label={
+                isFullscreen
+                  ? 'Quitter le mode plein écran'
+                  : 'Passer en mode plein écran'
+              }
+              data-testid="fullscreen-toggle"
+            >
+              {isFullscreen ? (
+                <ArrowsPointingInIcon className="h-4 w-4" />
+              ) : (
+                <ArrowsPointingOutIcon className="h-4 w-4" />
+              )}
+            </Button>
+          )}
           <Button
             onClick={() => setShowQuitConfirm(true)}
             variant="secondary"

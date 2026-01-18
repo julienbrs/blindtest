@@ -87,6 +87,21 @@ vi.mock('@/hooks/useWrongAnswerEffect', () => ({
   }),
 }))
 
+// Mock useFullscreen hook
+let mockIsFullscreen = false
+let mockIsFullscreenSupported = true
+const mockToggleFullscreen = vi.fn()
+
+vi.mock('@/hooks/useFullscreen', () => ({
+  useFullscreen: () => ({
+    isFullscreen: mockIsFullscreen,
+    toggleFullscreen: mockToggleFullscreen,
+    enterFullscreen: vi.fn(),
+    exitFullscreen: vi.fn(),
+    isSupported: mockIsFullscreenSupported,
+  }),
+}))
+
 // Track volume passed to AudioPlayer
 let lastVolumeReceived: number | undefined
 
@@ -182,6 +197,10 @@ function resetMockState() {
   mockSfxSetMuted.mockClear()
   // Reset volume tracking
   lastVolumeReceived = undefined
+  // Reset fullscreen mock state
+  mockIsFullscreen = false
+  mockIsFullscreenSupported = true
+  mockToggleFullscreen.mockClear()
 }
 
 describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
@@ -871,5 +890,80 @@ describe('GamePage - Music Volume Control (Issue 8.8)', () => {
       'rounded-lg',
       'bg-white/10'
     )
+  })
+})
+
+describe('GamePage - Fullscreen Mode (Issue 9.7)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+  })
+
+  it('renders fullscreen toggle button when supported', () => {
+    mockIsFullscreenSupported = true
+    render(<GamePage />)
+
+    const fullscreenToggle = screen.getByTestId('fullscreen-toggle')
+    expect(fullscreenToggle).toBeInTheDocument()
+  })
+
+  it('does not render fullscreen toggle button when not supported', () => {
+    mockIsFullscreenSupported = false
+    render(<GamePage />)
+
+    expect(screen.queryByTestId('fullscreen-toggle')).not.toBeInTheDocument()
+  })
+
+  it('shows expand icon when not in fullscreen', () => {
+    mockIsFullscreen = false
+    mockIsFullscreenSupported = true
+    render(<GamePage />)
+
+    const fullscreenToggle = screen.getByTestId('fullscreen-toggle')
+    expect(fullscreenToggle).toHaveAttribute(
+      'aria-label',
+      'Passer en mode plein écran'
+    )
+  })
+
+  it('shows minimize icon when in fullscreen', () => {
+    mockIsFullscreen = true
+    mockIsFullscreenSupported = true
+    render(<GamePage />)
+
+    const fullscreenToggle = screen.getByTestId('fullscreen-toggle')
+    expect(fullscreenToggle).toHaveAttribute(
+      'aria-label',
+      'Quitter le mode plein écran'
+    )
+  })
+
+  it('calls toggleFullscreen when button is clicked', () => {
+    mockIsFullscreenSupported = true
+    render(<GamePage />)
+
+    const fullscreenToggle = screen.getByTestId('fullscreen-toggle')
+    fireEvent.click(fullscreenToggle)
+
+    expect(mockToggleFullscreen).toHaveBeenCalled()
+  })
+
+  it('fullscreen toggle is in header next to other controls', () => {
+    mockIsFullscreenSupported = true
+    render(<GamePage />)
+
+    const fullscreenToggle = screen.getByTestId('fullscreen-toggle')
+    const sfxToggle = screen.getByTestId('sfx-mute-toggle')
+
+    // Both should be in the same header controls container
+    expect(fullscreenToggle.parentElement).toBe(sfxToggle.parentElement)
+  })
+
+  it('fullscreen toggle has proper button styling', () => {
+    mockIsFullscreenSupported = true
+    render(<GamePage />)
+
+    const fullscreenToggle = screen.getByTestId('fullscreen-toggle')
+    expect(fullscreenToggle).toHaveClass('flex', 'items-center')
   })
 })
