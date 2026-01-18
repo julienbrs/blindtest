@@ -709,3 +709,10 @@ Commit: 3c4dff0
 Notes: Implemented graceful handling when audio files are moved/deleted after scanning. Added FILE_NOT_FOUND error code with JSON logging for server-side debugging. Created HEAD endpoint for file accessibility checks. Game page now uses HEAD request to verify audio files before loading and auto-skips missing files to load the next song. Client-side console warnings log skipped songs. Added 11 comprehensive tests (6 for game page, 5 for HEAD endpoint). All 750 tests pass.
 Files: src/app/api/audio/[id]/route.ts, src/app/api/audio/[id]/route.test.ts, src/app/game/page.tsx, src/app/game/page.test.tsx
 
+=== Issue 10.3: Gérer l'erreur réseau ===
+Timestamp: 2026-01-18T16:06:00Z
+Status: COMPLETED
+Commit: 116a560
+Notes: Implemented network error handling with timeout and retry mechanisms. Added fetchWithTimeout (10s default) and fetchWithRetry (3 retries with exponential backoff 1s, 2s, 3s) helpers in utils.ts. Created NetworkError class with TIMEOUT, NETWORK_ERROR, MAX_RETRIES types. Created NetworkErrorToast component with retry button and dismiss option for user-friendly error display. Integrated in game page loadRandomSong function to show toast on network failures with manual retry option. French error messages displayed. All 777 tests pass.
+Files: src/lib/utils.ts, src/lib/utils.test.ts, src/components/game/NetworkErrorToast.tsx, src/components/game/NetworkErrorToast.test.tsx, src/app/game/page.tsx
+
