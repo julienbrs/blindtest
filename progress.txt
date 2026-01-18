@@ -604,3 +604,10 @@ Commit: 4c6c2f9
 Notes: Implemented incorrect answer sound using Web Audio API in useWrongAnswerEffect hook. Created playIncorrectSound function that generates a descending "whomp" tone (~0.4s) using three oscillators: main descending sawtooth (200Hz→80Hz), sub-bass sine (80Hz→40Hz), and brief initial click for clarity. Sound plays immediately on incorrect validation, synchronized with shake animation. Sound plays even when reduced motion is preferred (only visual effects disabled). Added AudioContext cleanup on unmount. Created 7 comprehensive tests for sound functionality. All 543 tests pass.
 Files: src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts
 
+=== Issue 8.4: Ajouter un son de fin de timer ===
+Timestamp: 2026-01-18T06:00:00Z
+Status: COMPLETED
+Commit: b793600
+Notes: Implemented timeout sound using Web Audio API in Timer component. Created a descending "time's up" buzzer sound with 3 oscillators: main sawtooth (400Hz→150Hz), sub-bass sine (100Hz→50Hz), and square buzz (200Hz→80Hz). Sound duration ~0.5s at 0.5 volume. Sound plays exactly when timer transitions from > 0 to 0 (detected using prevRemainingRef). Added optional onTimeout callback prop for external event handling. Handles browser autoplay policy by resuming suspended AudioContext. Added AudioContext cleanup on unmount. Created 8 comprehensive tests for sound functionality covering transition detection, no sound on mount at 0, sound plays only once, reset behavior, callback invocation, and oscillator creation. All 551 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+

@@ -129,7 +129,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 8.1 Ajouter un son de buzzer
 - [x] 8.2 Ajouter un son de bonne réponse
 - [x] 8.3 Ajouter un son de mauvaise réponse
-- [ ] 8.4 Ajouter un son de fin de timer
+- [x] 8.4 Ajouter un son de fin de timer
 - [ ] 8.5 Ajouter un tick-tock pour le timer
 - [ ] 8.6 Créer un hook useSoundEffects
 - [ ] 8.7 Ajouter une option mute effets sonores
