@@ -893,6 +893,261 @@ describe('GamePage - Music Volume Control (Issue 8.8)', () => {
   })
 })
 
+describe('GamePage - File Not Found Auto-Skip (Issue 10.2)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+    // Reset fetch mock
+    global.fetch = vi.fn()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('checks audio file accessibility via HEAD request before loading', async () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+    mockGameState.playedSongIds = []
+
+    const mockSong = {
+      id: 'test123abc',
+      title: 'Test Song',
+      artist: 'Test Artist',
+    }
+
+    // Mock fetch responses
+    ;(global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong }),
+      })
+      // HEAD request succeeds
+      .mockResolvedValueOnce({
+        ok: true,
+      })
+
+    render(<GamePage />)
+
+    // Wait for fetch to be called
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/audio/'),
+        expect.objectContaining({ method: 'HEAD' })
+      )
+    })
+  })
+
+  it('skips song and loads another when HEAD request returns 404', async () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+    mockGameState.playedSongIds = []
+
+    const mockSong1 = {
+      id: 'song1id12345',
+      title: 'Missing Song',
+      artist: 'Test Artist',
+    }
+    const mockSong2 = {
+      id: 'song2id67890',
+      title: 'Valid Song',
+      artist: 'Test Artist',
+    }
+
+    // Mock fetch responses
+    ;(global.fetch as ReturnType<typeof vi.fn>)
+      // First random song request
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong1 }),
+      })
+      // HEAD request fails (file not found)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+      // Second random song request (with first song excluded)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong2 }),
+      })
+      // HEAD request succeeds for second song
+      .mockResolvedValueOnce({
+        ok: true,
+      })
+
+    // Mock console.warn to verify logging
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    render(<GamePage />)
+
+    // Wait for retry fetch to be called
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(4)
+    })
+
+    // Verify warning was logged for skipped song
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not accessible, skipping')
+    )
+
+    warnSpy.mockRestore()
+  })
+
+  it('includes missing songs in exclude parameter for subsequent requests', async () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+    mockGameState.playedSongIds = ['prev1', 'prev2']
+
+    const mockSong1 = {
+      id: 'missing12345',
+      title: 'Missing Song',
+      artist: 'Test Artist',
+    }
+    const mockSong2 = {
+      id: 'valid1234567',
+      title: 'Valid Song',
+      artist: 'Test Artist',
+    }
+
+    ;(global.fetch as ReturnType<typeof vi.fn>)
+      // First random song request
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong1 }),
+      })
+      // HEAD request fails
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+      // Second random song request
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong2 }),
+      })
+      // HEAD request succeeds
+      .mockResolvedValueOnce({
+        ok: true,
+      })
+
+    render(<GamePage />)
+
+    await waitFor(() => {
+      const fetchCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls
+      // Third call should include the missing song in exclude
+      const secondRandomCall = fetchCalls[2]
+      if (secondRandomCall) {
+        expect(secondRandomCall[0]).toContain('missing12345')
+      }
+    })
+  })
+
+  it('ends game when no more songs available after skipping', async () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+    mockGameState.playedSongIds = []
+
+    const mockSong = {
+      id: 'missing12345',
+      title: 'Missing Song',
+      artist: 'Test Artist',
+    }
+
+    ;(global.fetch as ReturnType<typeof vi.fn>)
+      // First random song request
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong }),
+      })
+      // HEAD request fails
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+      // No more songs available
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+
+    render(<GamePage />)
+
+    await waitFor(() => {
+      expect(mockActions.quit).toHaveBeenCalled()
+    })
+  })
+
+  it('game continues without blocking when file is accessible', async () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+    mockGameState.playedSongIds = []
+
+    const mockSong = {
+      id: 'valid1234567',
+      title: 'Valid Song',
+      artist: 'Test Artist',
+    }
+
+    ;(global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong }),
+      })
+      // HEAD request succeeds
+      .mockResolvedValueOnce({
+        ok: true,
+      })
+
+    render(<GamePage />)
+
+    await waitFor(() => {
+      expect(mockActions.loadSong).toHaveBeenCalledWith(mockSong)
+    })
+  })
+
+  it('handles HEAD request network failure gracefully', async () => {
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+    mockGameState.playedSongIds = []
+
+    const mockSong1 = {
+      id: 'network12345',
+      title: 'Network Fail Song',
+      artist: 'Test Artist',
+    }
+    const mockSong2 = {
+      id: 'valid6789012',
+      title: 'Valid Song',
+      artist: 'Test Artist',
+    }
+
+    ;(global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong1 }),
+      })
+      // HEAD request fails with network error
+      .mockRejectedValueOnce(new Error('Network error'))
+      // Second random song request
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ song: mockSong2 }),
+      })
+      // HEAD request succeeds
+      .mockResolvedValueOnce({
+        ok: true,
+      })
+
+    render(<GamePage />)
+
+    await waitFor(() => {
+      // Should have retried with another song
+      expect(global.fetch).toHaveBeenCalledTimes(4)
+    })
+  })
+})
+
 describe('GamePage - Fullscreen Mode (Issue 9.7)', () => {
   beforeEach(() => {
     vi.clearAllMocks()

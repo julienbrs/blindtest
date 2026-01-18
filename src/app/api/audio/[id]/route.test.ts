@@ -12,7 +12,7 @@ vi.mock('@/lib/audioScanner', () => ({
 
 // Import after mocking
 import * as audioScanner from '@/lib/audioScanner'
-import { GET } from './route'
+import { GET, HEAD } from './route'
 
 // Create a test directory and file for Range Request tests
 const testDir = join(tmpdir(), 'blindtest-audio-test')
@@ -137,7 +137,7 @@ describe('GET /api/audio/[id]', () => {
     expect(data.error).toBe('Erreur streaming')
   })
 
-  it('returns 404 when file path does not exist', async () => {
+  it('returns 404 with FILE_NOT_FOUND error when file path does not exist', async () => {
     // Use a non-existent file path
     const songWithBadPath: Song = {
       ...mockSong,
@@ -145,13 +145,26 @@ describe('GET /api/audio/[id]', () => {
     }
     vi.mocked(audioScanner.getSongsCache).mockResolvedValue([songWithBadPath])
 
+    // Mock console.error to verify logging
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
     const response = await GET(createRequest(), {
       params: Promise.resolve({ id: 'abc123def456' }),
     })
     const data = await response.json()
 
     expect(response.status).toBe(404)
-    expect(data.error).toBe('Fichier audio introuvable')
+    expect(data.error).toBe('FILE_NOT_FOUND')
+    expect(data.message).toBe('Fichier audio introuvable')
+
+    // Verify error was logged
+    expect(consoleSpy).toHaveBeenCalled()
+    const logCall = consoleSpy.mock.calls[0][0]
+    const logData = JSON.parse(logCall as string)
+    expect(logData.error).toBe('FILE_NOT_FOUND')
+    expect(logData.context).toContain('/api/audio/')
+
+    consoleSpy.mockRestore()
   })
 
   it('validates that MIME types are defined for all supported formats', () => {
@@ -371,5 +384,130 @@ describe('GET /api/audio/[id]', () => {
         expect(response.headers.get('Content-Type')).toBe(expectedMime)
       }
     })
+  })
+})
+
+describe('HEAD /api/audio/[id]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const createHeadRequest = () => {
+    return new NextRequest('http://localhost:3000/api/audio/abc123def456', {
+      method: 'HEAD',
+    })
+  }
+
+  const mockSong: Song = {
+    id: 'abc123def456',
+    title: 'Test Song',
+    artist: 'Test Artist',
+    duration: 180,
+    filePath: '/music/test.mp3',
+    format: 'mp3',
+    hasCover: false,
+  }
+
+  const mockSongWithRealFile: Song = {
+    id: 'abc123def456',
+    title: 'Test Song',
+    artist: 'Test Artist',
+    duration: 180,
+    filePath: testFilePath,
+    format: 'mp3',
+    hasCover: false,
+  }
+
+  it('returns 200 with headers when file exists', async () => {
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue([
+      mockSongWithRealFile,
+    ])
+
+    const response = await HEAD(createHeadRequest(), {
+      params: Promise.resolve({ id: 'abc123def456' }),
+    })
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Length')).toBe('1024')
+    expect(response.headers.get('Content-Type')).toBe('audio/mpeg')
+    expect(response.headers.get('Accept-Ranges')).toBe('bytes')
+  })
+
+  it('returns 404 when song not found', async () => {
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue([mockSong])
+
+    const response = await HEAD(createHeadRequest(), {
+      params: Promise.resolve({ id: '111111111111' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(data.error).toBe('Chanson non trouvée')
+  })
+
+  it('returns 400 for invalid ID format', async () => {
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue([mockSong])
+
+    const response = await HEAD(createHeadRequest(), {
+      params: Promise.resolve({ id: 'abc' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error).toBe("Format d'ID invalide")
+  })
+
+  it('returns 404 with FILE_NOT_FOUND when file does not exist', async () => {
+    const songWithBadPath: Song = {
+      ...mockSong,
+      filePath: '/non/existent/path/test.mp3',
+    }
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue([songWithBadPath])
+
+    // Mock console.error to verify logging
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await HEAD(createHeadRequest(), {
+      params: Promise.resolve({ id: 'abc123def456' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(data.error).toBe('FILE_NOT_FOUND')
+    expect(data.message).toBe('Fichier audio introuvable')
+
+    // Verify error was logged
+    expect(consoleSpy).toHaveBeenCalled()
+
+    consoleSpy.mockRestore()
+  })
+
+  it('returns correct MIME type for different formats', async () => {
+    const formats: Array<{
+      format: Song['format']
+      expectedMime: string
+    }> = [
+      { format: 'mp3', expectedMime: 'audio/mpeg' },
+      { format: 'wav', expectedMime: 'audio/wav' },
+      { format: 'ogg', expectedMime: 'audio/ogg' },
+      { format: 'flac', expectedMime: 'audio/flac' },
+      { format: 'm4a', expectedMime: 'audio/mp4' },
+      { format: 'aac', expectedMime: 'audio/aac' },
+    ]
+
+    for (const { format, expectedMime } of formats) {
+      const songWithFormat: Song = {
+        ...mockSongWithRealFile,
+        format,
+      }
+      vi.mocked(audioScanner.getSongsCache).mockResolvedValue([songWithFormat])
+
+      const response = await HEAD(createHeadRequest(), {
+        params: Promise.resolve({ id: 'abc123def456' }),
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('Content-Type')).toBe(expectedMime)
+    }
   })
 })

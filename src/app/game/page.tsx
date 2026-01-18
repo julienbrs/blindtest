@@ -192,14 +192,37 @@ function GameContent() {
     }
   }, [])
 
+  // Check if an audio file is accessible via HEAD request
+  const checkAudioFileAccessible = useCallback(
+    async (songId: string): Promise<boolean> => {
+      try {
+        const res = await fetch(`/api/audio/${songId}`, { method: 'HEAD' })
+        return res.ok
+      } catch {
+        return false
+      }
+    },
+    []
+  )
+
   // Load a random song from the API
+  // If the audio file is not accessible, auto-skip and try another song
   const loadRandomSong = useCallback(
     async (excludeIds: string[], preloadedSong: Song | null) => {
-      // If we have a preloaded song, use it immediately
+      // If we have a preloaded song, verify it's still accessible
       if (preloadedSong) {
-        game.actions.loadSong(preloadedSong)
+        const isAccessible = await checkAudioFileAccessible(preloadedSong.id)
+        if (isAccessible) {
+          game.actions.loadSong(preloadedSong)
+          setNextSong(null)
+          return
+        }
+        // Preloaded song is not accessible, add to exclude list and load normally
+        console.warn(
+          `Audio file for preloaded song "${preloadedSong.title}" not accessible, skipping...`
+        )
+        excludeIds = [...excludeIds, preloadedSong.id]
         setNextSong(null)
-        return
       }
 
       const exclude = excludeIds.join(',')
@@ -219,6 +242,17 @@ function GameContent() {
 
         const data = (await res.json()) as { song: Song }
         if (data.song) {
+          // Verify the audio file is accessible before loading
+          const isAccessible = await checkAudioFileAccessible(data.song.id)
+          if (!isAccessible) {
+            // Audio file not accessible - add to exclude list and retry
+            console.warn(
+              `Audio file for song "${data.song.title}" not accessible, skipping...`
+            )
+            // Recursively call to get another song with updated exclude list
+            await loadRandomSong([...excludeIds, data.song.id], null)
+            return
+          }
           game.actions.loadSong(data.song)
         } else {
           // No song returned
@@ -230,7 +264,7 @@ function GameContent() {
         game.actions.quit()
       }
     },
-    [game.actions]
+    [game.actions, checkAudioFileAccessible]
   )
 
   // IDLE → LOADING transition: Start game automatically when page loads
