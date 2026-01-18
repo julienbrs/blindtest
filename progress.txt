@@ -625,3 +625,10 @@ Commit: a676931
 Notes: Created centralized useSoundEffects hook for managing all game sounds via Web Audio API. Hook provides methods for all sound effects: buzz, correct, incorrect, timeout, tick (with intensity based on remaining seconds), and reveal. Added volume control (0-1 range with clamping) and mute functionality. All sounds generated using oscillators for low latency. AudioContext is created lazily and reused across calls. Handles browser autoplay policy by resuming suspended context. Proper cleanup on unmount. Created comprehensive test suite with 29 tests covering all methods, mute, volume, AudioContext handling, and callback stability. All 588 tests pass.
 Files: src/hooks/useSoundEffects.ts, src/hooks/useSoundEffects.test.ts
 
+=== Issue 8.7: Ajouter une option mute effets sonores ===
+Timestamp: 2026-01-18T11:06:00Z
+Status: COMPLETED
+Commit: bdf4814
+Notes: Added SFX mute toggle button in game header with speaker icons (SpeakerWaveIcon/SpeakerXMarkIcon from Heroicons). Implemented localStorage persistence for sfx_muted state. Connected all game sound effects to the centralized useSoundEffects hook by adding optional onPlaySound callbacks to BuzzerButton, Timer, useCorrectAnswerCelebration, and useWrongAnswerEffect. Toggle button shows different aria-label based on mute state and includes "SFX" label on larger screens. Music playback via AudioPlayer remains unaffected by SFX mute. Created 8 comprehensive tests for mute toggle functionality. All 596 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx, src/components/game/BuzzerButton.tsx, src/components/game/Timer.tsx, src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts, src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts
+

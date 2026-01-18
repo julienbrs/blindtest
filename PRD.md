@@ -132,7 +132,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 8.4 Ajouter un son de fin de timer
 - [x] 8.5 Ajouter un tick-tock pour le timer
 - [x] 8.6 Créer un hook useSoundEffects
-- [ ] 8.7 Ajouter une option mute effets sonores
+- [x] 8.7 Ajouter une option mute effets sonores
 - [ ] 8.8 Gérer le volume principal
 
 ### Epic 9: Responsive (docs/epics/09-responsive.md)
