@@ -702,3 +702,10 @@ Commit: 3cda993
 Notes: Implemented empty library error handling. Updated /api/songs and /api/stats endpoints to return EMPTY_LIBRARY error (404 status) when no songs are found. Created EmptyLibraryError component displaying clear message, configured audio folder path, and retry button. Updated homepage to detect empty library state via LibraryStats callback and conditionally show EmptyLibraryError instead of game config form. Application gracefully handles empty or misconfigured audio folders without crashing. Created 10 comprehensive tests for EmptyLibraryError component. All 739 tests pass.
 Files: src/app/api/songs/route.ts, src/app/api/songs/route.test.ts, src/app/api/stats/route.ts, src/app/api/stats/route.test.ts, src/app/page.tsx, src/components/game/LibraryStats.tsx, src/components/game/EmptyLibraryError.tsx, src/components/game/EmptyLibraryError.test.tsx
 
+=== Issue 10.2: Gérer l'erreur "fichier audio introuvable" ===
+Timestamp: 2026-01-18T15:51:00Z
+Status: COMPLETED
+Commit: 3c4dff0
+Notes: Implemented graceful handling when audio files are moved/deleted after scanning. Added FILE_NOT_FOUND error code with JSON logging for server-side debugging. Created HEAD endpoint for file accessibility checks. Game page now uses HEAD request to verify audio files before loading and auto-skips missing files to load the next song. Client-side console warnings log skipped songs. Added 11 comprehensive tests (6 for game page, 5 for HEAD endpoint). All 750 tests pass.
+Files: src/app/api/audio/[id]/route.ts, src/app/api/audio/[id]/route.test.ts, src/app/game/page.tsx, src/app/game/page.test.tsx
+

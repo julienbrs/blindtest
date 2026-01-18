@@ -149,7 +149,7 @@ After this task, all subsequent issues run with full feedback loops.
 ### Epic 10: Error Handling (docs/epics/10-error-handling.md)
 
 - [x] 10.1 Gérer l'erreur "dossier audio vide"
-- [ ] 10.2 Gérer l'erreur "fichier audio introuvable"
+- [x] 10.2 Gérer l'erreur "fichier audio introuvable"
 - [ ] 10.3 Gérer l'erreur réseau
 - [ ] 10.4 Gérer le navigateur sans support audio
 - [ ] 10.5 Ajouter un état de chargement global
