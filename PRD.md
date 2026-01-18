@@ -143,8 +143,8 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 9.4 Ajouter la vibration mobile au buzz
 - [x] 9.5 Optimiser les performances mobile
 - [x] 9.6 Gérer l'orientation landscape/portrait
-- [ ] 9.7 Ajouter un mode plein écran
-- [ ] 9.8 Tester la lecture audio sur iOS Safari
+- [x] 9.7 Ajouter un mode plein écran
+- [x] 9.8 Tester la lecture audio sur iOS Safari
 
 ### Epic 10: Error Handling (docs/epics/10-error-handling.md)
 

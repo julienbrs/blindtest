@@ -660,3 +660,38 @@ Commit: 438926a
 Notes: Created comprehensive responsive test suite (src/test/responsive.test.tsx) with 43 tests covering 7 device viewports: iPhone SE (375×667), iPhone 14 (390×844), iPhone 14 Pro Max (430×932), Pixel 5 (393×851), iPad Mini (744×1133), iPad Pro (1024×1366), Desktop HD (1920×1080). Tests verify responsive CSS classes on Button, BuzzerButton, Timer, SongReveal, ScoreDisplay, and GameControls components. Touch target compliance verified (44-48px minimum per Apple/Google guidelines). Tailwind breakpoints documented (sm: 640px, md: 768px, lg: 1024px, xl: 1280px). All 660 tests pass.
 Files: src/test/responsive.test.tsx
 
+=== Issue 9.4: Ajouter la vibration mobile au buzz ===
+Timestamp: 2026-01-18T11:38:00Z
+Status: COMPLETED
+Commit: f3e92c6
+Notes: Added haptic feedback vibration patterns for mobile devices using the Vibration API. Buzzer button: 100ms simple vibration (already existed). Correct answer: celebratory buzz-pause-buzz pattern [100, 50, 100]. Incorrect answer: longer 200ms vibration to indicate mistake. All vibration functions fail silently on iOS Safari or unsupported browsers. Created 6 new tests for vibration functionality. All 666 tests pass.
+Files: src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts, src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts
+
+=== Issue 9.5: Optimiser les performances mobile ===
+Timestamp: 2026-01-18T11:44:00Z
+Status: COMPLETED
+Commit: b029bde
+Notes: Implemented mobile performance optimizations. Added prefers-reduced-motion CSS media query to disable all animations for users with reduced motion preference. Added will-change and translateZ(0) for GPU acceleration on animated elements. Optimized Next.js Image with quality=75, blur placeholder, and responsive sizes attribute. Added debounce (100ms) for audio timeUpdate events to reduce re-renders on mobile. Reduced particle count (30→15), FPS (60→30), and disabled animations on mobile in BackgroundParticles. Reduced floating orbs (6→3) and blur intensity (60px→40px) on mobile in FestiveBackground. Created comprehensive test suite with 9 tests for performance optimizations. All 675 tests pass.
+Files: src/app/globals.css, src/components/game/AudioPlayer.tsx, src/components/game/SongReveal.tsx, src/components/ui/BackgroundParticles.tsx, src/components/ui/FestiveBackground.tsx, src/test/performance.test.tsx
+
+=== Issue 9.6: Gérer l'orientation landscape/portrait ===
+Timestamp: 2026-01-18T11:50:00Z
+Status: COMPLETED
+Commit: b05da93
+Notes: Implemented orientation-aware layout using custom Tailwind screen variants. Added portrait: and landscape: variants to tailwind.config.ts using @media (orientation: portrait) and @media (orientation: landscape). Updated game page main content area to use landscape:flex-row for horizontal layout in landscape mode. Reduced cover image size (h-36 in landscape vs h-48 in portrait), buzzer size (h-24 in landscape vs h-32 in portrait), and timer size (h-20 in landscape vs h-24 in portrait) for better fit in landscape orientation. Created comprehensive test suite with 14 tests for orientation classes. All 689 tests pass.
+Files: tailwind.config.ts, src/app/game/page.tsx, src/components/game/BuzzerButton.tsx, src/components/game/SongReveal.tsx, src/components/game/Timer.tsx, src/test/orientation.test.tsx
+
+=== Issue 9.7: Ajouter un mode plein écran ===
+Timestamp: 2026-01-18T15:33:00Z
+Status: COMPLETED
+Commit: 70a5bba
+Notes: Implemented fullscreen mode using the Fullscreen API. Created useFullscreen hook with isFullscreen state, toggleFullscreen/enterFullscreen/exitFullscreen methods, and isSupported detection. Hook handles browser compatibility with standard API and webkit prefix for Safari. Silently fails on iOS Safari where fullscreen is not supported. Added fullscreen toggle button in game header (ArrowsPointingOutIcon/ArrowsPointingInIcon from Heroicons) that only renders when isSupported is true. Button updates icon and aria-label based on fullscreen state. Created 15 comprehensive tests for useFullscreen hook and 7 tests for game page integration. All 711 tests pass.
+Files: src/hooks/useFullscreen.ts, src/hooks/useFullscreen.test.ts, src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 9.8: Tester la lecture audio sur iOS Safari ===
+Timestamp: 2026-01-18T15:38:00Z
+Status: COMPLETED
+Commit: a8b026d
+Notes: Implemented iOS Safari audio compatibility with comprehensive audio unlock mechanism. Created useAudioUnlock hook that unlocks both Web Audio API (AudioContext) and HTMLAudioElement on first user interaction. Hook uses webkit-prefixed AudioContext fallback for older Safari versions, plays silent audio buffer to prime AudioContext, and plays silent MP3 to prime HTMLAudioElement. Updated useSoundEffects hook to use createAudioContext helper with webkit prefix support. Integrated audio unlock in game page with all user interaction handlers (buzz, play, validate, reveal, replay, nextSong). Created 18 comprehensive tests for useAudioUnlock hook covering AudioContext creation, webkit fallback, silent audio priming, cleanup, and iOS-specific behaviors. All 729 tests pass.
+Files: src/hooks/useAudioUnlock.ts, src/hooks/useAudioUnlock.test.ts, src/hooks/useSoundEffects.ts, src/app/game/page.tsx
+

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useCallback, useEffect, useState } from 'react'
+import { createAudioContext } from './useAudioUnlock'
 
 /**
  * Interface for the sound effects hook return value.
@@ -395,15 +396,18 @@ export function useSoundEffects(): SoundEffects {
     volumeRef.current = volume
   }, [volume])
 
-  // Create or get AudioContext
+  // Create or get AudioContext with webkit prefix fallback for iOS Safari
   const getAudioContext = useCallback((): AudioContext | null => {
     try {
       if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext()
+        audioContextRef.current = createAudioContext()
       }
 
       // Resume if suspended (browser autoplay policy)
-      if (audioContextRef.current.state === 'suspended') {
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state === 'suspended'
+      ) {
         audioContextRef.current.resume()
       }
 

@@ -17,6 +17,7 @@ import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration
 import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { useFullscreen } from '@/hooks/useFullscreen'
+import { useAudioUnlock } from '@/hooks/useAudioUnlock'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { Timer } from '@/components/game/Timer'
@@ -78,6 +79,10 @@ function GameContent() {
     toggleFullscreen,
     isSupported: isFullscreenSupported,
   } = useFullscreen()
+
+  // Audio unlock for iOS Safari compatibility
+  // Unlocks audio playback on first user interaction
+  const { unlockAudio } = useAudioUnlock()
 
   // Sound effects hook - must be before effects that use it
   const sfx = useSoundEffects()
@@ -317,19 +322,53 @@ function GameContent() {
   }, [])
 
   // Handle replay button click - trigger replay and transition state
-  const handleReplay = useCallback(() => {
+  // Also unlocks audio for iOS Safari on this user interaction
+  const handleReplay = useCallback(async () => {
+    // Unlock audio on interaction (iOS Safari)
+    await unlockAudio()
     setShouldReplay(true)
     game.actions.replay()
-  }, [game.actions])
+  }, [game.actions, unlockAudio])
 
   // Callback when replay is complete (audio has been reset)
   const handleReplayComplete = useCallback(() => {
     setShouldReplay(false)
   }, [])
 
+  // Handle play action with audio unlock for iOS Safari
+  const handlePlay = useCallback(async () => {
+    await unlockAudio()
+    game.actions.play()
+  }, [unlockAudio, game.actions])
+
+  // Handle reveal action with audio unlock for iOS Safari
+  const handleReveal = useCallback(async () => {
+    await unlockAudio()
+    game.actions.reveal()
+  }, [unlockAudio, game.actions])
+
+  // Handle next song action with audio unlock for iOS Safari
+  const handleNextSong = useCallback(async () => {
+    await unlockAudio()
+    game.actions.nextSong()
+  }, [unlockAudio, game.actions])
+
+  // Handle buzz with audio unlock for iOS Safari
+  // This ensures audio is unlocked on the first user interaction
+  const handleBuzz = useCallback(async () => {
+    // Unlock audio on first interaction (critical for iOS Safari)
+    await unlockAudio()
+    // Then trigger the actual buzz action
+    game.actions.buzz()
+  }, [unlockAudio, game.actions])
+
   // Handle validation with celebration on correct answers and shake on incorrect
+  // Also unlocks audio for iOS Safari on this user interaction
   const handleValidate = useCallback(
-    (correct: boolean) => {
+    async (correct: boolean) => {
+      // Unlock audio on interaction (iOS Safari)
+      await unlockAudio()
+
       if (correct) {
         // Trigger confetti and green flash
         celebrate()
@@ -349,7 +388,7 @@ function GameContent() {
       }
       game.actions.validate(correct)
     },
-    [celebrate, triggerShake, game.actions]
+    [celebrate, triggerShake, game.actions, unlockAudio]
   )
 
   const handleNewGame = () => {
@@ -585,10 +624,7 @@ function GameContent() {
                 className="flex items-center justify-center"
                 {...getAnimationProps(fadeSlideUp)}
               >
-                <BuzzerButton
-                  onBuzz={game.actions.buzz}
-                  onPlaySound={sfx.buzz}
-                />
+                <BuzzerButton onBuzz={handleBuzz} onPlaySound={sfx.buzz} />
               </motion.div>
             )}
 
@@ -615,9 +651,9 @@ function GameContent() {
               status={game.state.status}
               isRevealed={game.state.isRevealed}
               onValidate={handleValidate}
-              onReveal={game.actions.reveal}
-              onNext={game.actions.nextSong}
-              onPlay={game.actions.play}
+              onReveal={handleReveal}
+              onNext={handleNextSong}
+              onPlay={handlePlay}
               onPause={game.actions.pause}
               onReplay={handleReplay}
             />
