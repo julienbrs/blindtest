@@ -13,17 +13,16 @@ describe('GET /api/songs', () => {
     vi.clearAllMocks()
   })
 
-  it('returns an empty list when no songs in cache', async () => {
+  it('returns EMPTY_LIBRARY error when no songs in cache', async () => {
     vi.mocked(audioScanner.getSongsCache).mockResolvedValue([])
 
     const response = await GET()
     const data = await response.json()
 
-    expect(response.status).toBe(200)
-    expect(data).toEqual({
-      songs: [],
-      total: 0,
-    })
+    expect(response.status).toBe(404)
+    expect(data.error).toBe('EMPTY_LIBRARY')
+    expect(data.message).toBe('Aucune chanson trouvée')
+    expect(data.audioFolderPath).toBeDefined()
   })
 
   it('returns the list of songs with total count', async () => {

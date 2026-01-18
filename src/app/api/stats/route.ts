@@ -12,6 +12,18 @@ export async function GET() {
     const songs = await getSongsCache()
     const cacheInfo = getCacheInfo()
 
+    // Return EMPTY_LIBRARY error if no songs found
+    if (songs.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'EMPTY_LIBRARY',
+          message: 'Aucune chanson trouvée',
+          audioFolderPath: process.env.AUDIO_FOLDER_PATH || 'Non défini',
+        },
+        { status: 404 }
+      )
+    }
+
     // Calculate stats
     const artists = new Set(songs.map((s) => s.artist))
     const albums = new Set(songs.filter((s) => s.album).map((s) => s.album))

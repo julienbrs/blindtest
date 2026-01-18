@@ -21,7 +21,7 @@ describe('GET /api/stats', () => {
     vi.clearAllMocks()
   })
 
-  it('should return stats for an empty library', async () => {
+  it('should return EMPTY_LIBRARY error for an empty library', async () => {
     mockGetSongsCache.mockResolvedValue([])
     mockGetCacheInfo.mockReturnValue({
       count: 0,
@@ -31,15 +31,10 @@ describe('GET /api/stats', () => {
     const response = await GET()
     const data = await response.json()
 
-    expect(response.status).toBe(200)
-    expect(data.totalSongs).toBe(0)
-    expect(data.totalArtists).toBe(0)
-    expect(data.totalAlbums).toBe(0)
-    expect(data.totalDuration).toBe(0)
-    expect(data.totalDurationFormatted).toBe('0h 0min')
-    expect(data.formats).toEqual({})
-    expect(data.songsWithCover).toBe(0)
-    expect(data.lastScan).toBe(1705487200000)
+    expect(response.status).toBe(404)
+    expect(data.error).toBe('EMPTY_LIBRARY')
+    expect(data.message).toBe('Aucune chanson trouvée')
+    expect(data.audioFolderPath).toBeDefined()
   })
 
   it('should return correct stats for a library with songs', async () => {

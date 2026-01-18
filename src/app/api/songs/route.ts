@@ -6,6 +6,18 @@ export async function GET() {
   try {
     const songs = await getSongsCache()
 
+    // Return EMPTY_LIBRARY error if no songs found
+    if (songs.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'EMPTY_LIBRARY',
+          message: 'Aucune chanson trouvée',
+          audioFolderPath: process.env.AUDIO_FOLDER_PATH || 'Non défini',
+        },
+        { status: 404 }
+      )
+    }
+
     const response: SongsListResponse = {
       songs,
       total: songs.length,

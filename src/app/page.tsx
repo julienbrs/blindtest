@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   MusicalNoteIcon,
@@ -8,9 +9,21 @@ import {
 } from '@heroicons/react/24/solid'
 import { GameConfigForm } from '@/components/game/GameConfigForm'
 import { LibraryStats } from '@/components/game/LibraryStats'
+import { EmptyLibraryError } from '@/components/game/EmptyLibraryError'
 
 export default function HomePage() {
   const shouldReduceMotion = useReducedMotion()
+  const [emptyLibraryState, setEmptyLibraryState] = useState<{
+    isEmpty: boolean
+    audioFolderPath: string | null
+  }>({ isEmpty: false, audioFolderPath: null })
+
+  const handleEmptyLibrary = useCallback(
+    (isEmpty: boolean, audioFolderPath: string | null) => {
+      setEmptyLibraryState({ isEmpty, audioFolderPath })
+    },
+    []
+  )
 
   const fadeUpVariants = shouldReduceMotion
     ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
@@ -71,22 +84,37 @@ export default function HomePage() {
         />
       </motion.div>
 
-      {/* Game configuration form */}
-      <motion.div
-        variants={fadeUpVariants}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md px-2 sm:px-0"
-      >
-        <GameConfigForm />
-      </motion.div>
+      {/* Show EmptyLibraryError if library is empty */}
+      {emptyLibraryState.isEmpty && (
+        <motion.div
+          variants={fadeUpVariants}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md px-2 sm:px-0"
+        >
+          <EmptyLibraryError
+            audioFolderPath={emptyLibraryState.audioFolderPath || 'Non défini'}
+          />
+        </motion.div>
+      )}
 
-      {/* Library stats */}
+      {/* Game configuration form - hidden when library is empty */}
+      {!emptyLibraryState.isEmpty && (
+        <motion.div
+          variants={fadeUpVariants}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md px-2 sm:px-0"
+        >
+          <GameConfigForm />
+        </motion.div>
+      )}
+
+      {/* Library stats - always rendered but hidden when empty to detect library state */}
       <motion.div
         variants={fadeUpVariants}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md px-2 sm:px-0"
+        className={`w-full max-w-md px-2 sm:px-0 ${emptyLibraryState.isEmpty ? 'hidden' : ''}`}
       >
-        <LibraryStats />
+        <LibraryStats onEmptyLibrary={handleEmptyLibrary} />
       </motion.div>
     </motion.main>
   )
