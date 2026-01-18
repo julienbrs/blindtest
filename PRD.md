@@ -140,9 +140,9 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 9.1 Adapter le layout pour mobile
 - [x] 9.2 Agrandir les zones tactiles
 - [x] 9.3 Tester sur différentes tailles d'écran
-- [ ] 9.4 Ajouter la vibration mobile au buzz
-- [ ] 9.5 Optimiser les performances mobile
-- [ ] 9.6 Gérer l'orientation landscape/portrait
+- [x] 9.4 Ajouter la vibration mobile au buzz
+- [x] 9.5 Optimiser les performances mobile
+- [x] 9.6 Gérer l'orientation landscape/portrait
 - [ ] 9.7 Ajouter un mode plein écran
 - [ ] 9.8 Tester la lecture audio sur iOS Safari
 
@@ -184,6 +184,27 @@ After this task, all subsequent issues run with full feedback loops.
 - [ ] 13.4 Configurer le reverse proxy si nécessaire
 - [ ] 13.5 Ajouter un healthcheck endpoint
 - [ ] 13.6 Créer un Dockerfile
+
+### Epic 14: Multiplayer (docs/epics/14-multiplayer.md)
+
+- [ ] 14.1 Installer et configurer Supabase
+- [ ] 14.2 Créer le schéma de base de données
+- [ ] 14.3 Créer les types TypeScript pour le multiplayer
+- [ ] 14.4 Créer la page de sélection de mode (/play)
+- [ ] 14.5 Créer le formulaire de création de room
+- [ ] 14.6 Créer le formulaire pour rejoindre une room
+- [ ] 14.7 Implémenter le hook useRoom
+- [ ] 14.8 Créer le composant Lobby
+- [ ] 14.9 Implémenter la présence des joueurs
+- [ ] 14.10 Créer le hook useMultiplayerGame
+- [ ] 14.11 Implémenter la synchronisation audio
+- [ ] 14.12 Implémenter la résolution du buzz
+- [ ] 14.13 Créer les contrôles host
+- [ ] 14.14 Afficher les scores de tous les joueurs
+- [ ] 14.15 Gérer la migration de host
+- [ ] 14.16 Gérer la reconnexion des joueurs
+- [ ] 14.17 Créer le récap multijoueur
+- [ ] 14.18 Nettoyer les rooms expirées
 
 ---
 
