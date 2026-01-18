@@ -2,6 +2,40 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useWrongAnswerEffect } from './useWrongAnswerEffect'
 
+// Mock Web Audio API
+const mockOscillator = {
+  type: 'sine',
+  frequency: {
+    setValueAtTime: vi.fn(),
+    exponentialRampToValueAtTime: vi.fn(),
+  },
+  connect: vi.fn(),
+  start: vi.fn(),
+  stop: vi.fn(),
+}
+
+const mockGain = {
+  gain: {
+    setValueAtTime: vi.fn(),
+    linearRampToValueAtTime: vi.fn(),
+    exponentialRampToValueAtTime: vi.fn(),
+  },
+  connect: vi.fn(),
+}
+
+const mockAudioContext = {
+  currentTime: 0,
+  state: 'running',
+  destination: {},
+  createOscillator: vi.fn(() => ({ ...mockOscillator })),
+  createGain: vi.fn(() => ({
+    ...mockGain,
+    gain: { ...mockGain.gain },
+  })),
+  resume: vi.fn().mockResolvedValue(undefined),
+  close: vi.fn().mockResolvedValue(undefined),
+}
+
 describe('useWrongAnswerEffect', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -17,11 +51,18 @@ describe('useWrongAnswerEffect', () => {
         dispatchEvent: vi.fn(),
       })),
     })
+
+    // Mock AudioContext
+    vi.stubGlobal(
+      'AudioContext',
+      vi.fn(() => ({ ...mockAudioContext }))
+    )
   })
 
   afterEach(() => {
     vi.useRealTimers()
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('should initialize with isShaking as false', () => {
@@ -177,5 +218,146 @@ describe('useWrongAnswerEffect', () => {
 
     expect(result.current.triggerShake).toBe(firstTriggerShake)
     expect(result.current.cleanup).toBe(firstCleanup)
+  })
+
+  // Sound-related tests
+  describe('incorrect answer sound', () => {
+    it('should create AudioContext when triggerShake is called', () => {
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      expect(AudioContext).toHaveBeenCalled()
+    })
+
+    it('should create oscillators for the sound', () => {
+      const createOscillatorSpy = vi.fn(() => ({ ...mockOscillator }))
+      vi.stubGlobal(
+        'AudioContext',
+        vi.fn(() => ({
+          ...mockAudioContext,
+          createOscillator: createOscillatorSpy,
+        }))
+      )
+
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      // Should create 3 oscillators: main, sub-bass, and click
+      expect(createOscillatorSpy).toHaveBeenCalledTimes(3)
+    })
+
+    it('should create gain nodes for volume control', () => {
+      const createGainSpy = vi.fn(() => ({
+        ...mockGain,
+        gain: { ...mockGain.gain },
+      }))
+      vi.stubGlobal(
+        'AudioContext',
+        vi.fn(() => ({
+          ...mockAudioContext,
+          createGain: createGainSpy,
+        }))
+      )
+
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      // Should create master gain + 3 individual gain nodes
+      expect(createGainSpy).toHaveBeenCalledTimes(4)
+    })
+
+    it('should resume suspended AudioContext', () => {
+      const resumeSpy = vi.fn().mockResolvedValue(undefined)
+      vi.stubGlobal(
+        'AudioContext',
+        vi.fn(() => ({
+          ...mockAudioContext,
+          state: 'suspended',
+          resume: resumeSpy,
+        }))
+      )
+
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      expect(resumeSpy).toHaveBeenCalled()
+    })
+
+    it('should play sound even when reduced motion is preferred', () => {
+      // Mock reduced motion preference
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation((query: string) => ({
+          matches: query === '(prefers-reduced-motion: reduce)',
+          media: query,
+          onchange: null,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        })),
+      })
+
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      // Sound should still play (AudioContext created)
+      expect(AudioContext).toHaveBeenCalled()
+      // But visual shake should not occur
+      expect(result.current.isShaking).toBe(false)
+    })
+
+    it('should reuse existing AudioContext on subsequent calls', () => {
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      const firstCallCount = (AudioContext as ReturnType<typeof vi.fn>).mock
+        .calls.length
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      // Should not create a new AudioContext
+      expect(AudioContext).toHaveBeenCalledTimes(firstCallCount)
+    })
+
+    it('should close AudioContext on unmount', () => {
+      const closeSpy = vi.fn().mockResolvedValue(undefined)
+      vi.stubGlobal(
+        'AudioContext',
+        vi.fn(() => ({
+          ...mockAudioContext,
+          close: closeSpy,
+        }))
+      )
+
+      const { result, unmount } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      unmount()
+
+      expect(closeSpy).toHaveBeenCalled()
+    })
   })
 })

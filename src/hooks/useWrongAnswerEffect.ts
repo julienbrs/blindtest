@@ -1,17 +1,105 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 /**
- * Hook to trigger visual feedback effects when a wrong answer is given.
- * Includes a shake effect that can be applied to a container.
+ * Plays an "incorrect answer" sound using Web Audio API.
+ * Creates a short, clear negative buzzer sound that's not too punitive.
+ * Style: descending "whomp" tone (~0.4 seconds)
+ */
+function playIncorrectSound(audioContext: AudioContext, volume = 0.5): void {
+  const now = audioContext.currentTime
+
+  // Create master gain for overall volume control
+  const masterGain = audioContext.createGain()
+  masterGain.connect(audioContext.destination)
+  masterGain.gain.setValueAtTime(volume, now)
+  masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4)
+
+  // Main descending tone (sawtooth for a buzzy feel)
+  const osc = audioContext.createOscillator()
+  const oscGain = audioContext.createGain()
+
+  osc.type = 'sawtooth'
+  // Start at ~200Hz and descend to ~80Hz for a "whomp" effect
+  osc.frequency.setValueAtTime(200, now)
+  osc.frequency.exponentialRampToValueAtTime(80, now + 0.3)
+  osc.connect(oscGain)
+  oscGain.connect(masterGain)
+
+  // Quick attack, then decay
+  oscGain.gain.setValueAtTime(0, now)
+  oscGain.gain.linearRampToValueAtTime(0.7, now + 0.02)
+  oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35)
+
+  osc.start(now)
+  osc.stop(now + 0.4)
+
+  // Add a low sub-bass undertone for weight
+  const subOsc = audioContext.createOscillator()
+  const subGain = audioContext.createGain()
+
+  subOsc.type = 'sine'
+  subOsc.frequency.setValueAtTime(80, now)
+  subOsc.frequency.exponentialRampToValueAtTime(40, now + 0.35)
+  subOsc.connect(subGain)
+  subGain.connect(masterGain)
+
+  subGain.gain.setValueAtTime(0, now)
+  subGain.gain.linearRampToValueAtTime(0.5, now + 0.02)
+  subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35)
+
+  subOsc.start(now)
+  subOsc.stop(now + 0.4)
+
+  // Add a brief high-frequency click at the start for clarity
+  const clickOsc = audioContext.createOscillator()
+  const clickGain = audioContext.createGain()
+
+  clickOsc.type = 'square'
+  clickOsc.frequency.setValueAtTime(400, now)
+  clickOsc.connect(clickGain)
+  clickGain.connect(masterGain)
+
+  clickGain.gain.setValueAtTime(0, now)
+  clickGain.gain.linearRampToValueAtTime(0.3, now + 0.005)
+  clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05)
+
+  clickOsc.start(now)
+  clickOsc.stop(now + 0.05)
+}
+
+/**
+ * Hook to trigger visual and audio feedback effects when a wrong answer is given.
+ * Includes a shake effect that can be applied to a container and a "whomp" sound.
  */
 export function useWrongAnswerEffect(respectReducedMotion = true) {
   const [isShaking, setIsShaking] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+    }
+  }, [])
 
   const triggerShake = useCallback(() => {
-    // Check for reduced motion preference
+    // Play sound (always, regardless of reduced motion - sound is not a visual effect)
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext()
+    }
+    // Resume context if suspended (browser autoplay policy)
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume()
+    }
+    playIncorrectSound(audioContextRef.current)
+
+    // Check for reduced motion preference (affects visuals only, not sound)
     if (
       respectReducedMotion &&
       typeof window !== 'undefined' &&
