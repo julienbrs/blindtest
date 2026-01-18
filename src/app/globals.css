@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @config "../../tailwind.config.ts";
 
+/* Custom orientation variants for Tailwind v4 */
+@variant portrait (@media (orientation: portrait));
+@variant landscape (@media (orientation: landscape));
+
 @theme inline {
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-heading: var(--font-poppins), system-ui, sans-serif;
