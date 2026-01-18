@@ -390,19 +390,19 @@ function GameContent() {
 
   return (
     <motion.main
-      className="flex min-h-screen flex-col p-4 lg:p-6"
+      className="flex min-h-screen w-full flex-col overflow-x-hidden p-3 sm:p-4 lg:p-6"
       animate={shouldReduceMotion ? {} : shakeAnimation}
     >
-      {/* Header avec score - Full width on all breakpoints */}
-      <header className="mb-4 flex items-center justify-between lg:mb-6">
+      {/* Header avec score - Responsive layout */}
+      <header className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4 lg:mb-6">
         <ScoreDisplay
           score={game.state.score}
           songsPlayed={game.state.songsPlayed}
         />
-        <div className="flex items-center gap-2">
-          {/* Music Volume Slider */}
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+          {/* Music Volume Slider - Hidden on very small screens, compact on mobile */}
           <div
-            className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5"
+            className="hidden items-center gap-1 rounded-lg bg-white/10 px-2 py-1 sm:flex sm:gap-2 sm:px-3 sm:py-1.5"
             data-testid="music-volume-control"
           >
             <MusicalNoteIcon
@@ -416,12 +416,12 @@ function GameContent() {
               step={0.1}
               value={musicVolume}
               onChange={handleMusicVolumeChange}
-              className="w-16 cursor-pointer accent-purple-500 sm:w-24"
+              className="w-14 cursor-pointer accent-purple-500 sm:w-20 md:w-24"
               aria-label="Volume de la musique"
               data-testid="music-volume-slider"
             />
             <span
-              className="w-8 text-xs text-purple-300"
+              className="w-7 text-xs text-purple-300 sm:w-8"
               data-testid="music-volume-percentage"
             >
               {Math.round(musicVolume * 100)}%
@@ -432,7 +432,7 @@ function GameContent() {
             onClick={handleToggleSfxMute}
             variant="secondary"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2"
             aria-label={
               sfx.isMuted
                 ? 'Activer les effets sonores'
@@ -451,10 +451,10 @@ function GameContent() {
             onClick={() => setShowQuitConfirm(true)}
             variant="secondary"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2"
           >
             <ArrowRightOnRectangleIcon className="h-4 w-4" />
-            Quitter
+            <span className="hidden sm:inline">Quitter</span>
           </Button>
         </div>
       </header>
@@ -502,10 +502,10 @@ function GameContent() {
       </AnimatePresence>
 
       {/* Main content area - Mobile: vertical stack, Desktop: two columns */}
-      <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:gap-8">
+      <div className="flex flex-1 flex-col gap-4 sm:gap-6 lg:flex-row lg:gap-8">
         {/* Left column (Mobile: full width, Desktop: left side) */}
         {/* Contains: Cover image + Audio player */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 lg:gap-6">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 sm:gap-4 lg:gap-6">
           {/* Pochette / Révélation */}
           <SongReveal
             song={game.state.currentSong}
@@ -514,21 +514,23 @@ function GameContent() {
           />
 
           {/* Lecteur audio */}
-          <AudioPlayer
-            songId={game.state.currentSong?.id}
-            isPlaying={game.state.status === 'playing'}
-            maxDuration={config.clipDuration}
-            onEnded={game.actions.clipEnded}
-            onReady={handleAudioReady}
-            shouldReplay={shouldReplay}
-            onReplayComplete={handleReplayComplete}
-            volume={musicVolume}
-          />
+          <div className="w-full max-w-xs px-2 sm:max-w-sm sm:px-0 md:max-w-md">
+            <AudioPlayer
+              songId={game.state.currentSong?.id}
+              isPlaying={game.state.status === 'playing'}
+              maxDuration={config.clipDuration}
+              onEnded={game.actions.clipEnded}
+              onReady={handleAudioReady}
+              shouldReplay={shouldReplay}
+              onReplayComplete={handleReplayComplete}
+              volume={musicVolume}
+            />
+          </div>
         </div>
 
         {/* Right column (Mobile: bottom area, Desktop: right side) */}
         {/* Contains: Buzzer/Timer + Game Controls */}
-        <div className="flex flex-col items-center justify-center gap-6 lg:w-80 lg:flex-shrink-0">
+        <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 lg:w-80 lg:flex-shrink-0">
           {/* Animated state transitions for loading/buzzer/timer */}
           <AnimatePresence mode="wait">
             {/* Loading indicator - visible during loading state */}
@@ -538,8 +540,10 @@ function GameContent() {
                 className="flex flex-col items-center justify-center gap-3"
                 {...getAnimationProps(fadeIn, quickTransition)}
               >
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
-                <p className="text-purple-300">Chargement...</p>
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent sm:h-12 sm:w-12" />
+                <p className="text-sm text-purple-300 sm:text-base">
+                  Chargement...
+                </p>
               </motion.div>
             )}
 
@@ -575,7 +579,7 @@ function GameContent() {
           </AnimatePresence>
 
           {/* Contrôles du MJ */}
-          <div className="w-full max-w-md lg:max-w-none">
+          <div className="w-full max-w-xs px-2 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-none">
             <GameControls
               status={game.state.status}
               isRevealed={game.state.isRevealed}

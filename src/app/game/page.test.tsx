@@ -865,6 +865,11 @@ describe('GamePage - Music Volume Control (Issue 8.8)', () => {
 
     const volumeControl = screen.getByTestId('music-volume-control')
     expect(volumeControl).toBeInTheDocument()
-    expect(volumeControl).toHaveClass('flex', 'items-center', 'gap-2')
+    // Mobile-first: hidden on mobile, sm:flex on larger screens
+    expect(volumeControl).toHaveClass(
+      'items-center',
+      'rounded-lg',
+      'bg-white/10'
+    )
   })
 })

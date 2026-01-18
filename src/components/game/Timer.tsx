@@ -245,10 +245,10 @@ export function Timer({
   const circumference = 2 * Math.PI * 58 // ~364
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Cercle de progression */}
+    <div className="flex flex-col items-center gap-2 sm:gap-4">
+      {/* Cercle de progression - Responsive size */}
       <motion.div
-        className="relative h-32 w-32"
+        className="relative h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32"
         animate={
           prefersReducedMotion
             ? {}
@@ -325,7 +325,7 @@ export function Timer({
 
         {/* Nombre avec animation - urgency effects */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center text-5xl font-bold"
+          className="absolute inset-0 flex items-center justify-center text-3xl font-bold sm:text-4xl md:text-5xl"
           animate={
             prefersReducedMotion
               ? { color: progressColor }
@@ -416,7 +416,7 @@ export function Timer({
       </motion.div>
 
       <motion.p
-        className="text-lg font-medium"
+        className="text-sm font-medium sm:text-base md:text-lg"
         animate={{
           color: isCritical
             ? '#ef4444' // red-500

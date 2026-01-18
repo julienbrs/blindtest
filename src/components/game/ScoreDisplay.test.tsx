@@ -143,7 +143,8 @@ describe('ScoreDisplay', () => {
       rerender(<ScoreDisplay score={1} songsPlayed={1} />)
 
       // Check that the score element exists and has the expected styling
-      const scoreValue = container.querySelector('.text-2xl')
+      // Mobile-first: text-xl on mobile, sm:text-2xl on larger screens
+      const scoreValue = container.querySelector('.text-xl')
       expect(scoreValue).toBeInTheDocument()
       // In the mock, initial styles are applied, so color should be green
       expect(scoreValue).toHaveStyle({ color: '#22c55e' })
@@ -163,7 +164,8 @@ describe('ScoreDisplay', () => {
       expect(screen.getByText('1')).toBeInTheDocument()
 
       // No special styling should be applied when reduced motion is preferred
-      const scoreValue = container.querySelector('.text-2xl')
+      // Mobile-first: text-xl on mobile, sm:text-2xl on larger screens
+      const scoreValue = container.querySelector('.text-xl')
       expect(scoreValue).not.toHaveStyle({ color: '#22c55e' })
     })
   })
@@ -182,7 +184,8 @@ describe('ScoreDisplay', () => {
       const scoreLabel = container.querySelector('.text-purple-300')
       expect(scoreLabel).toBeInTheDocument()
 
-      const scoreValue = container.querySelector('.text-2xl')
+      // Mobile-first: text-xl on mobile, sm:text-2xl on larger screens
+      const scoreValue = container.querySelector('.text-xl')
       expect(scoreValue).toBeInTheDocument()
     })
 

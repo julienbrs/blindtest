@@ -286,7 +286,8 @@ describe('Timer', () => {
     it('does not apply scale animation when attention (remaining 5-4s)', () => {
       const { container } = render(<Timer duration={10} remaining={4} />)
       // Check that the outer container has empty animate object
-      const outerDiv = container.querySelector('.h-32.w-32')
+      // Mobile-first: h-24 w-24 on mobile, responsive larger on bigger screens
+      const outerDiv = container.querySelector('.h-24.w-24')
       const animateData = getAnimateData(outerDiv)
       expect(animateData).toEqual({})
     })

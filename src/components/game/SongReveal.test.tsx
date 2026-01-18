@@ -73,17 +73,17 @@ describe('SongReveal', () => {
     it('shows music note icon when not revealed', () => {
       render(<SongReveal song={mockSong} isRevealed={false} guessMode="both" />)
 
-      // MusicalNoteIcon from Heroicons is rendered as an SVG
+      // MusicalNoteIcon from Heroicons is rendered as an SVG - responsive classes
       const icon = document.querySelector('svg')
       expect(icon).toBeInTheDocument()
-      expect(icon).toHaveClass('h-16', 'w-16', 'text-white/80')
+      expect(icon).toHaveClass('h-12', 'w-12', 'text-white/80')
     })
 
     it('hides music note icon when revealed', () => {
       render(<SongReveal song={mockSong} isRevealed={true} guessMode="both" />)
 
       // The music note icon should not be present when revealed
-      const icon = document.querySelector('.h-16.w-16')
+      const icon = document.querySelector('.h-12.w-12')
       expect(icon).not.toBeInTheDocument()
     })
   })
@@ -162,21 +162,24 @@ describe('SongReveal', () => {
 
       const title = screen.getByText('Test Song Title')
       expect(title.tagName).toBe('H2')
-      expect(title).toHaveClass('text-2xl', 'font-bold')
+      // Mobile-first: text-xl on mobile, sm:text-2xl on larger screens
+      expect(title).toHaveClass('text-xl', 'font-bold')
     })
 
     it('artist uses correct styling', () => {
       render(<SongReveal song={mockSong} isRevealed={true} guessMode="both" />)
 
       const artist = screen.getByText('Test Artist')
-      expect(artist).toHaveClass('text-xl', 'text-purple-200')
+      // Mobile-first: text-lg on mobile, sm:text-xl on larger screens
+      expect(artist).toHaveClass('text-lg', 'text-purple-200')
     })
 
     it('album uses correct styling', () => {
       render(<SongReveal song={mockSong} isRevealed={true} guessMode="both" />)
 
       const album = screen.getByText('Test Album')
-      expect(album).toHaveClass('text-sm', 'text-purple-400')
+      // Mobile-first: text-xs on mobile, sm:text-sm on larger screens
+      expect(album).toHaveClass('text-xs', 'text-purple-400')
     })
   })
 })

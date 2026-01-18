@@ -38,13 +38,13 @@ export function ScoreDisplay({
   }, [score])
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative rounded-xl border border-white/10 bg-white/10 px-4 py-2 shadow-lg backdrop-blur-sm">
-        <div className="text-sm text-purple-300">Score</div>
+    <div className="flex items-center gap-2 sm:gap-4">
+      <div className="relative rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 shadow-lg backdrop-blur-sm sm:px-4 sm:py-2">
+        <div className="text-xs text-purple-300 sm:text-sm">Score</div>
         <AnimatePresence mode="popLayout">
           <motion.div
             key={score}
-            className="text-2xl font-bold"
+            className="text-xl font-bold sm:text-2xl"
             initial={
               shouldReduceMotion ? false : { scale: 1.5, color: '#22c55e' }
             }
@@ -58,7 +58,7 @@ export function ScoreDisplay({
         <AnimatePresence>
           {justScored && !shouldReduceMotion && (
             <motion.div
-              className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-xs font-bold"
+              className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold sm:-top-2 sm:-right-2 sm:h-6 sm:w-6"
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
@@ -70,8 +70,10 @@ export function ScoreDisplay({
         </AnimatePresence>
       </div>
       <div className="flex flex-col text-purple-300">
-        <span className="font-semibold text-white">Chanson {songNumber}</span>
-        <span className="text-sm">
+        <span className="text-sm font-semibold text-white sm:text-base">
+          Chanson {songNumber}
+        </span>
+        <span className="text-xs sm:text-sm">
           {songsPlayed} jouée{songsPlayed !== 1 ? 's' : ''}
         </span>
       </div>

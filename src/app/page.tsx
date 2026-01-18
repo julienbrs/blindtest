@@ -32,41 +32,41 @@ export default function HomePage() {
 
   return (
     <motion.main
-      className="flex flex-1 flex-col items-center justify-center p-4"
+      className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4 lg:p-8"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Logo / Titre */}
       <motion.div
-        className="mb-8 text-center"
+        className="mb-6 text-center sm:mb-8"
         variants={fadeUpVariants}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 bg-clip-text text-5xl font-extrabold text-transparent md:text-7xl">
+        <h1 className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl md:text-7xl">
           Blindtest
         </h1>
-        <p className="mt-2 text-lg text-purple-200">
+        <p className="mt-2 text-base text-purple-200 sm:text-lg">
           Testez vos connaissances musicales !
         </p>
       </motion.div>
 
       {/* Decorative music icons */}
       <motion.div
-        className="mb-8 flex items-center gap-4 opacity-60"
+        className="mb-6 flex items-center gap-3 opacity-60 sm:mb-8 sm:gap-4"
         variants={fadeUpVariants}
         transition={{ duration: 0.5 }}
       >
         <MusicalNoteIcon
-          className="h-10 w-10 animate-bounce text-pink-400"
+          className="h-8 w-8 animate-bounce text-pink-400 sm:h-10 sm:w-10"
           style={{ animationDelay: '0s' }}
         />
         <SpeakerWaveIcon
-          className="h-10 w-10 animate-bounce text-purple-400"
+          className="h-8 w-8 animate-bounce text-purple-400 sm:h-10 sm:w-10"
           style={{ animationDelay: '0.2s', animationDuration: '1.2s' }}
         />
         <MicrophoneIcon
-          className="h-10 w-10 animate-bounce text-yellow-400"
+          className="h-8 w-8 animate-bounce text-yellow-400 sm:h-10 sm:w-10"
           style={{ animationDelay: '0.4s' }}
         />
       </motion.div>
@@ -75,13 +75,17 @@ export default function HomePage() {
       <motion.div
         variants={fadeUpVariants}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md px-2 sm:px-0"
       >
         <GameConfigForm />
       </motion.div>
 
       {/* Library stats */}
-      <motion.div variants={fadeUpVariants} transition={{ duration: 0.5 }}>
+      <motion.div
+        variants={fadeUpVariants}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md px-2 sm:px-0"
+      >
         <LibraryStats />
       </motion.div>
     </motion.main>

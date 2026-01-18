@@ -13,16 +13,16 @@ interface SongRevealProps {
 export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
   if (!song) {
     return (
-      <div className="flex h-64 w-64 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-sm">
-        <p className="text-purple-300">Chargement...</p>
+      <div className="flex h-48 w-48 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-sm sm:h-56 sm:w-56 md:h-64 md:w-64">
+        <p className="text-sm text-purple-300 sm:text-base">Chargement...</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Pochette */}
-      <div className="relative h-64 w-64 overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
+    <div className="flex flex-col items-center gap-3 sm:gap-4">
+      {/* Pochette - Responsive size: smaller on mobile, larger on desktop */}
+      <div className="relative h-48 w-48 overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] sm:h-56 sm:w-56 md:h-64 md:w-64">
         <Image
           src={`/api/cover/${song.id}`}
           alt="Pochette album"
@@ -33,22 +33,24 @@ export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
         />
         {!isRevealed && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <MusicalNoteIcon className="h-16 w-16 text-white/80" />
+            <MusicalNoteIcon className="h-12 w-12 text-white/80 sm:h-14 sm:w-14 md:h-16 md:w-16" />
           </div>
         )}
       </div>
 
       {/* Informations - shown when revealed */}
       {isRevealed && (
-        <div className="animate-fade-in text-center">
+        <div className="animate-fade-in max-w-xs px-2 text-center sm:max-w-sm sm:px-0">
           {(guessMode === 'title' || guessMode === 'both') && (
-            <h2 className="text-2xl font-bold">{song.title}</h2>
+            <h2 className="text-xl font-bold sm:text-2xl">{song.title}</h2>
           )}
           {(guessMode === 'artist' || guessMode === 'both') && (
-            <p className="text-xl text-purple-200">{song.artist}</p>
+            <p className="text-lg text-purple-200 sm:text-xl">{song.artist}</p>
           )}
           {song.album && (
-            <p className="mt-1 text-sm text-purple-400">{song.album}</p>
+            <p className="mt-1 text-xs text-purple-400 sm:text-sm">
+              {song.album}
+            </p>
           )}
         </div>
       )}
