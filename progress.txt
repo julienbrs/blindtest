@@ -597,3 +597,10 @@ Commit: f7af771
 Notes: Implemented celebratory correct answer sound using Web Audio API in useCorrectAnswerCelebration hook. Created playCorrectSound function that generates a joyful ascending arpeggio (C5, E5, G5, C6) with sine wave oscillators and harmonic overtones for richness. Sound includes a final chord for emphasis (~1.2s duration, 0.6 volume). Sound is synchronized with confetti animation and plays immediately on validation. Sound plays even when reduced motion is preferred (only visual effects disabled). Added AudioContext cleanup on unmount. Created 7 comprehensive tests for sound functionality. All 536 tests pass.
 Files: src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts
 
+=== Issue 8.3: Ajouter un son de mauvaise réponse ===
+Timestamp: 2026-01-18T05:45:00Z
+Status: COMPLETED
+Commit: 4c6c2f9
+Notes: Implemented incorrect answer sound using Web Audio API in useWrongAnswerEffect hook. Created playIncorrectSound function that generates a descending "whomp" tone (~0.4s) using three oscillators: main descending sawtooth (200Hz→80Hz), sub-bass sine (80Hz→40Hz), and brief initial click for clarity. Sound plays immediately on incorrect validation, synchronized with shake animation. Sound plays even when reduced motion is preferred (only visual effects disabled). Added AudioContext cleanup on unmount. Created 7 comprehensive tests for sound functionality. All 543 tests pass.
+Files: src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts
+
