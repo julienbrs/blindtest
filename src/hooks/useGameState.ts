@@ -1,6 +1,6 @@
 'use client'
 
-import { useReducer, useEffect, useCallback } from 'react'
+import { useReducer, useEffect, useCallback, useMemo } from 'react'
 import type { GameState, GameAction, GameConfig, Song } from '@/lib/types'
 
 const initialState: GameState = {
@@ -203,20 +203,38 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
     dispatch({ type: 'REPLAY' })
   }, [])
 
-  const actions = {
-    startGame,
-    loadSong,
-    play,
-    pause,
-    buzz,
-    validate,
-    reveal,
-    nextSong,
-    quit,
-    reset,
-    clipEnded,
-    replay,
-  }
+  // Memoize the actions object to prevent unnecessary re-renders
+  // Individual actions are already memoized, but the object itself must be stable
+  const actions = useMemo(
+    () => ({
+      startGame,
+      loadSong,
+      play,
+      pause,
+      buzz,
+      validate,
+      reveal,
+      nextSong,
+      quit,
+      reset,
+      clipEnded,
+      replay,
+    }),
+    [
+      startGame,
+      loadSong,
+      play,
+      pause,
+      buzz,
+      validate,
+      reveal,
+      nextSong,
+      quit,
+      reset,
+      clipEnded,
+      replay,
+    ]
+  )
 
   return { state, actions, dispatch }
 }

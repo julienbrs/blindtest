@@ -1,6 +1,13 @@
 'use client'
 
-import { Suspense, useState, useEffect, useCallback, useRef } from 'react'
+import {
+  Suspense,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
@@ -121,15 +128,18 @@ function GameContent() {
   const preloadedAudioRef = useRef<HTMLAudioElement | null>(null)
   const isPrefetchingRef = useRef(false)
 
-  // Parse config from URL parameters
-  const config: GameConfig = {
-    guessMode: (searchParams.get('mode') as GuessMode) || 'both',
-    clipDuration: Number(searchParams.get('duration')) || 20,
-    timerDuration:
-      searchParams.get('noTimer') === 'true'
-        ? 0
-        : Number(searchParams.get('timerDuration')) || 5,
-  }
+  // Parse config from URL parameters - memoized to prevent unnecessary re-renders
+  const config: GameConfig = useMemo(
+    () => ({
+      guessMode: (searchParams.get('mode') as GuessMode) || 'both',
+      clipDuration: Number(searchParams.get('duration')) || 20,
+      timerDuration:
+        searchParams.get('noTimer') === 'true'
+          ? 0
+          : Number(searchParams.get('timerDuration')) || 5,
+    }),
+    [searchParams]
+  )
 
   const game = useGameState(config)
 
