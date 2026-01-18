@@ -611,3 +611,10 @@ Commit: b793600
 Notes: Implemented timeout sound using Web Audio API in Timer component. Created a descending "time's up" buzzer sound with 3 oscillators: main sawtooth (400Hz→150Hz), sub-bass sine (100Hz→50Hz), and square buzz (200Hz→80Hz). Sound duration ~0.5s at 0.5 volume. Sound plays exactly when timer transitions from > 0 to 0 (detected using prevRemainingRef). Added optional onTimeout callback prop for external event handling. Handles browser autoplay policy by resuming suspended AudioContext. Added AudioContext cleanup on unmount. Created 8 comprehensive tests for sound functionality covering transition detection, no sound on mount at 0, sound plays only once, reset behavior, callback invocation, and oscillator creation. All 551 tests pass.
 Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
 
+=== Issue 8.5: Ajouter un tick-tock pour le timer ===
+Timestamp: 2026-01-18T06:10:00Z
+Status: COMPLETED
+Commit: b8cd5d2
+Notes: Implemented tick-tock sound for timer using Web Audio API. Tick sound plays at each second of countdown using sine wave oscillator (~80ms duration). Added tick-tock effect (two sounds) when remaining <= 5 seconds for added urgency. Volume intensifies as time decreases (0.2 at 5s to 0.5 at 1s). Pitch also increases slightly in final 3 seconds for urgency effect. Sound is subtle but audible, not distracting. Created 9 comprehensive tests for tick-tock functionality (559 tests total pass).
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
