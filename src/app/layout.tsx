@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Poppins, Inter } from 'next/font/google'
 import './globals.css'
-import { FestiveBackground } from '@/components/ui/FestiveBackground'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import { ThemedLayout } from '@/components/layout/ThemedLayout'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -29,8 +30,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${poppins.variable} ${inter.variable}`}>
       <body className="min-h-screen text-white font-sans antialiased">
-        <FestiveBackground />
-        <div className="min-h-screen flex flex-col relative">{children}</div>
+        <ThemeProvider>
+          <ThemedLayout>{children}</ThemedLayout>
+        </ThemeProvider>
       </body>
     </html>
   )

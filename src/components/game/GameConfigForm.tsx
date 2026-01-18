@@ -7,10 +7,12 @@ import {
   ChevronRightIcon,
   ClockIcon,
   Cog6ToothIcon,
+  MoonIcon,
 } from '@heroicons/react/24/solid'
 import type { GuessMode } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { useTheme } from '@/contexts/ThemeContext'
 
 const STORAGE_KEY = 'blindtest_config'
 
@@ -104,6 +106,7 @@ const modes: { value: GuessMode; label: string; description: string }[] = [
 
 export function GameConfigForm() {
   const router = useRouter()
+  const { isDark, toggle: toggleTheme } = useTheme()
   const [guessMode, setGuessMode] = useState<GuessMode>('both')
   const [clipDuration, setClipDuration] = useState(20)
   const [timerDuration, setTimerDuration] = useState(5)
@@ -432,6 +435,34 @@ export function GameConfigForm() {
                 >
                   <div
                     className={`h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${randomStartPoint ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`}
+                  />
+                </div>
+              </div>
+            </label>
+
+            {/* Dark theme toggle */}
+            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 p-3 transition-colors hover:bg-white/10">
+              <div className="flex items-center gap-3">
+                <MoonIcon className="h-5 w-5 text-purple-400" />
+                <div>
+                  <div className="font-medium">Thème sombre</div>
+                  <div className="text-sm text-purple-200">
+                    Interface plus sombre pour les soirées
+                  </div>
+                </div>
+              </div>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={isDark}
+                  onChange={toggleTheme}
+                  className="sr-only"
+                />
+                <div
+                  className={`h-6 w-11 rounded-full transition-colors ${isDark ? 'bg-purple-500' : 'bg-white/20'}`}
+                >
+                  <div
+                    className={`h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${isDark ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`}
                   />
                 </div>
               </div>

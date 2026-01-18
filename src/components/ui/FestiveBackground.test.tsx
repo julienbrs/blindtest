@@ -113,4 +113,78 @@ describe('FestiveBackground', () => {
       expect(hasColorClass).toBe(true)
     })
   })
+
+  describe('dark theme', () => {
+    it('renders darker gradient when isDark is true', () => {
+      const { container } = render(<FestiveBackground isDark />)
+      const gradient = container.querySelector('.animate-gradient-shift')
+      expect(gradient).toBeInTheDocument()
+      // Check that the gradient style contains dark colors (browsers convert hex to RGB)
+      const style = (gradient as HTMLElement)?.style.background
+      // #0f0a1f = rgb(15, 10, 31)
+      expect(style).toContain('rgb(15, 10, 31)')
+    })
+
+    it('uses darker orb colors when isDark is true', () => {
+      const { container } = render(<FestiveBackground isDark />)
+      const orbs = container.querySelectorAll('.animate-float-orb')
+      const darkColorClasses = [
+        'bg-purple-900/20',
+        'bg-indigo-900/20',
+        'bg-slate-800/20',
+        'bg-violet-900/15',
+        'bg-blue-900/15',
+      ]
+
+      orbs.forEach((orb) => {
+        const hasDarkColorClass = darkColorClasses.some((colorClass) =>
+          orb.classList.contains(colorClass)
+        )
+        expect(hasDarkColorClass).toBe(true)
+      })
+    })
+
+    it('uses festive gradient by default (isDark=false)', () => {
+      const { container } = render(<FestiveBackground isDark={false} />)
+      const gradient = container.querySelector('.animate-gradient-shift')
+      const style = (gradient as HTMLElement)?.style.background
+      // Browsers convert hex to RGB: #581c87 = rgb(88, 28, 135), #be185d = rgb(190, 24, 93)
+      expect(style).toContain('rgb(88, 28, 135)') // Festive purple
+      expect(style).toContain('rgb(190, 24, 93)') // Festive pink
+    })
+
+    it('applies transition classes for smooth theme change', () => {
+      const { container } = render(<FestiveBackground isDark />)
+      const gradient = container.querySelector('.transition-all')
+      expect(gradient).toBeInTheDocument()
+    })
+
+    it('has darker vignette in dark mode', () => {
+      const { container } = render(<FestiveBackground isDark />)
+      const vignette = container.querySelector('.pointer-events-none')
+      const style = (vignette as HTMLElement)?.style.background
+      expect(style).toContain('0.5') // Darker opacity in dark mode
+    })
+
+    it('respects reduced motion in dark mode too', () => {
+      matchMediaMock.mockImplementation((query: string) => ({
+        matches: query.includes('prefers-reduced-motion'),
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }))
+
+      const { container } = render(<FestiveBackground isDark />)
+      // Static background only
+      const orbs = container.querySelectorAll('.animate-float-orb')
+      expect(orbs.length).toBe(0)
+      // Should still have the dark gradient (browsers convert hex to RGB)
+      const background = container.querySelector('.fixed.inset-0')
+      const style = (background as HTMLElement)?.style.background
+      // #0f0a1f = rgb(15, 10, 31)
+      expect(style).toContain('rgb(15, 10, 31)')
+    })
+  })
 })

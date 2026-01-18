@@ -8,6 +8,7 @@ interface Orb {
   top: string
   size: string
   color: string
+  darkColor: string
   animationDelay: string
   animationDuration: string
 }
@@ -20,6 +21,14 @@ const ORB_COLORS = [
   'bg-violet-500/25',
 ]
 
+const DARK_ORB_COLORS = [
+  'bg-purple-900/20',
+  'bg-indigo-900/20',
+  'bg-slate-800/20',
+  'bg-violet-900/15',
+  'bg-blue-900/15',
+]
+
 // Pre-generated orb configurations with deterministic values for SSR compatibility
 const PRE_GENERATED_ORBS: Orb[] = [
   {
@@ -28,6 +37,7 @@ const PRE_GENERATED_ORBS: Orb[] = [
     top: '20%',
     size: '250px',
     color: ORB_COLORS[0],
+    darkColor: DARK_ORB_COLORS[0],
     animationDelay: '-5s',
     animationDuration: '25s',
   },
@@ -37,6 +47,7 @@ const PRE_GENERATED_ORBS: Orb[] = [
     top: '10%',
     size: '200px',
     color: ORB_COLORS[1],
+    darkColor: DARK_ORB_COLORS[1],
     animationDelay: '-12s',
     animationDuration: '30s',
   },
@@ -46,6 +57,7 @@ const PRE_GENERATED_ORBS: Orb[] = [
     top: '60%',
     size: '300px',
     color: ORB_COLORS[2],
+    darkColor: DARK_ORB_COLORS[2],
     animationDelay: '-8s',
     animationDuration: '22s',
   },
@@ -55,6 +67,7 @@ const PRE_GENERATED_ORBS: Orb[] = [
     top: '50%',
     size: '180px',
     color: ORB_COLORS[3],
+    darkColor: DARK_ORB_COLORS[3],
     animationDelay: '-15s',
     animationDuration: '28s',
   },
@@ -64,6 +77,7 @@ const PRE_GENERATED_ORBS: Orb[] = [
     top: '80%',
     size: '220px',
     color: ORB_COLORS[4],
+    darkColor: DARK_ORB_COLORS[4],
     animationDelay: '-3s',
     animationDuration: '32s',
   },
@@ -73,6 +87,7 @@ const PRE_GENERATED_ORBS: Orb[] = [
     top: '35%',
     size: '280px',
     color: ORB_COLORS[0],
+    darkColor: DARK_ORB_COLORS[0],
     animationDelay: '-18s',
     animationDuration: '26s',
   },
@@ -100,18 +115,31 @@ function useReducedMotion() {
   )
 }
 
-export function FestiveBackground() {
+// Festive gradient (colorful, vibrant)
+const FESTIVE_GRADIENT =
+  'linear-gradient(-45deg, #1e1b4b, #581c87, #be185d, #1e1b4b)'
+
+// Dark gradient (much darker, low luminosity)
+const DARK_GRADIENT =
+  'linear-gradient(-45deg, #0f0a1f, #1a1333, #0d0d1a, #0f0a1f)'
+
+interface FestiveBackgroundProps {
+  isDark?: boolean
+}
+
+export function FestiveBackground({ isDark = false }: FestiveBackgroundProps) {
   const orbs = useMemo(() => PRE_GENERATED_ORBS, [])
   const reducedMotion = useReducedMotion()
+
+  const gradient = isDark ? DARK_GRADIENT : FESTIVE_GRADIENT
 
   // Don't render animations if user prefers reduced motion
   if (reducedMotion) {
     return (
       <div
-        className="fixed inset-0 -z-10"
+        className="fixed inset-0 -z-10 transition-all duration-500"
         style={{
-          background:
-            'linear-gradient(-45deg, #1e1b4b, #581c87, #be185d, #1e1b4b)',
+          background: gradient,
         }}
       />
     )
@@ -121,10 +149,9 @@ export function FestiveBackground() {
     <div className="fixed inset-0 -z-10 overflow-hidden">
       {/* Animated gradient base */}
       <div
-        className="absolute inset-0 animate-gradient-shift"
+        className="absolute inset-0 animate-gradient-shift transition-all duration-500"
         style={{
-          background:
-            'linear-gradient(-45deg, #1e1b4b, #581c87, #be185d, #1e1b4b)',
+          background: gradient,
           backgroundSize: '400% 400%',
         }}
       />
@@ -133,7 +160,7 @@ export function FestiveBackground() {
       {orbs.map((orb) => (
         <div
           key={orb.id}
-          className={`absolute rounded-full ${orb.color} animate-float-orb`}
+          className={`absolute rounded-full ${isDark ? orb.darkColor : orb.color} animate-float-orb transition-colors duration-500`}
           style={{
             left: orb.left,
             top: orb.top,
@@ -146,12 +173,11 @@ export function FestiveBackground() {
         />
       ))}
 
-      {/* Subtle vignette overlay for depth */}
+      {/* Subtle vignette overlay for depth - darker in dark mode */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none transition-opacity duration-500"
         style={{
-          background:
-            'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 100%)',
+          background: `radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,${isDark ? '0.5' : '0.3'}) 100%)`,
         }}
       />
     </div>
