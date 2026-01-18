@@ -501,11 +501,11 @@ function GameContent() {
         )}
       </AnimatePresence>
 
-      {/* Main content area - Mobile: vertical stack, Desktop: two columns */}
-      <div className="flex flex-1 flex-col gap-4 sm:gap-6 lg:flex-row lg:gap-8">
-        {/* Left column (Mobile: full width, Desktop: left side) */}
+      {/* Main content area - Portrait: vertical stack, Landscape/Desktop: two columns */}
+      <div className="flex flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row sm:gap-6 lg:flex-row lg:gap-8">
+        {/* Left column (Portrait: full width, Landscape/Desktop: left side) */}
         {/* Contains: Cover image + Audio player */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 sm:gap-4 lg:gap-6">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 landscape:gap-2 sm:gap-4 lg:gap-6">
           {/* Pochette / Révélation */}
           <SongReveal
             song={game.state.currentSong}
@@ -528,9 +528,9 @@ function GameContent() {
           </div>
         </div>
 
-        {/* Right column (Mobile: bottom area, Desktop: right side) */}
+        {/* Right column (Portrait: bottom area, Landscape/Desktop: right side) */}
         {/* Contains: Buzzer/Timer + Game Controls */}
-        <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 lg:w-80 lg:flex-shrink-0">
+        <div className="flex flex-col items-center justify-center gap-4 landscape:w-64 landscape:flex-shrink-0 sm:gap-6 lg:w-80 lg:flex-shrink-0">
           {/* Animated state transitions for loading/buzzer/timer */}
           <AnimatePresence mode="wait">
             {/* Loading indicator - visible during loading state */}

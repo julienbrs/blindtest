@@ -132,11 +132,11 @@ export function BuzzerButton({
         transition={{ duration: 0.15 }}
         className={`
           relative
-          h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48
+          h-32 w-32 landscape:h-24 landscape:w-24 sm:h-40 sm:w-40 md:h-48 md:w-48 landscape:md:h-32 landscape:md:w-32
           rounded-full
           border-4 border-red-400
           bg-gradient-to-br from-red-500 to-red-700
-          text-xl font-bold text-white sm:text-2xl
+          text-xl font-bold text-white landscape:text-lg sm:text-2xl
           focus:outline-none focus:ring-4 focus:ring-red-400/50
           disabled:cursor-not-allowed disabled:opacity-50
         `}

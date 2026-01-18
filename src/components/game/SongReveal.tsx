@@ -17,16 +17,16 @@ interface SongRevealProps {
 export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
   if (!song) {
     return (
-      <div className="flex h-48 w-48 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-sm sm:h-56 sm:w-56 md:h-64 md:w-64">
+      <div className="flex h-48 w-48 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-sm landscape:h-36 landscape:w-36 sm:h-56 sm:w-56 md:h-64 md:w-64 landscape:md:h-48 landscape:md:w-48">
         <p className="text-sm text-purple-300 sm:text-base">Chargement...</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col items-center gap-3 sm:gap-4">
-      {/* Pochette - Responsive size: smaller on mobile, larger on desktop */}
-      <div className="relative h-48 w-48 overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] sm:h-56 sm:w-56 md:h-64 md:w-64">
+    <div className="flex flex-col items-center gap-3 landscape:gap-2 sm:gap-4">
+      {/* Pochette - Responsive size: smaller on mobile/landscape, larger on desktop */}
+      <div className="relative h-48 w-48 overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] landscape:h-36 landscape:w-36 sm:h-56 sm:w-56 md:h-64 md:w-64 landscape:md:h-48 landscape:md:w-48">
         <Image
           src={`/api/cover/${song.id}`}
           alt="Pochette album"
