@@ -1,9 +1,11 @@
 # Epic 4 : Frontend - Page d'accueil / Configuration
 
 ## Objectif
+
 Créer la page d'accueil de l'application avec un formulaire de configuration de partie. Interface festive et accueillante qui donne envie de jouer.
 
 ## Dépendances
+
 - Epic 1 terminé (setup, styles)
 - Epic 3 partiellement terminé (API /api/songs pour afficher le nombre de chansons)
 
@@ -12,6 +14,7 @@ Créer la page d'accueil de l'application avec un formulaire de configuration de
 ## Issues
 
 ### 4.1 Créer le layout principal
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -20,6 +23,7 @@ Créer le layout racine qui sera utilisé par toutes les pages : fond festif, co
 **Fichier** : `src/app/layout.tsx`
 
 **Implémentation**
+
 ```tsx
 import type { Metadata } from 'next'
 import { Poppins, Inter } from 'next/font/google'
@@ -49,9 +53,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${poppins.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900 text-white font-sans antialiased">
-        <div className="min-h-screen flex flex-col">
-          {children}
-        </div>
+        <div className="min-h-screen flex flex-col">{children}</div>
       </body>
     </html>
   )
@@ -59,6 +61,7 @@ export default function RootLayout({
 ```
 
 **Fichier** : `src/app/globals.css`
+
 ```css
 @tailwind base;
 @tailwind components;
@@ -73,14 +76,24 @@ body {
   font-family: var(--font-inter);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-poppins);
 }
 
 /* Animation de fond subtile */
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .animated-bg {
@@ -90,6 +103,7 @@ h1, h2, h3, h4, h5, h6 {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Fond gradient festif appliqué
 - [ ] Fonts chargées correctement
 - [ ] Structure flex pour le contenu
@@ -98,6 +112,7 @@ h1, h2, h3, h4, h5, h6 {
 ---
 
 ### 4.2 Designer la page d'accueil
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -106,6 +121,7 @@ Créer la page d'accueil avec le logo/titre, une ambiance festive, et le formula
 **Fichier** : `src/app/page.tsx`
 
 **Structure**
+
 ```tsx
 export default function HomePage() {
   return (
@@ -131,12 +147,14 @@ export default function HomePage() {
 ```
 
 **Éléments visuels**
+
 - Titre en gradient coloré
 - Sous-titre descriptif
 - Icônes musicales décoratives (notes, vinyles)
 - Effet de particules ou étoiles en fond (optionnel)
 
 **Critères d'acceptation**
+
 - [ ] Titre impactant et lisible
 - [ ] Ambiance festive visible
 - [ ] Responsive (mobile et desktop)
@@ -145,6 +163,7 @@ export default function HomePage() {
 ---
 
 ### 4.3 Créer le formulaire de configuration
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -153,6 +172,7 @@ Composant formulaire pour configurer les paramètres de la partie avant de jouer
 **Fichier** : `src/components/game/GameConfigForm.tsx`
 
 **Implémentation**
+
 ```tsx
 'use client'
 
@@ -207,6 +227,7 @@ export function GameConfigForm() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Formulaire fonctionnel
 - [ ] État de chargement au submit
 - [ ] Redirection vers /game avec paramètres
@@ -215,17 +236,20 @@ export function GameConfigForm() {
 ---
 
 ### 4.4 Ajouter le sélecteur de mode de devinette
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Radio buttons stylisés pour choisir ce que les joueurs doivent deviner.
 
 **Options**
+
 - Titre uniquement
 - Artiste uniquement
 - Les deux (titre ET artiste)
 
 **Implémentation**
+
 ```tsx
 const modes: { value: GuessMode; label: string; description: string }[] = [
   { value: 'title', label: 'Titre', description: 'Deviner le nom de la chanson' },
@@ -272,6 +296,7 @@ const modes: { value: GuessMode; label: string; description: string }[] = [
 ```
 
 **Critères d'acceptation**
+
 - [ ] 3 options disponibles
 - [ ] État sélectionné visuellement distinct
 - [ ] Descriptions claires
@@ -280,12 +305,14 @@ const modes: { value: GuessMode; label: string; description: string }[] = [
 ---
 
 ### 4.5 Ajouter le slider durée des extraits
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Slider pour choisir la durée des extraits audio (5 à 60 secondes).
 
 **Implémentation**
+
 ```tsx
 <div className="space-y-4">
   <div className="flex justify-between items-center">
@@ -321,6 +348,7 @@ Slider pour choisir la durée des extraits audio (5 à 60 secondes).
 ```
 
 **Critères d'acceptation**
+
 - [ ] Range de 5 à 60 secondes
 - [ ] Pas de 5 secondes
 - [ ] Valeur affichée en temps réel
@@ -329,6 +357,7 @@ Slider pour choisir la durée des extraits audio (5 à 60 secondes).
 ---
 
 ### 4.6 Afficher le nombre de chansons disponibles
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -337,6 +366,7 @@ Afficher une info sur la taille de la bibliothèque pour rassurer l'utilisateur.
 **Composant** : `src/components/game/LibraryStats.tsx`
 
 **Implémentation**
+
 ```tsx
 'use client'
 
@@ -370,7 +400,7 @@ export function LibraryStats() {
           error: null,
         })
       } catch (error) {
-        setStats(prev => ({
+        setStats((prev) => ({
           ...prev,
           isLoading: false,
           error: 'Impossible de charger les statistiques',
@@ -389,19 +419,17 @@ export function LibraryStats() {
   }
 
   if (stats.error) {
-    return (
-      <p className="mt-8 text-red-400">
-        {stats.error}
-      </p>
-    )
+    return <p className="mt-8 text-red-400">{stats.error}</p>
   }
 
   return (
     <div className="mt-8 text-center text-purple-200">
       <p className="text-lg">
-        <span className="font-bold text-white">{stats.totalSongs}</span> chansons
+        <span className="font-bold text-white">{stats.totalSongs}</span>{' '}
+        chansons
         {' de '}
-        <span className="font-bold text-white">{stats.totalArtists}</span> artistes
+        <span className="font-bold text-white">{stats.totalArtists}</span>{' '}
+        artistes
       </p>
       <p className="text-sm mt-1">prêtes à vous tester !</p>
     </div>
@@ -410,6 +438,7 @@ export function LibraryStats() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Nombre de chansons affiché
 - [ ] État de chargement visible
 - [ ] Gestion des erreurs
@@ -418,16 +447,19 @@ export function LibraryStats() {
 ---
 
 ### 4.7 Ajouter la validation du formulaire
+
 **Priorité** : P1 (Important)
 
 **Description**
 Valider les paramètres avant de démarrer la partie.
 
 **Validations**
+
 - Au moins une chanson dans la bibliothèque
 - Valeurs dans les ranges acceptés
 
 **Implémentation**
+
 ```tsx
 const [validationError, setValidationError] = useState<string | null>(null)
 
@@ -437,7 +469,9 @@ const validateForm = async (): Promise<boolean> => {
     const res = await fetch('/api/songs')
     const data = await res.json()
     if (data.total === 0) {
-      setValidationError('Aucune chanson disponible. Vérifiez votre dossier audio.')
+      setValidationError(
+        'Aucune chanson disponible. Vérifiez votre dossier audio.'
+      )
       return false
     }
   } catch {
@@ -470,6 +504,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Erreur si bibliothèque vide
 - [ ] Messages d'erreur clairs
 - [ ] Pas de submit si invalide
@@ -477,12 +512,14 @@ const handleSubmit = async (e: React.FormEvent) => {
 ---
 
 ### 4.8 Persister la configuration
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Sauvegarder les préférences de l'utilisateur dans localStorage pour les sessions futures.
 
 **Implémentation**
+
 ```tsx
 const STORAGE_KEY = 'blindtest_config'
 
@@ -502,14 +539,18 @@ useEffect(() => {
 
 // Sauvegarder à chaque changement
 useEffect(() => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    guessMode,
-    clipDuration,
-  }))
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      guessMode,
+      clipDuration,
+    })
+  )
 }, [guessMode, clipDuration])
 ```
 
 **Critères d'acceptation**
+
 - [ ] Config sauvegardée en localStorage
 - [ ] Restaurée au prochain chargement
 - [ ] Gestion des valeurs invalides
@@ -517,17 +558,20 @@ useEffect(() => {
 ---
 
 ### 4.9 Ajouter un bouton "Paramètres avancés"
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Section dépliable avec des options supplémentaires pour les utilisateurs avancés.
 
 **Options avancées possibles**
+
 - Timer personnalisé (autre que 5s)
 - Mode sans timer
 - Point de départ aléatoire dans la chanson
 
 **Implémentation**
+
 ```tsx
 const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -547,6 +591,7 @@ const [showAdvanced, setShowAdvanced] = useState(false)
 ```
 
 **Critères d'acceptation**
+
 - [ ] Section masquée par défaut
 - [ ] Animation d'ouverture/fermeture
 - [ ] Options fonctionnelles
@@ -554,12 +599,14 @@ const [showAdvanced, setShowAdvanced] = useState(false)
 ---
 
 ### 4.10 Créer une animation d'entrée
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Animation de chargement/apparition des éléments de la page pour une entrée dynamique.
 
 **Avec Framer Motion**
+
 ```bash
 npm install framer-motion
 ```
@@ -567,7 +614,7 @@ npm install framer-motion
 ```tsx
 import { motion } from 'framer-motion'
 
-<motion.div
+;<motion.div
   initial={{ opacity: 0, y: 20 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.5, delay: 0.1 }}
@@ -577,11 +624,13 @@ import { motion } from 'framer-motion'
 ```
 
 **Animation suggérée**
+
 1. Titre apparaît en premier (fade + slide up)
 2. Formulaire apparaît ensuite (stagger)
 3. Stats apparaissent en dernier
 
 **Critères d'acceptation**
+
 - [ ] Animation fluide
 - [ ] Pas de flash de contenu non-stylé
 - [ ] Désactivable si prefers-reduced-motion
@@ -602,4 +651,5 @@ import { motion } from 'framer-motion'
 - [ ] 4.10 Animation d'entrée
 
 ## Estimation
+
 ~3-4 heures de travail

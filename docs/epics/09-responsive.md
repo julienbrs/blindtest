@@ -1,9 +1,11 @@
 # Epic 9 : Responsive et mobile
 
 ## Objectif
+
 S'assurer que l'application fonctionne parfaitement sur tous les appareils, avec une attention particulière au mobile (usage principal prévu).
 
 ## Dépendances
+
 - Epic 4-5 terminés (pages et composants)
 - Tailwind configuré
 
@@ -11,30 +13,33 @@ S'assurer que l'application fonctionne parfaitement sur tous les appareils, avec
 
 ## Breakpoints Tailwind
 
-| Préfixe | Largeur min | Appareils typiques |
-|---------|-------------|-------------------|
-| (base) | 0px | Téléphones portrait |
-| `sm` | 640px | Téléphones paysage |
-| `md` | 768px | Tablettes portrait |
-| `lg` | 1024px | Tablettes paysage, laptops |
-| `xl` | 1280px | Desktops |
+| Préfixe | Largeur min | Appareils typiques         |
+| ------- | ----------- | -------------------------- |
+| (base)  | 0px         | Téléphones portrait        |
+| `sm`    | 640px       | Téléphones paysage         |
+| `md`    | 768px       | Tablettes portrait         |
+| `lg`    | 1024px      | Tablettes paysage, laptops |
+| `xl`    | 1280px      | Desktops                   |
 
 ---
 
 ## Issues
 
 ### 9.1 Adapter le layout pour mobile
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Réorganiser les éléments pour les petits écrans tout en gardant l'ergonomie.
 
 **Principes**
+
 - Éléments empilés verticalement sur mobile
 - Disposition en grille/colonnes sur desktop
 - Pas de scroll horizontal
 
 **Page d'accueil**
+
 ```tsx
 // Mobile: tout empilé
 // Desktop: config à gauche, aperçu à droite (optionnel)
@@ -49,6 +54,7 @@ Réorganiser les éléments pour les petits écrans tout en gardant l'ergonomie.
 ```
 
 **Écran de jeu**
+
 ```tsx
 // Mobile: vertical, buzzer en bas
 // Desktop: horizontal, contrôles à droite
@@ -65,6 +71,7 @@ Réorganiser les éléments pour les petits écrans tout en gardant l'ergonomie.
 ```
 
 **Critères d'acceptation**
+
 - [ ] Layout fluide de 320px à 1920px
 - [ ] Pas de débordement horizontal
 - [ ] Tous les éléments accessibles
@@ -72,33 +79,39 @@ Réorganiser les éléments pour les petits écrans tout en gardant l'ergonomie.
 ---
 
 ### 9.2 Agrandir les zones tactiles
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Les boutons doivent être suffisamment grands pour être touchés avec le doigt (minimum 44x44px recommandé par Apple/Google).
 
 **Tailles minimales**
+
 ```tsx
 // Bouton principal (buzzer, actions)
-className="min-h-[48px] min-w-[48px] p-4"
+className = 'min-h-[48px] min-w-[48px] p-4'
 
 // Bouton secondaire
-className="min-h-[44px] px-4 py-2"
+className = 'min-h-[44px] px-4 py-2'
 
 // Icône interactive
-className="p-3" // Ajoute du padding autour de l'icône
+className = 'p-3' // Ajoute du padding autour de l'icône
 ```
 
 **Espacement**
+
 ```tsx
 // Éviter les clics accidentels
-<div className="flex gap-4"> {/* gap minimum de 16px */}
+<div className="flex gap-4">
+  {' '}
+  {/* gap minimum de 16px */}
   <button>Action 1</button>
   <button>Action 2</button>
 </div>
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tous les boutons ≥ 44px de hauteur
 - [ ] Espacement suffisant entre les boutons
 - [ ] Test au doigt sur mobile réel
@@ -106,6 +119,7 @@ className="p-3" // Ajoute du padding autour de l'icône
 ---
 
 ### 9.3 Tester sur différentes tailles d'écran
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -122,11 +136,13 @@ Vérifier le rendu sur les tailles d'écran courantes.
 | iPad Pro | 1024×1366 | 4:3 |
 
 **Chrome DevTools**
+
 1. Ouvrir DevTools (F12)
 2. Toggle device toolbar (Ctrl+Shift+M)
 3. Sélectionner les appareils ou dimensions custom
 
 **Checklist par taille**
+
 - [ ] Titre lisible et pas coupé
 - [ ] Formulaire accessible sans scroll excessif
 - [ ] Buzzer visible et accessible
@@ -135,6 +151,7 @@ Vérifier le rendu sur les tailles d'écran courantes.
 - [ ] Contrôles accessibles
 
 **Critères d'acceptation**
+
 - [ ] Testé sur 6+ tailles différentes
 - [ ] Pas de bug visuel majeur
 - [ ] Screenshots documentés
@@ -142,12 +159,14 @@ Vérifier le rendu sur les tailles d'écran courantes.
 ---
 
 ### 9.4 Ajouter la vibration mobile au buzz
+
 **Priorité** : P1 (Important)
 
 **Description**
 Utiliser l'API Vibration pour un feedback haptique lors du buzz.
 
 **Implémentation**
+
 ```typescript
 function triggerHapticFeedback() {
   if ('vibrate' in navigator) {
@@ -164,6 +183,7 @@ const handleClick = () => {
 ```
 
 **Patterns de vibration**
+
 ```typescript
 // Buzz simple
 navigator.vibrate(100)
@@ -178,6 +198,7 @@ navigator.vibrate(200)
 **Note** : Ne fonctionne pas sur iOS Safari (API non supportée).
 
 **Critères d'acceptation**
+
 - [ ] Vibration sur Android
 - [ ] Pas d'erreur sur iOS (fail silently)
 - [ ] Durée appropriée
@@ -185,13 +206,16 @@ navigator.vibrate(200)
 ---
 
 ### 9.5 Optimiser les performances mobile
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Réduire la charge CPU/GPU sur les appareils moins puissants.
 
 **Optimisations**
+
 1. **Animations réduites**
+
 ```css
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -202,10 +226,11 @@ Réduire la charge CPU/GPU sur les appareils moins puissants.
 ```
 
 2. **Images optimisées**
+
 ```tsx
 import Image from 'next/image'
 
-<Image
+;<Image
   src={`/api/cover/${song.id}`}
   alt="Pochette"
   width={256}
@@ -217,6 +242,7 @@ import Image from 'next/image'
 ```
 
 3. **Lazy loading**
+
 ```tsx
 // Charger les composants lourds au besoin
 const Confetti = dynamic(() => import('canvas-confetti'), {
@@ -226,6 +252,7 @@ const Confetti = dynamic(() => import('canvas-confetti'), {
 ```
 
 4. **Débounce des événements fréquents**
+
 ```typescript
 const debouncedTimeUpdate = useMemo(
   () => debounce((time: number) => setCurrentTime(time), 100),
@@ -234,6 +261,7 @@ const debouncedTimeUpdate = useMemo(
 ```
 
 **Critères d'acceptation**
+
 - [ ] Pas de lag sur appareils mid-range
 - [ ] Respect de prefers-reduced-motion
 - [ ] Images optimisées
@@ -241,12 +269,14 @@ const debouncedTimeUpdate = useMemo(
 ---
 
 ### 9.6 Gérer l'orientation landscape/portrait
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Adapter le layout selon l'orientation de l'écran.
 
 **Détection**
+
 ```css
 @media (orientation: portrait) {
   /* Layout vertical */
@@ -258,10 +288,9 @@ Adapter le layout selon l'orientation de l'écran.
 ```
 
 **Avec Tailwind**
+
 ```tsx
-<div className="portrait:flex-col landscape:flex-row">
-  {/* Contenu */}
-</div>
+<div className="portrait:flex-col landscape:flex-row">{/* Contenu */}</div>
 ```
 
 **Note** : Les classes `portrait:` et `landscape:` ne sont pas dans Tailwind par défaut, il faut les ajouter :
@@ -271,8 +300,8 @@ Adapter le layout selon l'orientation de l'écran.
 module.exports = {
   theme: {
     screens: {
-      'portrait': { 'raw': '(orientation: portrait)' },
-      'landscape': { 'raw': '(orientation: landscape)' },
+      portrait: { raw: '(orientation: portrait)' },
+      landscape: { raw: '(orientation: landscape)' },
       // ...autres breakpoints
     },
   },
@@ -280,6 +309,7 @@ module.exports = {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Layout adapté en paysage
 - [ ] Pas d'éléments coupés
 - [ ] Buzzer toujours accessible
@@ -287,12 +317,14 @@ module.exports = {
 ---
 
 ### 9.7 Ajouter un mode plein écran
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Option pour passer en mode plein écran pour une immersion maximale.
 
 **API Fullscreen**
+
 ```typescript
 async function toggleFullscreen() {
   if (document.fullscreenElement) {
@@ -313,6 +345,7 @@ useEffect(() => {
 ```
 
 **UI**
+
 ```tsx
 <button onClick={toggleFullscreen}>
   {isFullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
@@ -322,6 +355,7 @@ useEffect(() => {
 **Note** : Ne fonctionne pas sur iOS Safari (limitations système).
 
 **Critères d'acceptation**
+
 - [ ] Bouton fullscreen visible
 - [ ] Toggle fonctionnel sur desktop/Android
 - [ ] Pas d'erreur sur iOS
@@ -329,17 +363,20 @@ useEffect(() => {
 ---
 
 ### 9.8 Tester la lecture audio sur iOS Safari
+
 **Priorité** : P0 (Critique)
 
 **Description**
 iOS Safari a des restrictions strictes sur l'autoplay audio. Il faut s'assurer que l'audio fonctionne correctement.
 
 **Problèmes connus**
+
 1. **Autoplay bloqué** : L'audio ne peut jouer qu'après une interaction utilisateur
 2. **Volume non modifiable** : Le volume est contrôlé par les boutons hardware
 3. **Playsound restrictions** : Les sons courts peuvent être silencieux
 
 **Solutions**
+
 ```typescript
 // 1. Débloquer l'audio au premier clic
 const [audioUnlocked, setAudioUnlocked] = useState(false)
@@ -355,7 +392,8 @@ const unlockAudio = () => {
 
   // Jouer un son silencieux
   const audio = new Audio()
-  audio.src = 'data:audio/mp3;base64,//uQxAAAAAANIAAAAAExBTUUzLjk4LjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+  audio.src =
+    'data:audio/mp3;base64,//uQxAAAAAANIAAAAAExBTUUzLjk4LjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
   audio.play().catch(() => {})
 }
 
@@ -366,7 +404,7 @@ gainNode.connect(audioContext.destination)
 
 // 3. Précharger les sons après interaction
 const preloadSounds = () => {
-  soundFiles.forEach(src => {
+  soundFiles.forEach((src) => {
     const audio = new Audio(src)
     audio.preload = 'auto'
   })
@@ -374,11 +412,13 @@ const preloadSounds = () => {
 ```
 
 **Test sur appareil réel**
+
 1. Connecter un iPhone
 2. Ouvrir Safari > localhost (via ngrok ou IP locale)
 3. Tester le flux complet
 
 **Critères d'acceptation**
+
 - [ ] Audio joue après premier clic
 - [ ] Pas de silence inattendu
 - [ ] Effets sonores fonctionnels
@@ -398,4 +438,5 @@ const preloadSounds = () => {
 - [ ] 9.8 iOS Safari testé
 
 ## Estimation
+
 ~3-4 heures de travail

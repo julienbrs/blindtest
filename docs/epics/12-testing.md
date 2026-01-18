@@ -1,9 +1,11 @@
 # Epic 12 : Tests et qualité
 
 ## Objectif
+
 Assurer la qualité et la fiabilité de l'application par des tests automatisés et manuels.
 
 ## Dépendances
+
 - Application fonctionnelle complète
 - Jest et/ou Vitest configuré
 
@@ -12,12 +14,14 @@ Assurer la qualité et la fiabilité de l'application par des tests automatisés
 ## Issues
 
 ### 12.1 Tester le scan de fichiers audio
+
 **Priorité** : P1 (Important)
 
 **Description**
 Tests unitaires pour le scanner de fichiers audio.
 
 **Setup test**
+
 ```bash
 npm install -D vitest @testing-library/react
 ```
@@ -25,25 +29,30 @@ npm install -D vitest @testing-library/react
 **Fichier** : `src/lib/__tests__/audioScanner.test.ts`
 
 **Tests**
+
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { scanAudioFolder, extractMetadata, generateSongId } from '../audioScanner'
+import {
+  scanAudioFolder,
+  extractMetadata,
+  generateSongId,
+} from '../audioScanner'
 
 describe('audioScanner', () => {
   describe('scanAudioFolder', () => {
     it('devrait trouver les fichiers MP3', async () => {
       const files = await scanAudioFolder('./test-fixtures/music')
-      expect(files.some(f => f.endsWith('.mp3'))).toBe(true)
+      expect(files.some((f) => f.endsWith('.mp3'))).toBe(true)
     })
 
     it('devrait ignorer les fichiers non-audio', async () => {
       const files = await scanAudioFolder('./test-fixtures/music')
-      expect(files.some(f => f.endsWith('.txt'))).toBe(false)
+      expect(files.some((f) => f.endsWith('.txt'))).toBe(false)
     })
 
     it('devrait scanner récursivement', async () => {
       const files = await scanAudioFolder('./test-fixtures/music')
-      expect(files.some(f => f.includes('/subfolder/'))).toBe(true)
+      expect(files.some((f) => f.includes('/subfolder/'))).toBe(true)
     })
 
     it('devrait retourner un array vide pour un dossier inexistant', async () => {
@@ -61,7 +70,9 @@ describe('audioScanner', () => {
     })
 
     it('devrait fallback sur le nom de fichier', async () => {
-      const song = await extractMetadata('./test-fixtures/music/Artist - Title.mp3')
+      const song = await extractMetadata(
+        './test-fixtures/music/Artist - Title.mp3'
+      )
       expect(song?.artist).toBe('Artist')
       expect(song?.title).toBe('Title')
     })
@@ -94,6 +105,7 @@ describe('audioScanner', () => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tests pour scanAudioFolder
 - [ ] Tests pour extractMetadata
 - [ ] Tests pour generateSongId
@@ -103,6 +115,7 @@ describe('audioScanner', () => {
 ---
 
 ### 12.2 Tester les API routes
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -111,6 +124,7 @@ Tests d'intégration pour les endpoints API.
 **Fichier** : `src/app/api/__tests__/songs.test.ts`
 
 **Tests**
+
 ```typescript
 import { describe, it, expect, vi } from 'vitest'
 import { GET } from '../songs/route'
@@ -118,10 +132,22 @@ import { GET as GETRandom } from '../songs/random/route'
 
 // Mock du cache
 vi.mock('@/lib/audioScanner', () => ({
-  getSongsCache: vi.fn(() => Promise.resolve([
-    { id: 'abc123', title: 'Test Song', artist: 'Test Artist', duration: 180 },
-    { id: 'def456', title: 'Another Song', artist: 'Another Artist', duration: 240 },
-  ])),
+  getSongsCache: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 'abc123',
+        title: 'Test Song',
+        artist: 'Test Artist',
+        duration: 180,
+      },
+      {
+        id: 'def456',
+        title: 'Another Song',
+        artist: 'Another Artist',
+        duration: 240,
+      },
+    ])
+  ),
 }))
 
 describe('API /api/songs', () => {
@@ -147,7 +173,9 @@ describe('API /api/songs/random', () => {
   })
 
   it('GET avec exclude devrait filtrer les chansons', async () => {
-    const request = new Request('http://localhost/api/songs/random?exclude=abc123')
+    const request = new Request(
+      'http://localhost/api/songs/random?exclude=abc123'
+    )
     const response = await GETRandom(request)
     const data = await response.json()
 
@@ -157,6 +185,7 @@ describe('API /api/songs/random', () => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tests GET /api/songs
 - [ ] Tests GET /api/songs/random
 - [ ] Tests GET /api/songs/[id]
@@ -166,6 +195,7 @@ describe('API /api/songs/random', () => {
 ---
 
 ### 12.3 Tester la machine d'état du jeu
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -174,6 +204,7 @@ Tests unitaires pour le reducer et les transitions d'état.
 **Fichier** : `src/hooks/__tests__/useGameState.test.ts`
 
 **Tests**
+
 ```typescript
 import { describe, it, expect } from 'vitest'
 import { gameReducer, initialState } from '../useGameState'
@@ -236,7 +267,12 @@ describe('gameReducer', () => {
 
   it('TICK_TIMER à 0 devrait passer en reveal', () => {
     const state = gameReducer(
-      { ...initialState, status: 'timer', timerRemaining: 1, currentSong: mockSong },
+      {
+        ...initialState,
+        status: 'timer',
+        timerRemaining: 1,
+        currentSong: mockSong,
+      },
       { type: 'TICK_TIMER' }
     )
     expect(state.status).toBe('reveal')
@@ -255,6 +291,7 @@ describe('gameReducer', () => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tests pour chaque action
 - [ ] Tests des transitions
 - [ ] Tests des edge cases
@@ -263,6 +300,7 @@ describe('gameReducer', () => {
 ---
 
 ### 12.4 Tester sur plusieurs navigateurs
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -279,6 +317,7 @@ Tests manuels de compatibilité multi-navigateurs.
 | Chrome Android | 100+ | P0 |
 
 **Checklist par navigateur**
+
 - [ ] Page d'accueil charge correctement
 - [ ] Formulaire de configuration fonctionne
 - [ ] Audio se charge et joue
@@ -289,11 +328,13 @@ Tests manuels de compatibilité multi-navigateurs.
 - [ ] Effets sonores fonctionnent
 
 **Outils**
+
 - BrowserStack pour tests sur appareils réels
 - Chrome DevTools pour émulation
 - Safari Technology Preview
 
 **Critères d'acceptation**
+
 - [ ] Chrome desktop ✓
 - [ ] Firefox desktop ✓
 - [ ] Safari desktop ✓
@@ -304,12 +345,14 @@ Tests manuels de compatibilité multi-navigateurs.
 ---
 
 ### 12.5 Tester avec une grande bibliothèque
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Vérifier les performances avec 1000+ chansons.
 
 **Tests de performance**
+
 ```typescript
 describe('Performance', () => {
   it('devrait scanner 1000 fichiers en moins de 30s', async () => {
@@ -333,12 +376,14 @@ describe('Performance', () => {
 ```
 
 **Métriques à surveiller**
+
 - Temps de scan initial
 - Utilisation mémoire
 - Temps de réponse API
 - Taille du payload JSON
 
 **Critères d'acceptation**
+
 - [ ] Scan < 30s pour 1000 fichiers
 - [ ] API < 1s
 - [ ] Mémoire stable (pas de leak)
@@ -347,6 +392,7 @@ describe('Performance', () => {
 ---
 
 ### 12.6 Ajouter des tests unitaires
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
@@ -355,6 +401,7 @@ Tests unitaires pour les fonctions utilitaires.
 **Fichier** : `src/lib/__tests__/utils.test.ts`
 
 **Tests**
+
 ```typescript
 import { describe, it, expect } from 'vitest'
 import { formatTime, formatDuration, parseFileName } from '../utils'
@@ -392,6 +439,7 @@ describe('utils', () => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tests pour toutes les fonctions utilitaires
 - [ ] Edge cases couverts
 - [ ] Coverage > 90%
@@ -399,12 +447,14 @@ describe('utils', () => {
 ---
 
 ### 12.7 Ajouter des tests E2E
+
 **Priorité** : P3 (Futur)
 
 **Description**
 Tests end-to-end avec Playwright pour le flux complet.
 
 **Setup**
+
 ```bash
 npm install -D @playwright/test
 npx playwright install
@@ -413,6 +463,7 @@ npx playwright install
 **Fichier** : `e2e/game-flow.spec.ts`
 
 **Tests**
+
 ```typescript
 import { test, expect } from '@playwright/test'
 
@@ -428,7 +479,9 @@ test.describe('Blindtest Game Flow', () => {
 
     // 3. Attendre le chargement
     await page.waitForURL('/game*')
-    await expect(page.getByText('Chargement')).not.toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Chargement')).not.toBeVisible({
+      timeout: 10000,
+    })
 
     // 4. Buzzer
     await page.getByRole('button', { name: 'BUZZ!' }).click()
@@ -451,6 +504,7 @@ test.describe('Blindtest Game Flow', () => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Test du flux complet
 - [ ] Tests sur mobile (viewport)
 - [ ] CI/CD intégration
@@ -460,6 +514,7 @@ test.describe('Blindtest Game Flow', () => {
 ## Configuration Vitest
 
 **Fichier** : `vitest.config.ts`
+
 ```typescript
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
@@ -493,4 +548,5 @@ export default defineConfig({
 - [ ] 12.7 Tests E2E
 
 ## Estimation
+
 ~4-6 heures de travail

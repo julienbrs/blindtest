@@ -1,0 +1,732 @@
+# Ralph Progress Log
+# This file is append-only. Ralph adds entries after each completed issue.
+
+=== Issue 1.1: Initialiser le projet Next.js ===
+Timestamp: 2026-01-17T16:05:00Z
+Status: COMPLETED
+Commit: 65da864
+Notes: Initialized Next.js 16.1.3 project with TypeScript, App Router, Tailwind CSS, and ESLint using create-next-app. Project runs successfully with npm run dev.
+Files: package.json, tsconfig.json, next.config.ts, eslint.config.mjs, postcss.config.mjs, .gitignore, src/app/layout.tsx, src/app/page.tsx, src/app/globals.css
+
+=== Issue 1.2: Configurer Tailwind CSS ===
+Timestamp: 2026-01-17T16:10:00Z
+Status: COMPLETED
+Commit: ac49b60
+Notes: Created tailwind.config.ts with content paths and theme extend structure. Added @config directive to globals.css for Tailwind v4. Build verified successful.
+Files: tailwind.config.ts, src/app/globals.css
+
+=== Issue 1.3: Définir la palette de couleurs festive ===
+Timestamp: 2026-01-17T16:15:00Z
+Status: COMPLETED
+Commit: 81aa841
+Notes: Added festive color palette with primary (magenta), secondary (golden), dark (indigo), and state colors. Updated homepage to demonstrate colors on both light and dark backgrounds.
+Files: tailwind.config.ts, src/app/page.tsx
+
+=== Issue 1.4: Configurer les fonts ===
+Timestamp: 2026-01-17T16:20:00Z
+Status: COMPLETED
+Commit: 6539a68
+Notes: Configured Poppins (headings) and Inter (body) fonts using next/font/google. Added CSS variables and Tailwind fontFamily config. Using display: swap to prevent FOUT.
+Files: src/app/layout.tsx, src/app/globals.css, tailwind.config.ts, src/app/page.tsx
+
+=== Issue 1.5: Créer la structure des dossiers ===
+Timestamp: 2026-01-17T16:25:00Z
+Status: COMPLETED
+Commit: 26652f0
+Notes: Created complete folder structure with app/game, app/api routes, components (ui, game, layout), hooks, and lib directories. All placeholders created. @/ alias imports verified working.
+Files: src/app/game/page.tsx, src/app/api/*, src/components/*, src/hooks/*, src/lib/*
+
+=== Issue 1.6: Configurer les variables d'environnement ===
+Timestamp: 2026-01-17T16:30:00Z
+Status: COMPLETED
+Commit: e8cd85d
+Notes: Created .env.local with AUDIO_FOLDER_PATH pointing to test-audio. Updated /api/songs route to use environment variable. Build confirms .env.local is loaded.
+Files: .env.local, src/app/api/songs/route.ts
+
+=== Issue 1.7: Configurer ESLint et Prettier ===
+Timestamp: 2026-01-17T16:35:00Z
+Status: COMPLETED
+Commit: b91108a
+Notes: Added custom ESLint rules. Created .prettierrc with project settings. Added format script. Ran Prettier on all files.
+Files: eslint.config.mjs, .prettierrc, package.json
+
+=== BOOTSTRAP.FEEDBACK: Install Vitest, Husky, lint-staged and configure pre-commit hooks ===
+Timestamp: 2026-01-17T17:40:00Z
+Status: COMPLETED
+Commit: fd32217
+Notes: Installed vitest, @vitejs/plugin-react, jsdom, @testing-library/react, husky, and lint-staged. Created vitest.config.ts with jsdom environment and React plugin. Created .husky/pre-commit hook running lint-staged, typecheck, and test. Created .lintstagedrc for Prettier formatting. Added typecheck and test scripts to package.json. Created src/test/setup.ts. All feedback loops verified working.
+Files: package.json, vitest.config.ts, .husky/pre-commit, .lintstagedrc, src/test/setup.ts
+
+=== Issue 1.8: Créer le fichier de types global ===
+Timestamp: 2026-01-17T17:50:00Z
+Status: COMPLETED
+Commit: dc08362
+Notes: Created complete TypeScript types in src/lib/types.ts. Defined Song, AudioFormat, GameConfig, GuessMode, GameState, GameStatus, ApiResponse, SongsListResponse, RandomSongResponse, and GameAction types. All types exported and usable throughout the project.
+Files: src/lib/types.ts
+
+=== Issue 2.1: Installer music-metadata ===
+Timestamp: 2026-01-17T18:00:00Z
+Status: COMPLETED
+Commit: 7c28f25
+Notes: Installed music-metadata package (v11.10.6) for reading ID3 tags from audio files. Added import and export in audioScanner.ts to verify the library works. Updated ESLint config to ignore underscore-prefixed unused variables. All feedback loops pass.
+Files: package.json, package-lock.json, src/lib/audioScanner.ts, eslint.config.mjs
+
+=== Issue 2.2: Créer le scanner de dossier audio ===
+Timestamp: 2026-01-17T17:52:00Z
+Status: COMPLETED
+Commit: 2c6c289
+Notes: Implemented scanAudioFolder function that recursively scans directories for audio files. Supports mp3, wav, ogg, flac, m4a, aac formats. Ignores hidden directories and special folders (@eaDir, __MACOSX). Handles permission errors and non-existent folders gracefully. Added getSupportedExtensions utility. Created comprehensive test suite with 10 passing tests.
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
+=== Issue 2.3: Extraire les métadonnées ID3 ===
+Timestamp: 2026-01-17T17:55:00Z
+Status: COMPLETED
+Commit: 1baa45d
+Notes: Implemented extractMetadata function to read ID3 tags from audio files using music-metadata. Added parseFileName helper for fallback on "Artist - Title" filename format. Added generateSongId function for unique 12-char hex IDs based on file path. Extended AudioFormat type to include m4a and aac. Created comprehensive tests for all new functions (22 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts, src/lib/types.ts
+
+=== Issue 2.4: Extraire les pochettes d'album ===
+Timestamp: 2026-01-17T18:00:00Z
+Status: COMPLETED
+Commit: 47b04c0
+Notes: Implemented extractCover function to extract album covers from audio files. First tries embedded covers in ID3 tags, then falls back to cover.jpg/cover.png/folder.jpg/folder.png/album.jpg/album.png in the song's directory. Added getCoverMimeType function to detect MIME type of cover images. Added getCoverFilenames helper. Created 15 comprehensive tests for cover extraction (37 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
+=== Issue 2.5: Générer des IDs uniques pour les chansons ===
+Timestamp: 2026-01-17T18:02:00Z
+Status: COMPLETED
+Commit: 6214d84
+Notes: Validated the generateSongId function implementation (added in issue 2.3). Function uses MD5 hash of file path truncated to 12 hex characters, ensuring deterministic and unique IDs. Same file always generates the same ID, different files generate different IDs. Tests already covered in audioScanner.test.ts (3 tests for generateSongId).
+Files: PRD.md (marked complete)
+
+
+=== Issue 2.6: Créer un cache des métadonnées ===
+Timestamp: 2026-01-17T18:05:00Z
+Status: COMPLETED
+Commit: 08c8b5d
+Notes: Implemented in-memory metadata cache with getSongsCache(), refreshCache(), getCacheInfo(), clearCache(), and isCacheInitialized() functions. First call triggers scan, subsequent calls use cache. Created 10 comprehensive tests for cache functionality (47 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
+=== Issue 2.7: Gérer les fichiers sans métadonnées ===
+Timestamp: 2026-01-17T18:08:00Z
+Status: COMPLETED
+Commit: 2a28105
+Notes: Enhanced parseFileName to handle additional filename formats beyond "Artist - Title". Added support for track number prefixes (01 - Title, 1 - Title), track numbers with dots (01. Title), and underscore separators (Artist_Title). Dash format prioritized over underscore. Added 10 new tests for filename parsing edge cases (57 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
+=== Issue 2.8: Valider les formats audio supportés ===
+Timestamp: 2026-01-17T18:12:00Z
+Status: COMPLETED
+Commit: 6b5a007
+Notes: Added format validation functions: isFormatSupported (checks universal browser support), getFormatWarning (returns warnings for OGG/FLAC), getUniversalFormats and getPartialSupportFormats helpers. Documented browser compatibility in JSDoc comments with compatibility table. Created 15 comprehensive tests for format validation (72 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
+=== Issue 2.9: Gérer les erreurs de lecture ===
+Timestamp: 2026-01-17T18:15:00Z
+Status: COMPLETED
+Commit: 87d5989
+Notes: Implemented graceful error handling for audio file reading. Added safeExtractMetadata wrapper function, classifyReadError for error type classification (FILE_NOT_FOUND, PERMISSION_DENIED, CORRUPTED_FILE, UNKNOWN_ERROR), getReadErrorMessage for French user-friendly messages, and batchExtractMetadata for processing multiple files while continuing after errors. Created 17 comprehensive tests for error handling (89 tests total pass).
+Files: src/lib/audioScanner.ts, src/lib/audioScanner.test.ts
+
+=== Issue 2.10: Ajouter un endpoint de rafraîchissement du cache ===
+Timestamp: 2026-01-17T18:18:00Z
+Status: COMPLETED
+Commit: 3794ba4
+Notes: Created POST /api/songs/rescan endpoint that triggers refreshCache() and returns the song count and last scan timestamp. Endpoint returns success response with songsCount and lastScan, or error response with message if rescan fails. Added 5 comprehensive tests for the endpoint (94 tests total pass).
+Files: src/app/api/songs/rescan/route.ts, src/app/api/songs/rescan/route.test.ts
+
+=== Issue 3.1: Créer GET /api/songs ===
+Timestamp: 2026-01-17T18:21:00Z
+Status: COMPLETED
+Commit: 55c2248
+Notes: Implemented GET /api/songs endpoint using getSongsCache() from audioScanner. Returns JSON response with songs array and total count. Includes proper error handling with 500 status. Created comprehensive test suite with 5 tests (99 tests total pass).
+Files: src/app/api/songs/route.ts, src/app/api/songs/route.test.ts
+
+=== Issue 3.2: Créer GET /api/songs/random ===
+Timestamp: 2026-01-17T18:25:00Z
+Status: COMPLETED
+Commit: a58f422
+Notes: Implemented GET /api/songs/random endpoint for selecting random songs. Added support for exclude query parameter to filter out already-played songs. Returns 404 when no songs available or all songs excluded. Created comprehensive test suite with 8 tests including uniform distribution verification (107 tests total pass).
+Files: src/app/api/songs/random/route.ts, src/app/api/songs/random/route.test.ts
+
+=== Issue 3.3: Créer GET /api/songs/[id] ===
+Timestamp: 2026-01-17T18:30:00Z
+Status: COMPLETED
+Commit: 854586d
+Notes: Implemented GET /api/songs/[id] endpoint to return a specific song by ID. Added ID format validation (12 hex characters). Returns 404 for unknown song IDs, 400 for invalid ID format. Created comprehensive test suite with 8 tests (115 tests total pass).
+Files: src/app/api/songs/[id]/route.ts, src/app/api/songs/[id]/route.test.ts
+
+=== Issue 3.4: Créer GET /api/audio/[id] ===
+Timestamp: 2026-01-17T18:36:00Z
+Status: COMPLETED
+Commit: eeda086
+Notes: Implemented GET /api/audio/[id] endpoint for streaming audio files. Added Range Request support (HTTP 206) for seeking in audio players. MIME types defined for all supported audio formats (mp3, wav, ogg, flac, m4a, aac). ID validation (12 hex characters). Created comprehensive test suite with 7 tests (122 tests total pass).
+Files: src/app/api/audio/[id]/route.ts, src/app/api/audio/[id]/route.test.ts
+
+=== Issue 3.5: Créer GET /api/cover/[id] ===
+Timestamp: 2026-01-17T18:41:00Z
+Status: COMPLETED
+Commit: 9f6b0ab
+Notes: Implemented GET /api/cover/[id] endpoint for serving album covers. Returns embedded cover from audio file if available (via extractCover), fallback to cover.jpg/cover.png in song directory, or placeholder SVG if no cover found. Image MIME type detected from magic bytes (JPEG, PNG, GIF, WebP). Cache headers set for 1 year. ID validation (12 hex characters). All 122 tests pass.
+Files: src/app/api/cover/[id]/route.ts
+
+=== Issue 3.6: Gérer les Range Requests pour l'audio ===
+Timestamp: 2026-01-17T18:44:00Z
+Status: COMPLETED
+Commit: 873d4f2
+Notes: Added comprehensive Range Request test suite with 11 new tests. Tests verify: 206 Partial Content status, Content-Range header format, Accept-Ranges header, start-only ranges (bytes=512-), exact byte ranges, edge cases (first byte, last byte, middle ranges), 416 Range Not Satisfiable for invalid ranges, correct byte content verification for seeking simulation, MIME types for all audio formats. All 133 tests pass.
+Files: src/app/api/audio/[id]/route.test.ts
+
+=== Issue 3.7: Ajouter les headers CORS appropriés ===
+Timestamp: 2026-01-17T18:45:00Z
+Status: COMPLETED
+Commit: 9f73a55
+Notes: Configured CORS headers in next.config.ts for all API routes. Added Access-Control-Allow-Origin: * for cross-origin requests, Access-Control-Allow-Methods for GET/POST/OPTIONS, Access-Control-Allow-Headers for Content-Type and Range headers, and Access-Control-Expose-Headers for Content-Range and Accept-Ranges to support Range Requests from cross-origin clients. All 133 tests pass.
+Files: next.config.ts
+
+=== Issue 3.8: Créer GET /api/stats ===
+Timestamp: 2026-01-17T18:48:00Z
+Status: COMPLETED
+Commit: 8d39e44
+Notes: Implemented GET /api/stats endpoint returning library statistics including totalSongs, totalArtists, totalAlbums, totalDuration (rounded integer), totalDurationFormatted (human-readable like "10h 0min"), formats breakdown by type, songsWithCover count, and lastScan timestamp. Created comprehensive test suite with 7 tests. All 140 tests pass.
+Files: src/app/api/stats/route.ts, src/app/api/stats/route.test.ts
+
+=== Issue 3.9: Optimiser le streaming audio ===
+Timestamp: 2026-01-17T18:52:00Z
+Status: COMPLETED
+Commit: 7a09bdc
+Notes: Optimized audio streaming to use true streaming via Readable.toWeb() instead of buffering the entire file in memory. Added 64KB highWaterMark for optimal chunk sizes. Both Range Requests and full file requests now stream without loading the entire file into memory. Memory stays stable even with large audio files.
+Files: src/app/api/audio/[id]/route.ts
+
+=== Issue 3.10: Créer POST /api/songs/rescan ===
+Timestamp: 2026-01-17T18:56:00Z
+Status: COMPLETED
+Commit: b588cbd
+Notes: Updated POST /api/songs/rescan endpoint to return scanDuration and human-readable message as per epic specs. Response now includes success, songsFound, scanDuration, and message fields. Added test for scan duration measurement accuracy. All 141 tests pass.
+Files: src/app/api/songs/rescan/route.ts, src/app/api/songs/rescan/route.test.ts
+
+=== Issue 4.1: Créer le layout principal ===
+Timestamp: 2026-01-17T19:30:00Z
+Status: COMPLETED
+Commit: d041f24
+Notes: Updated layout.tsx with festive gradient background (from-indigo-950 via-purple-900 to-pink-900), min-h-screen flex container structure, and updated SEO metadata. Added CSS font variables for Poppins (headings) and Inter (body), heading font styles, and gradient-shift animation for animated background effect. All 141 tests pass.
+Files: src/app/layout.tsx, src/app/globals.css
+
+=== Issue 4.2: Designer la page d'accueil ===
+Timestamp: 2026-01-17T19:32:00Z
+Status: COMPLETED
+Commit: 7329177
+Notes: Redesigned homepage with festive gradient title (yellow-pink-purple), descriptive subtitle, and animated bouncing music icons for festive ambiance. Added placeholders for GameConfigForm and LibraryStats components (to be implemented in issues 4.3 and 4.6). Styled "Nouvelle Partie" button with gradient and hover effects. Responsive design with mobile/desktop title sizes. All 141 tests pass.
+Files: src/app/page.tsx
+
+=== Issue 4.3: Créer le formulaire de configuration ===
+Timestamp: 2026-01-17T19:34:00Z
+Status: COMPLETED
+Commit: f9b4dc5
+Notes: Created GameConfigForm component with useState for guessMode (default 'both'), clipDuration (default 20s), and isLoading. Implemented handleSubmit that builds URLSearchParams and redirects to /game with query params. Styled form with backdrop-blur glass effect and sections for mode selector and duration slider (placeholders for 4.4/4.5). Integrated component in homepage replacing placeholder. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx, src/app/page.tsx
+
+=== Issue 4.4: Ajouter le sélecteur de mode de devinette ===
+Timestamp: 2026-01-17T19:35:00Z
+Status: COMPLETED
+Commit: c9e1728
+Notes: Added guess mode selector with 3 styled radio button options (title, artist, both). Each option shows label and description. Visual selection state with purple border/background highlight. Radio inputs use sr-only class for accessibility while remaining keyboard navigable via labels. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
+=== Issue 4.5: Ajouter le slider durée des extraits ===
+Timestamp: 2026-01-17T19:37:00Z
+Status: COMPLETED
+Commit: 3b0a30b
+Notes: Added range slider for clip duration (5-60 seconds, step 5). Displays current duration value in real-time with large bold text. Styled slider thumb with gradient from pink-500 to purple-500 matching theme. Added min/max labels (5s, 30s, 60s) below the slider. Removed underscore prefix from setClipDuration to enable functionality. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
+=== Issue 4.6: Afficher le nombre de chansons disponibles ===
+Timestamp: 2026-01-17T19:38:00Z
+Status: COMPLETED
+Commit: c755858
+Notes: Created LibraryStats component that fetches stats from /api/stats endpoint. Displays total songs and total artists count from the music library. Shows loading state with animated pulse while fetching data. Handles errors gracefully with user-friendly French error message. Integrated component in homepage replacing placeholder. All 141 tests pass.
+Files: src/components/game/LibraryStats.tsx, src/app/page.tsx
+
+=== Issue 4.7: Ajouter la validation du formulaire ===
+Timestamp: 2026-01-17T19:41:00Z
+Status: COMPLETED
+Commit: 11413b7
+Notes: Added form validation to GameConfigForm component. Implemented validateForm async function that checks: 1) At least one song exists in the library by fetching /api/songs, 2) Clip duration is within valid range (5-60 seconds). Added validationError state and styled error display with red background. Made handleSubmit async to await validation before redirecting. If validation fails, form submission is blocked and error message is displayed. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
+=== Issue 4.8: Persister la configuration ===
+Timestamp: 2026-01-17T19:45:00Z
+Status: COMPLETED
+Commit: b48caa3
+Notes: Added localStorage persistence for game configuration (guessMode, clipDuration). Created loadSavedConfig helper function to load and validate saved config on mount. Added handleGuessModeChange and handleClipDurationChange callback handlers that save to localStorage immediately on every change. Validates guessMode against valid values and clipDuration against valid range (5-60, step 5). Invalid or corrupted localStorage data is gracefully ignored and defaults are used. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
+=== Issue 4.9: Ajouter un bouton "Paramètres avancés" ===
+Timestamp: 2026-01-17T19:48:00Z
+Status: COMPLETED
+Commit: fa189a8
+Notes: Added collapsible "Paramètres avancés" section with smooth CSS animations. Implemented three advanced options: 1) Timer duration slider (3-30 seconds), 2) No-timer toggle for unlimited response time, 3) Random start point toggle to begin at random position in song. Extended SavedConfig interface and loadSavedConfig validation for all new settings. All settings persisted to localStorage and passed to /game via query params. All 141 tests pass.
+Files: src/components/game/GameConfigForm.tsx
+
+=== Issue 4.10: Créer une animation d'entrée ===
+Timestamp: 2026-01-17T19:50:00Z
+Status: COMPLETED
+Commit: 251665e
+Notes: Installed framer-motion for smooth page entry animations. Converted homepage to client component with staggered fade-up animations. Title appears first, then music icons, form, and finally stats. Implemented prefers-reduced-motion support via useReducedMotion hook - animations are completely disabled when user has reduced motion preference. No flash of unstyled content. All 141 tests pass.
+Files: package.json, package-lock.json, src/app/page.tsx
+
+=== Issue 5.1: Créer la page /game ===
+Timestamp: 2026-01-17T19:52:00Z
+Status: COMPLETED
+Commit: 825fc96
+Notes: Created game page with URL parameters parsing (mode, duration, timerDuration, noTimer). Integrated all game components with proper props interfaces: AudioPlayer, BuzzerButton, Timer, ScoreDisplay, SongReveal, GameControls. Added Suspense wrapper for useSearchParams. Updated useGameState hook to return proper state/actions interface for game logic. Responsive flex layout structure. All 141 tests pass.
+Files: src/app/game/page.tsx, src/components/game/GameControls.tsx, src/components/game/AudioPlayer.tsx, src/components/game/BuzzerButton.tsx, src/components/game/Timer.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/SongReveal.tsx, src/hooks/useGameState.ts
+
+=== Issue 5.2: Implémenter le layout de jeu ===
+Timestamp: 2026-01-17T19:55:00Z
+Status: COMPLETED
+Commit: 64473f0
+Notes: Implemented responsive game layout with mobile-first design. Mobile layout: vertical stack with header at top, central zone (cover+audio bar), buzzer/timer, and controls at bottom. Desktop layout (lg+): two-column layout with cover/audio on left side and controls/buzzer/timer on right side (fixed 320px width). Used Tailwind lg: breakpoint for smooth transitions between layouts. Improved quit button styling with hover background effect. All 141 tests pass.
+Files: src/app/game/page.tsx
+
+=== Issue 5.3: Créer le composant AudioPlayer ===
+Timestamp: 2026-01-17T19:57:00Z
+Status: COMPLETED
+Commit: 4ad0ad8
+Notes: Implemented full HTML5 audio player component. Audio loads from /api/audio/{songId} endpoint. Play/pause controlled via isPlaying prop with effects. Visual progress bar with gradient (pink to purple). Auto-stop playback when currentTime reaches maxDuration and calls onEnded callback. Uses onLoadStart event to reset state when new song loads, avoiding ESLint set-state-in-effect warning. Time display in mm:ss format. All 141 tests pass.
+Files: src/components/game/AudioPlayer.tsx
+
+=== Issue 5.4: Ajouter les contrôles play/pause ===
+Timestamp: 2026-01-17T19:58:00Z
+Status: COMPLETED
+Commit: 20f8a9c
+Notes: Added styled play/pause toggle button to GameControls component. Created PlayIcon and PauseIcon SVG components. Button toggles between play/pause states based on game status ('playing'). Added keyboard accessibility with focus:ring styling and aria-label for screen readers.
+Files: src/components/game/GameControls.tsx
+
+=== Issue 5.5: Afficher la barre de progression audio ===
+Timestamp: 2026-01-17T20:00:00Z
+Status: COMPLETED
+Commit: 7af8109
+Notes: Enhanced audio progress bar with visual improvements. Added subtle pulsing animation during playback (animate-pulse-subtle). Implemented color change from pink/purple gradient to orange/red when 5 seconds or less remaining. Increased bar height from h-2 to h-3 for better visibility. Time display turns red and bold when near end. Added CSS keyframes animation to globals.css. All 141 tests pass.
+Files: src/components/game/AudioPlayer.tsx, src/app/globals.css
+
+=== Issue 5.6: Limiter la lecture à la durée configurée ===
+Timestamp: 2026-01-17T20:04:00Z
+Status: COMPLETED
+Commit: 343bed3
+Notes: Verified duration limiting already implemented in AudioPlayer component via useEffect that checks currentTime >= maxDuration and pauses audio while calling onEnded callback. Added @testing-library/jest-dom for improved test assertions. Created AudioPlayer.test.tsx with 14 comprehensive tests verifying maxDuration prop, progress capping with Math.min(progress, 100), time formatting, and styling. All 155 tests pass.
+Files: src/components/game/AudioPlayer.test.tsx, src/test/setup.ts, package.json
+
+=== Issue 5.7: Créer le composant BuzzerButton ===
+Timestamp: 2026-01-17T20:08:00Z
+Status: COMPLETED
+Commit: 5cc2f50
+Notes: Implemented BuzzerButton component with large tactile-friendly size (h-40 w-40 md:h-48 md:w-48), red gradient styling with glow shadow effect, visual press effects (active:scale-95, hover:scale-105), mobile vibration support using navigator.vibrate when available, and focus ring for keyboard accessibility. Fixed vibrate check to use typeof for safer detection. Created comprehensive test suite with 12 tests verifying all acceptance criteria. All 167 tests pass.
+Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
+
+=== Issue 5.8: Ajouter l'animation du buzzer ===
+Timestamp: 2026-01-17T20:10:00Z
+Status: COMPLETED
+Commit: cd86abf
+Notes: Added Framer Motion animations to BuzzerButton component. Implemented whileTap (scale 0.9) and whileHover (scale 1.05) for smooth press/hover effects. Added justBuzzed state with glowing box-shadow animation on press (60px to 100px to 60px). Created shockwave effect with expanding circle that fades out when buzzer is pressed. Used useCallback for handleClick optimization. Updated tests for animation state verification. All 167 tests pass.
+Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
+
+=== Issue 5.9: Créer le composant Timer ===
+Timestamp: 2026-01-17T20:15:00Z
+Status: COMPLETED
+Commit: 5ae53c7
+Notes: Timer component already fully implemented with circular SVG progress indicator, countdown display from N to 0, and urgency indicator (red color + pulse animation when remaining <= 2 seconds). Created comprehensive test suite with 15 tests covering rendering, progress calculation, urgency indicator styling, and edge cases. All 182 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
+=== Issue 5.10: Ajouter l'animation du timer ===
+Timestamp: 2026-01-17T20:17:00Z
+Status: COMPLETED
+Commit: d84c47d
+Notes: Enhanced Timer component with Framer Motion animations. Added smooth color transitions (green > 60% → yellow 30-60% → orange 10-30% → red <= 10%). Implemented scale pulsing effect when critical (remaining <= 1), opacity pulsing when warning (remaining <= 3), and glowing red halo effect in critical state. Text changes to "Vite !" when critical. Added useReducedMotion support for accessibility. Updated test suite with mocked Framer Motion (19 tests). All 186 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
+=== Issue 5.11: Créer le composant ScoreDisplay ===
+Timestamp: 2026-01-17T20:34:00Z
+Status: COMPLETED
+Commit: 0a82be3
+Notes: ScoreDisplay component already implemented with score label and value in glass-effect container, plus songs played counter with French pluralization. Created comprehensive test suite with 8 tests covering score display, songs played with singular/plural forms, and styling verification. All 194 tests pass.
+Files: src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx
+
+=== Issue 5.12: Créer le composant SongReveal ===
+Timestamp: 2026-01-17T20:38:00Z
+Status: COMPLETED
+Commit: e093909
+Notes: Implemented SongReveal component with Next.js Image for album cover display. Added blur effect (blur-xl scale-110) when song not revealed with smooth 500ms transition. Music note icon overlay when blurred. Title/artist display based on guessMode (title/artist/both). Album name shown when available. Added fade-in animation to globals.css. Added cleanup to test setup for proper test isolation. Created comprehensive test suite with 18 tests. All 212 tests pass.
+Files: src/components/game/SongReveal.tsx, src/components/game/SongReveal.test.tsx, src/app/globals.css, src/test/setup.ts
+
+=== Issue 5.13: Implémenter le blur de la pochette ===
+Timestamp: 2026-01-17T20:40:00Z
+Status: COMPLETED
+Commit: 77b820e
+Notes: Blur effect for album cover was fully implemented in issue 5.12. Verified all acceptance criteria: blur-xl (24px) makes cover unreadable when not revealed, transition-all duration-500 provides smooth 500ms transition to clear state, CSS blur filter uses hardware acceleration for optimal performance. Tests already exist verifying blur classes are applied when isRevealed=false and removed when isRevealed=true. All 212 tests pass.
+Files: src/components/game/SongReveal.tsx (no changes - verification only)
+
+=== Issue 5.14: Créer les boutons de validation ===
+Timestamp: 2026-01-17T20:43:00Z
+Status: COMPLETED
+Commit: 8b36486
+Notes: Added validation buttons (Correct/Incorrect) to GameControls component. Created CheckIcon and XIcon SVG components. Green "Correct" button calls onValidate(true), red "Incorrect" button calls onValidate(false). Buttons only visible when status is 'buzzed' or 'timer'. Created comprehensive test suite with 15 tests covering button visibility, callbacks, and styling. All 227 tests pass.
+Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx
+
+=== Issue 5.15: Créer le bouton "Chanson suivante" ===
+Timestamp: 2026-01-17T20:45:00Z
+Status: COMPLETED
+Commit: b2e3c05
+Notes: Added "Chanson suivante" button to GameControls component. Button is visible only when status is 'reveal'. Created ArrowRightIcon SVG component for button arrow. Styled with pink-purple gradient matching app theme (bg-gradient-to-r from-pink-500 to-purple-600). Button calls onNext callback to load the next song. Added 8 comprehensive tests for visibility, callback, styling, and icon presence. All 235 tests pass.
+Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx
+
+=== Issue 5.16: Créer le bouton "Révéler la réponse" ===
+Timestamp: 2026-01-17T20:47:00Z
+Status: COMPLETED
+Commit: 4c1ffcd
+Notes: Added "Révéler la réponse" button to GameControls component. Created EyeIcon SVG component. Button visible during playing/buzzed/timer states when not yet revealed. Added isRevealed prop to GameControlsProps interface. Updated game page to pass isRevealed prop. Created 9 comprehensive tests for reveal button functionality. All 244 tests pass.
+Files: src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx, src/app/game/page.tsx
+
+=== Issue 5.17: Ajouter un bouton "Quitter la partie" ===
+Timestamp: 2026-01-17T20:49:00Z
+Status: COMPLETED
+Commit: 103e97a
+Notes: Added quit button confirmation modal to game page. Button in header now opens modal with warning message. Modal has Cancel button to dismiss and Quit button to navigate home. Used useState for modal visibility and useRouter for navigation. Created comprehensive test suite with 8 tests covering modal rendering, button interactions, navigation, and styling. All 252 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 5.18: Afficher le numéro de la chanson ===
+Timestamp: 2026-01-17T20:52:00Z
+Status: COMPLETED
+Commit: d5af4b2
+Notes: Added current song number display ("Chanson N") to ScoreDisplay component. Song number is calculated as songsPlayed + 1 by default, with optional currentSongNumber prop override. Displayed prominently in white with font-semibold, while songs played count is shown in smaller secondary text below. Added 5 new tests for song number display functionality. All 257 tests pass.
+Files: src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx
+
+=== Issue 5.19: Créer le récap de fin de partie ===
+Timestamp: 2026-01-17T20:57:00Z
+Status: COMPLETED
+Commit: 773a94a
+Notes: Created GameRecap component showing final game stats (score, songs played, correct answers, success rate). Added confetti animation for good scores (>=50%) with lazy initialization to avoid impure render calls. Dynamic messages based on performance (from "Score parfait !" to "La prochaine fois sera meilleure !"). Integrated with game page to display when status is 'ended'. Added "Nouvelle partie" and "Retour à l'accueil" buttons. Created 17 comprehensive tests. All 274 tests pass. Respects prefers-reduced-motion for accessibility.
+Files: src/components/game/GameRecap.tsx, src/components/game/GameRecap.test.tsx, src/app/game/page.tsx
+
+=== Issue 6.1: Créer le hook useGameState ===
+Timestamp: 2026-01-17T21:00:00Z
+Status: COMPLETED
+Commit: c2bc523
+Notes: Implemented useGameState hook with useReducer-based state machine for game logic. Added gameReducer with all state transitions (START_GAME, LOAD_SONG, PLAY, BUZZ, TICK_TIMER, VALIDATE, REVEAL, NEXT_SONG, END_GAME, RESET, CLIP_ENDED). Timer countdown effect auto-ticks every second when in timer state. All actions memoized with useCallback for performance. Added CLIP_ENDED action type to types.ts for proper clip end handling. Created comprehensive test suite with 47 tests covering all actions, state transitions, timer countdown, and immutability. All 321 tests pass.
+Files: src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/lib/types.ts
+
+=== Issue 6.2: Définir les états du jeu ===
+Timestamp: 2026-01-17T23:40:00Z
+Status: COMPLETED
+Commit: f2a19f4
+Notes: Added comprehensive JSDoc documentation for GameStatus type in types.ts. Documentation includes ASCII state machine diagram showing all transitions, state/actions table with descriptions for each of the 7 states (idle, loading, playing, buzzed, timer, reveal, ended), and detailed explanations of each state's purpose. Type was already exported and fully defined - this issue focused on documenting transitions as per acceptance criteria. All 321 tests pass.
+Files: src/lib/types.ts
+
+=== Issue 6.3: Implémenter la transition IDLE → LOADING ===
+Timestamp: 2026-01-17T23:44:00Z
+Status: COMPLETED
+Commit: 0b1832b
+Notes: Implemented IDLE → LOADING transition with automatic game start on page load. Added loadRandomSong function that fetches from /api/songs/random with exclude parameter to avoid replaying songs. Added allSongsPlayed state and handling for "no more songs" scenario with appropriate message in GameRecap. Added loading indicator during loading state. Updated game page tests with proper mocks for new actions. All 321 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx, src/components/game/GameRecap.tsx
+
+=== Issue 6.4: Implémenter la transition LOADING → PLAYING ===
+Timestamp: 2026-01-17T23:49:00Z
+Status: COMPLETED
+Commit: 1c75730
+Notes: Implemented LOADING → PLAYING transition with automatic playback start when audio is ready. Added onReady callback prop to AudioPlayer component that triggers with songId when canplay event fires. Added audioReadyForSongId state in game page to track which song's audio is ready (prevents race conditions when loading new songs). Created effect that transitions to PLAYING state when audio is ready and song matches. All 326 tests pass.
+Files: src/components/game/AudioPlayer.tsx, src/components/game/AudioPlayer.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 6.5: Implémenter la transition PLAYING → BUZZED ===
+Timestamp: 2026-01-17T23:52:00Z
+Status: COMPLETED
+Commit: e1ddf03
+Notes: Implemented PLAYING → TIMER transition when buzzer is pressed. Updated BUZZ action type to include timerDuration parameter for proper timer reset. Audio automatically pauses since isPlaying is derived from status === 'playing'. Added 4 new comprehensive tests for buzz behavior: timer reset, buzz ignored in non-playing states (reveal, timer). Buzz goes directly to timer state (no intermediate buzzed state as per implementation). All 330 tests pass.
+Files: src/lib/types.ts, src/hooks/useGameState.ts, src/hooks/useGameState.test.ts
+
+=== Issue 6.6: Implémenter la transition BUZZED → TIMER ===
+Timestamp: 2026-01-18T00:00:00Z
+Status: COMPLETED
+Commit: e2fe970
+Notes: Verified and documented BUZZED → TIMER transition. In current implementation, BUZZ action transitions directly to 'timer' state (skipping transient 'buzzed' state as noted in epic). Timer starts immediately when status changes to 'timer'. Timer component is rendered conditionally when game.state.status === 'timer'. Added 6 comprehensive tests verifying: Timer renders in timer state, Timer hidden in playing state, Buzzer hidden in timer state, countdown visible via timerRemaining, immediate transition (no intermediate buzzed state), and proper props passing. Refactored test mock to support dynamic state modification. All 336 tests pass.
+Files: src/app/game/page.test.tsx
+
+=== Issue 6.7: Implémenter la fin du timer ===
+Timestamp: 2026-01-18T00:05:00Z
+Status: COMPLETED
+Commit: 0eb9c90
+Notes: Verified timer end behavior already implemented in useGameState hook. TICK_TIMER action (lines 38-53) handles: timer decrement each tick, transition to 'reveal' when timer reaches 0, timerRemaining set to 0, isRevealed set to true, songsPlayed incremented, currentSong.id added to playedSongIds, score NOT incremented (timeout = no points). Tests already comprehensive in useGameState.test.ts (lines 221-339): transitions to reveal at 0, reveals answer, increments songsPlayed, adds song to playedSongIds, no score increment on timeout, timer stops in non-timer state. All 336 tests pass.
+Files: src/hooks/useGameState.ts (verified), src/hooks/useGameState.test.ts (verified)
+
+=== Issue 6.8: Implémenter la validation de réponse ===
+Timestamp: 2026-01-18T00:10:00Z
+Status: COMPLETED
+Commit: afb4f90
+Notes: Verified VALIDATE action already fully implemented in useGameState hook (lines 55-65). VALIDATE action handles: transition to 'reveal' status, isRevealed set to true, score incremented by 1 if correct (action.correct ? state.score + 1 : state.score), songsPlayed incremented, currentSong.id added to playedSongIds. GameControls component has Correct/Incorrect buttons (lines 95-109) that call onValidate(true) and onValidate(false) respectively. Comprehensive tests already exist in useGameState.test.ts (lines 341-406) testing: transitions to reveal, increments score when correct, no score increment when incorrect, increments songsPlayed, adds song id to playedSongIds, sets isRevealed to true. GameControls.test.tsx (lines 44-106) tests button visibility and callbacks. All 336 tests pass.
+Files: src/hooks/useGameState.ts (verified), src/hooks/useGameState.test.ts (verified), src/components/game/GameControls.tsx (verified), src/components/game/GameControls.test.tsx (verified)
+
+=== Issue 6.9: Implémenter la transition vers REVEAL ===
+Timestamp: 2026-01-18T00:15:00Z
+Status: COMPLETED
+Commit: 9e22a8c
+Notes: Verified REVEAL transition already fully implemented. REVEAL action in useGameState.ts (lines 67-80) sets status to 'reveal', isRevealed to true, increments songsPlayed if not already revealed, and adds song id to playedSongIds. SongReveal component (lines 29-53) removes blur from cover when isRevealed=true and displays song info (title/artist/album based on guessMode). GameControls provides "Révéler la réponse" button connected to reveal action. Tests exist in useGameState.test.ts (lines 409-467) covering all REVEAL behaviors. All 336 tests pass.
+Files: src/hooks/useGameState.ts (verified), src/components/game/SongReveal.tsx (verified), src/components/game/GameControls.tsx (verified), src/hooks/useGameState.test.ts (verified)
+
+=== Issue 6.10: Implémenter la transition REVEAL → LOADING ===
+Timestamp: 2026-01-18T00:20:00Z
+Status: COMPLETED
+Commit: 4b55d35
+Notes: Implemented REVEAL → LOADING transition when clicking "Chanson suivante". Updated NEXT_SONG action in useGameState reducer to reset timerRemaining to config.timerDuration (added timerDuration param to action type). Added effect in game page that detects when status is 'loading' with no currentSong and triggers loadRandomSong. Unified loading behavior for both initial game start and subsequent song transitions. Reset audioReadyForSongId to null when loading new song to prevent race conditions. Added 7 new tests for REVEAL → LOADING behavior (1 in useGameState.test.ts for timer reset, 6 in page.test.tsx for loading state UI). All 343 tests pass.
+Files: src/hooks/useGameState.ts, src/lib/types.ts, src/app/game/page.tsx, src/hooks/useGameState.test.ts, src/app/game/page.test.tsx
+
+=== Issue 6.11: Gérer la liste des chansons déjà jouées ===
+Timestamp: 2026-01-18T00:25:00Z
+Status: COMPLETED
+Commit: 809130a
+Notes: Verified and documented no-repeat song functionality. playedSongIds is tracked in useGameState via TICK_TIMER, VALIDATE, REVEAL, and CLIP_ENDED actions. The game page passes playedSongIds as exclude parameter to /api/songs/random endpoint. API filters excluded songs and returns 404 when all songs played. Added 9 comprehensive tests verifying: multi-round tracking, timer expiry tracking, reveal tracking, clipEnded tracking, preservation on game end, clearing on reset/new game, and exclude parameter construction. All 351 tests pass.
+Files: src/hooks/useGameState.test.ts
+
+=== Issue 6.12: Détecter la fin de la bibliothèque ===
+Timestamp: 2026-01-18T00:30:00Z
+Status: COMPLETED
+Commit: 9e73f47
+Notes: Verified library end detection functionality already implemented in game page. When API returns 404 (all songs played), allSongsPlayed state is set to true and game.actions.quit() is called. GameRecap component displays "Félicitations !" title and "Vous avez écouté toute la bibliothèque !" message when allSongsPlayed prop is true. Added 11 comprehensive tests: 7 tests in GameRecap.test.tsx for library completion UI (congratulations title, completion message, priority over score messages, stats display, new game button, home button), 4 tests in page.test.tsx for GameRecap rendering when game ends. All 362 tests pass.
+Files: src/components/game/GameRecap.test.tsx, src/app/game/page.test.tsx
+
+=== Issue 6.13: Créer le hook useAudioPlayer ===
+Timestamp: 2026-01-18T00:35:00Z
+Status: COMPLETED
+Commit: aa946e3
+Notes: Implemented useAudioPlayer hook with full audio control capabilities. Added loadSong method to load audio from /api/audio/{songId}, play/pause/toggle methods for playback control, progress tracking with currentTime and percentage-based progress. Added isLoaded and isPlaying state. Implemented onEnded callback (fired when maxDuration reached or audio naturally ends) and onReady callback (fired with songId when audio is ready to play). Used refs to avoid stale closures with callbacks. Created comprehensive test suite with 18 tests covering initialization, loadSong, play/pause/toggle, progress tracking, callbacks, isLoaded state, cleanup, and ref stability. All 380 tests pass.
+Files: src/hooks/useAudioPlayer.ts, src/hooks/useAudioPlayer.test.ts
+
+=== Issue 6.14: Gérer le preloading de la chanson suivante ===
+Timestamp: 2026-01-18T00:45:00Z
+Status: COMPLETED
+Commit: f511b90
+Notes: Implemented next song preloading during REVEAL state for instant transitions. Added nextSong state to store prefetched song data, preloadedAudioRef to preload audio in background, and isPrefetchingRef to prevent duplicate prefetch requests. Created prefetchNextSong function that fetches from /api/songs/random during REVEAL state with exclude parameter (played songs + current song). Updated loadRandomSong to use preloaded song for instant transitions when available. Added cleanup effect for preloaded audio on unmount. Created 6 comprehensive tests for preloading behavior. All 386 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 6.15: Ajouter un mode "rejouer la même chanson" ===
+Timestamp: 2026-01-18T00:55:00Z
+Status: COMPLETED
+Commit: 200927b
+Notes: Implemented replay functionality to allow re-listening to the current song clip. Added REPLAY action type to GameAction. Implemented REPLAY action handler in useGameState reducer that transitions from reveal to playing state without resetting the timer. Added replay() action to hook interface. Added shouldReplay and onReplayComplete props to AudioPlayer for audio reset (resets currentTime to 0 and starts playback). Added "Rejouer l'extrait" button to GameControls component (visible only in reveal state). Wired up replay in game page with state management. Created 17 comprehensive tests (8 for REPLAY action in useGameState, 9 for replay button in GameControls). All 403 tests pass.
+Files: src/lib/types.ts, src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/components/game/AudioPlayer.tsx, src/components/game/GameControls.tsx, src/components/game/GameControls.test.tsx, src/app/game/page.tsx
+
+=== Issue 7.1: Créer le fond d'écran festif ===
+Timestamp: 2026-01-18T01:27:00Z
+Status: COMPLETED
+Commit: 8e9edc4
+Notes: Created FestiveBackground component with animated gradient (-45deg from indigo to purple to pink) and 6 floating orbs with blur effect. Added CSS animations (animate-gradient-shift, animate-float-orb) for smooth 15-32s animations. Used useSyncExternalStore for proper media query subscription to respect prefers-reduced-motion. Orbs have varied positions, sizes (180-300px), and animation delays for natural movement. Added vignette overlay for depth. Integrated component in layout.tsx as fixed background behind content. Created 10 comprehensive tests. All 413 tests pass.
+Files: src/components/ui/FestiveBackground.tsx, src/components/ui/FestiveBackground.test.tsx, src/app/globals.css, src/app/layout.tsx
+
+=== Issue 7.2: Styliser les boutons principaux ===
+Timestamp: 2026-01-18T01:45:00Z
+Status: COMPLETED
+Commit: 8606f01
+Notes: Created reusable Button component with 4 variants (primary, secondary, success, danger). Added hover, active, and disabled states for all variants. Primary variant has gradient from pink-500 to purple-600, scale hover/active effects. Secondary variant uses transparent bg-white/10. Success uses green-600, danger uses red-600. All variants have shadow-lg and proper transition animations. Implemented 3 size options (sm, md, lg) and fullWidth prop. Updated GameConfigForm, GameControls, GameRecap, and game page to use new Button component. Created comprehensive test suite with 32 tests. All 445 tests pass.
+Files: src/components/ui/Button.tsx, src/components/ui/Button.test.tsx, src/components/game/GameConfigForm.tsx, src/components/game/GameControls.tsx, src/components/game/GameRecap.tsx, src/app/game/page.tsx
+
+=== Issue 7.3: Ajouter des ombres et profondeur ===
+Timestamp: 2026-01-18T02:35:00Z
+Status: COMPLETED
+Commit: 82e1416
+Notes: Enhanced Card component with 3 variants (default, elevated, glow) for visual hierarchy. Default variant adds bg-white/10, backdrop-blur-sm, rounded-2xl, shadow-xl, and border-white/10. Elevated variant uses stronger shadow-[0_20px_50px_rgba(0,0,0,0.3)] for emphasis. Glow variant adds pink glow shadow-[0_0_30px_rgba(236,72,153,0.3)] with pink-tinted border. Updated GameConfigForm to use Card component for all sections. Updated ScoreDisplay with shadow-lg, border, and backdrop-blur. Updated GameRecap with deeper shadow and border on modal and stat cards. Updated SongReveal loading state and album cover with enhanced depth shadows. Created 14 comprehensive tests for Card component. All 459 tests pass.
+Files: src/components/ui/Card.tsx, src/components/ui/Card.test.tsx, src/components/game/GameConfigForm.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/GameRecap.tsx, src/components/game/SongReveal.tsx
+
+=== Issue 7.4: Créer les animations de transition ===
+Timestamp: 2026-01-18T02:40:00Z
+Status: COMPLETED
+Commit: dbd97f6
+Notes: Added AnimatePresence from Framer Motion for smooth transitions between game states. Created three animation variants: fadeSlideUp (buzzer appears with slide), fadeScale (timer and recap appear with scale), fadeIn (modal overlay fades). Used AnimatePresence mode="wait" to prevent content flash during state changes. Added useReducedMotion hook for accessibility compliance. Wrapped loading indicator, buzzer, timer, and quit modal with motion.div and AnimatePresence. Updated tests to use waitFor for animation exit completion. All 459 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 7.5: Ajouter l'animation de bonne réponse ===
+Timestamp: 2026-01-18T03:00:00Z
+Status: COMPLETED
+Commit: 63e4b61
+Notes: Implemented celebration effects for correct answers. Installed canvas-confetti package for multi-burst confetti animation (100 particles center + 50 from each side). Created useCorrectAnswerCelebration hook with festive colors (pink, purple, gold, green). Created CorrectAnswerFlash component for green screen flash effect with 500ms duration. Updated ScoreDisplay with score "pop" animation (scale 1.5 to 1, green to white color transition). Integrated celebration effects in game page via handleValidate wrapper function. All effects respect prefers-reduced-motion accessibility setting. Created 11 comprehensive tests (4 for CorrectAnswerFlash, 7 for useCorrectAnswerCelebration hook). All 474 tests pass.
+Files: package.json, package-lock.json, src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts, src/components/game/CorrectAnswerFlash.tsx, src/components/game/CorrectAnswerFlash.test.tsx, src/components/game/ScoreDisplay.tsx, src/components/game/ScoreDisplay.test.tsx, src/app/game/page.tsx
+
+=== Issue 7.6: Ajouter l'animation de mauvaise réponse ===
+Timestamp: 2026-01-18T03:15:00Z
+Status: COMPLETED
+Commit: 559b316
+Notes: Implemented visual feedback effects for incorrect answers. Created IncorrectAnswerFlash component with subtle red flash overlay (0.2 max opacity, lower than correct answer's 0.3 to avoid being punitive). Created useWrongAnswerEffect hook that triggers a shake animation on the main game container. Shake uses Framer Motion's animate prop with x keyframes [-10, 10, -10, 10, 0] over 400ms. Both effects integrated in game page's handleValidate function. All effects respect prefers-reduced-motion accessibility setting. Created 17 comprehensive tests (8 for IncorrectAnswerFlash, 9 for useWrongAnswerEffect hook). All 491 tests pass.
+Files: src/components/game/IncorrectAnswerFlash.tsx, src/components/game/IncorrectAnswerFlash.test.tsx, src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts, src/app/game/page.tsx
+
+=== Issue 7.7: Styliser le timer avec urgence ===
+Timestamp: 2026-01-18T03:25:00Z
+Status: COMPLETED
+Commit: 9f57045
+Notes: Enhanced Timer component with urgency-based styling using absolute second thresholds per epic 7.7 specs. Colors: green (>5s), yellow (5-4s), orange (3-2s), red (1s). Animations: no pulse (>3s), léger pulse (3-2s with 0.6s duration), pulse rapide + clignotement (1s with 0.25s duration). Added orange glow for warning state and intense red glow for critical state. Text changes to "Dépêchez-vous !" at 3-2s and "VITE !" at 1s. All effects respect prefers-reduced-motion accessibility setting. Updated test suite with 7 additional tests for new urgency states. All 498 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
+=== Issue 7.8: Ajouter des icônes ===
+Timestamp: 2026-01-18T03:45:00Z
+Status: COMPLETED
+Commit: 2e1f81c
+Notes: Installed @heroicons/react package for consistent icon library. Replaced all custom SVG icons with Heroicons throughout the application. Added icons to: GameControls (PlayIcon, PauseIcon, CheckIcon, XMarkIcon, ArrowRightIcon, EyeIcon, ArrowPathIcon), homepage (MusicalNoteIcon, SpeakerWaveIcon, MicrophoneIcon), LibraryStats (MusicalNoteIcon, UserGroupIcon), GameRecap stats and buttons (TrophyIcon, MusicalNoteIcon, CheckCircleIcon, ChartBarIcon, HomeIcon, PlayIcon), GameConfigForm (PlayIcon, ChevronRightIcon, ClockIcon, Cog6ToothIcon), game page quit button (ArrowRightOnRectangleIcon, XMarkIcon), and SongReveal (MusicalNoteIcon replacing emoji). All icons use consistent sizing (h-4/h-5/h-6 based on context) and colors (currentColor or themed). Updated SongReveal tests for new icon implementation. All 498 tests pass.
+Files: package.json, package-lock.json, src/components/game/GameControls.tsx, src/components/game/GameRecap.tsx, src/components/game/LibraryStats.tsx, src/components/game/GameConfigForm.tsx, src/components/game/SongReveal.tsx, src/components/game/SongReveal.test.tsx, src/app/page.tsx, src/app/game/page.tsx
+
+=== Issue 7.9: Créer un thème sombre ===
+Timestamp: 2026-01-18T04:10:00Z
+Status: COMPLETED
+Commit: 1714084
+Notes: Implemented dark theme feature with smooth transitions. Created ThemeContext for dark/festive theme state management with localStorage persistence. Created ThemeToggle component with animated sun/moon icons using Framer Motion (spring animation on knob). Created ThemedLayout wrapper component that applies theme class and passes isDark to FestiveBackground. Enhanced FestiveBackground with darker gradient (#0f0a1f, #1a1333, #0d0d1a) and darker orb colors for dark mode. Added dark theme toggle in GameConfigForm advanced settings section. All theme changes use 500ms transitions for smooth switching. Created comprehensive test suites (7 tests for ThemeContext, 8 tests for ThemeToggle, 6 dark theme tests for FestiveBackground). All 519 tests pass.
+Files: src/contexts/ThemeContext.tsx, src/contexts/ThemeContext.test.tsx, src/components/ui/ThemeToggle.tsx, src/components/ui/ThemeToggle.test.tsx, src/components/layout/ThemedLayout.tsx, src/components/ui/FestiveBackground.tsx, src/components/ui/FestiveBackground.test.tsx, src/components/game/GameConfigForm.tsx, src/app/layout.tsx
+
+=== Issue 7.10: Ajouter des particules de fond ===
+Timestamp: 2026-01-18T04:20:00Z
+Status: COMPLETED
+Commit: c98864b
+Notes: Installed @tsparticles/react and @tsparticles/slim for background particles. Created BackgroundParticles component with subtle floating particles that adapt to dark/festive theme. Particles have opacity animation, twinkle effect, and colors that match the theme (pink/purple/gold in festive mode, indigo/purple/slate in dark mode). Integrated component in ThemedLayout below FestiveBackground. All effects respect prefers-reduced-motion accessibility setting. Created comprehensive test suite (8 tests). All 527 tests pass.
+Files: package.json, package-lock.json, src/components/ui/BackgroundParticles.tsx, src/components/ui/BackgroundParticles.test.tsx, src/components/layout/ThemedLayout.tsx
+
+=== Issue 8.1: Ajouter un son de buzzer ===
+Timestamp: 2026-01-18T04:30:00Z
+Status: COMPLETED
+Commit: e531744
+Notes: Implemented buzzer sound using Web Audio API for immediate playback with no latency. Created playBuzzSound function that generates a game show-style buzz sound using square wave oscillators at 200/400/600/800 Hz frequencies with harmonics and volume envelope (quick attack, sustain, decay). Sound plays immediately on click (~350ms duration, 0.7 volume). Added AudioContext ref with proper cleanup on unmount. Handles browser autoplay policy by resuming suspended context. Created comprehensive test suite with Web Audio API mocks (14 tests). All 529 tests pass.
+Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
+
+=== Issue 8.2: Ajouter un son de bonne réponse ===
+Timestamp: 2026-01-18T05:42:00Z
+Status: COMPLETED
+Commit: f7af771
+Notes: Implemented celebratory correct answer sound using Web Audio API in useCorrectAnswerCelebration hook. Created playCorrectSound function that generates a joyful ascending arpeggio (C5, E5, G5, C6) with sine wave oscillators and harmonic overtones for richness. Sound includes a final chord for emphasis (~1.2s duration, 0.6 volume). Sound is synchronized with confetti animation and plays immediately on validation. Sound plays even when reduced motion is preferred (only visual effects disabled). Added AudioContext cleanup on unmount. Created 7 comprehensive tests for sound functionality. All 536 tests pass.
+Files: src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts
+
+=== Issue 8.3: Ajouter un son de mauvaise réponse ===
+Timestamp: 2026-01-18T05:45:00Z
+Status: COMPLETED
+Commit: 4c6c2f9
+Notes: Implemented incorrect answer sound using Web Audio API in useWrongAnswerEffect hook. Created playIncorrectSound function that generates a descending "whomp" tone (~0.4s) using three oscillators: main descending sawtooth (200Hz→80Hz), sub-bass sine (80Hz→40Hz), and brief initial click for clarity. Sound plays immediately on incorrect validation, synchronized with shake animation. Sound plays even when reduced motion is preferred (only visual effects disabled). Added AudioContext cleanup on unmount. Created 7 comprehensive tests for sound functionality. All 543 tests pass.
+Files: src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts
+
+=== Issue 8.4: Ajouter un son de fin de timer ===
+Timestamp: 2026-01-18T06:00:00Z
+Status: COMPLETED
+Commit: b793600
+Notes: Implemented timeout sound using Web Audio API in Timer component. Created a descending "time's up" buzzer sound with 3 oscillators: main sawtooth (400Hz→150Hz), sub-bass sine (100Hz→50Hz), and square buzz (200Hz→80Hz). Sound duration ~0.5s at 0.5 volume. Sound plays exactly when timer transitions from > 0 to 0 (detected using prevRemainingRef). Added optional onTimeout callback prop for external event handling. Handles browser autoplay policy by resuming suspended AudioContext. Added AudioContext cleanup on unmount. Created 8 comprehensive tests for sound functionality covering transition detection, no sound on mount at 0, sound plays only once, reset behavior, callback invocation, and oscillator creation. All 551 tests pass.
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
+=== Issue 8.5: Ajouter un tick-tock pour le timer ===
+Timestamp: 2026-01-18T06:10:00Z
+Status: COMPLETED
+Commit: b8cd5d2
+Notes: Implemented tick-tock sound for timer using Web Audio API. Tick sound plays at each second of countdown using sine wave oscillator (~80ms duration). Added tick-tock effect (two sounds) when remaining <= 5 seconds for added urgency. Volume intensifies as time decreases (0.2 at 5s to 0.5 at 1s). Pitch also increases slightly in final 3 seconds for urgency effect. Sound is subtle but audible, not distracting. Created 9 comprehensive tests for tick-tock functionality (559 tests total pass).
+Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
+
+=== Issue 8.6: Créer un hook useSoundEffects ===
+Timestamp: 2026-01-18T10:56:00Z
+Status: COMPLETED
+Commit: a676931
+Notes: Created centralized useSoundEffects hook for managing all game sounds via Web Audio API. Hook provides methods for all sound effects: buzz, correct, incorrect, timeout, tick (with intensity based on remaining seconds), and reveal. Added volume control (0-1 range with clamping) and mute functionality. All sounds generated using oscillators for low latency. AudioContext is created lazily and reused across calls. Handles browser autoplay policy by resuming suspended context. Proper cleanup on unmount. Created comprehensive test suite with 29 tests covering all methods, mute, volume, AudioContext handling, and callback stability. All 588 tests pass.
+Files: src/hooks/useSoundEffects.ts, src/hooks/useSoundEffects.test.ts
+
+=== Issue 8.7: Ajouter une option mute effets sonores ===
+Timestamp: 2026-01-18T11:06:00Z
+Status: COMPLETED
+Commit: bdf4814
+Notes: Added SFX mute toggle button in game header with speaker icons (SpeakerWaveIcon/SpeakerXMarkIcon from Heroicons). Implemented localStorage persistence for sfx_muted state. Connected all game sound effects to the centralized useSoundEffects hook by adding optional onPlaySound callbacks to BuzzerButton, Timer, useCorrectAnswerCelebration, and useWrongAnswerEffect. Toggle button shows different aria-label based on mute state and includes "SFX" label on larger screens. Music playback via AudioPlayer remains unaffected by SFX mute. Created 8 comprehensive tests for mute toggle functionality. All 596 tests pass.
+Files: src/app/game/page.tsx, src/app/game/page.test.tsx, src/components/game/BuzzerButton.tsx, src/components/game/Timer.tsx, src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts, src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts
+
+=== Issue 8.8: Gérer le volume principal ===
+Timestamp: 2026-01-18T11:15:00Z
+Status: COMPLETED
+Commit: a0b38a1
+Notes: Added music volume slider control in game header. Implemented volume prop in AudioPlayer component with real-time volume changes via useEffect. Volume is clamped to 0-1 range for safety. Added MusicalNoteIcon and percentage display (0-100%). Volume state is persisted in localStorage as music_volume. Volume slider uses step of 0.1 for smooth control. Added 7 tests for AudioPlayer volume prop and 15 tests for game page volume control UI. All 617 tests pass.
+Files: src/components/game/AudioPlayer.tsx, src/components/game/AudioPlayer.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 9.1: Adapter le layout pour mobile ===
+Timestamp: 2026-01-18T11:22:00Z
+Status: COMPLETED
+Commit: fe8db77
+Notes: Implemented mobile-first responsive layout from 320px to 1920px. Added responsive sizing to all game components: homepage (title, icons, padding), game page (header, controls, volume slider), SongReveal (cover 48→64 responsive), Timer (circle 24→32 responsive), BuzzerButton (32→48 responsive), GameControls (buttons, spacing), ScoreDisplay (compact on mobile). Volume slider hidden on very small screens. No horizontal overflow. Updated 5 test files for new responsive class selectors. All 617 tests pass.
+Files: src/app/page.tsx, src/app/game/page.tsx, src/components/game/SongReveal.tsx, src/components/game/Timer.tsx, src/components/game/BuzzerButton.tsx, src/components/game/GameControls.tsx, src/components/game/ScoreDisplay.tsx, test files
+
+=== Issue 9.2: Agrandir les zones tactiles ===
+Timestamp: 2026-01-18T11:28:00Z
+Status: COMPLETED
+Commit: d0a272a
+Notes: Enlarged touch targets to meet Apple/Google 44-48px recommendations. Updated Button component with min-h-[44px] for sm size and min-h-[48px] for md/lg sizes. Added min-h-[48px] min-w-[48px] to GameControls play/pause button. Increased button spacing to gap-4 (16px) throughout to prevent accidental taps. Added min-h-[48px] to mode selection labels and toggle buttons in GameConfigForm. Updated advanced settings toggle with min-h-[44px] and proper padding. Enhanced volume slider container with proper sizing. All 617 tests pass.
+Files: src/components/ui/Button.tsx, src/components/game/GameControls.tsx, src/components/game/GameConfigForm.tsx, src/app/game/page.tsx, src/components/game/GameRecap.tsx
+
+=== Issue 9.3: Tester sur différentes tailles d'écran ===
+Timestamp: 2026-01-18T11:35:00Z
+Status: COMPLETED
+Commit: 438926a
+Notes: Created comprehensive responsive test suite (src/test/responsive.test.tsx) with 43 tests covering 7 device viewports: iPhone SE (375×667), iPhone 14 (390×844), iPhone 14 Pro Max (430×932), Pixel 5 (393×851), iPad Mini (744×1133), iPad Pro (1024×1366), Desktop HD (1920×1080). Tests verify responsive CSS classes on Button, BuzzerButton, Timer, SongReveal, ScoreDisplay, and GameControls components. Touch target compliance verified (44-48px minimum per Apple/Google guidelines). Tailwind breakpoints documented (sm: 640px, md: 768px, lg: 1024px, xl: 1280px). All 660 tests pass.
+Files: src/test/responsive.test.tsx
+
+=== Issue 9.4: Ajouter la vibration mobile au buzz ===
+Timestamp: 2026-01-18T11:38:00Z
+Status: COMPLETED
+Commit: f3e92c6
+Notes: Added haptic feedback vibration patterns for mobile devices using the Vibration API. Buzzer button: 100ms simple vibration (already existed). Correct answer: celebratory buzz-pause-buzz pattern [100, 50, 100]. Incorrect answer: longer 200ms vibration to indicate mistake. All vibration functions fail silently on iOS Safari or unsupported browsers. Created 6 new tests for vibration functionality. All 666 tests pass.
+Files: src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts, src/hooks/useWrongAnswerEffect.ts, src/hooks/useWrongAnswerEffect.test.ts
+
+=== Issue 9.5: Optimiser les performances mobile ===
+Timestamp: 2026-01-18T11:44:00Z
+Status: COMPLETED
+Commit: b029bde
+Notes: Implemented mobile performance optimizations. Added prefers-reduced-motion CSS media query to disable all animations for users with reduced motion preference. Added will-change and translateZ(0) for GPU acceleration on animated elements. Optimized Next.js Image with quality=75, blur placeholder, and responsive sizes attribute. Added debounce (100ms) for audio timeUpdate events to reduce re-renders on mobile. Reduced particle count (30→15), FPS (60→30), and disabled animations on mobile in BackgroundParticles. Reduced floating orbs (6→3) and blur intensity (60px→40px) on mobile in FestiveBackground. Created comprehensive test suite with 9 tests for performance optimizations. All 675 tests pass.
+Files: src/app/globals.css, src/components/game/AudioPlayer.tsx, src/components/game/SongReveal.tsx, src/components/ui/BackgroundParticles.tsx, src/components/ui/FestiveBackground.tsx, src/test/performance.test.tsx
+
+=== Issue 9.6: Gérer l'orientation landscape/portrait ===
+Timestamp: 2026-01-18T11:50:00Z
+Status: COMPLETED
+Commit: b05da93
+Notes: Implemented orientation-aware layout using custom Tailwind screen variants. Added portrait: and landscape: variants to tailwind.config.ts using @media (orientation: portrait) and @media (orientation: landscape). Updated game page main content area to use landscape:flex-row for horizontal layout in landscape mode. Reduced cover image size (h-36 in landscape vs h-48 in portrait), buzzer size (h-24 in landscape vs h-32 in portrait), and timer size (h-20 in landscape vs h-24 in portrait) for better fit in landscape orientation. Created comprehensive test suite with 14 tests for orientation classes. All 689 tests pass.
+Files: tailwind.config.ts, src/app/game/page.tsx, src/components/game/BuzzerButton.tsx, src/components/game/SongReveal.tsx, src/components/game/Timer.tsx, src/test/orientation.test.tsx
+
+=== Issue 9.7: Ajouter un mode plein écran ===
+Timestamp: 2026-01-18T15:33:00Z
+Status: COMPLETED
+Commit: 70a5bba
+Notes: Implemented fullscreen mode using the Fullscreen API. Created useFullscreen hook with isFullscreen state, toggleFullscreen/enterFullscreen/exitFullscreen methods, and isSupported detection. Hook handles browser compatibility with standard API and webkit prefix for Safari. Silently fails on iOS Safari where fullscreen is not supported. Added fullscreen toggle button in game header (ArrowsPointingOutIcon/ArrowsPointingInIcon from Heroicons) that only renders when isSupported is true. Button updates icon and aria-label based on fullscreen state. Created 15 comprehensive tests for useFullscreen hook and 7 tests for game page integration. All 711 tests pass.
+Files: src/hooks/useFullscreen.ts, src/hooks/useFullscreen.test.ts, src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 9.8: Tester la lecture audio sur iOS Safari ===
+Timestamp: 2026-01-18T15:38:00Z
+Status: COMPLETED
+Commit: a8b026d
+Notes: Implemented iOS Safari audio compatibility with comprehensive audio unlock mechanism. Created useAudioUnlock hook that unlocks both Web Audio API (AudioContext) and HTMLAudioElement on first user interaction. Hook uses webkit-prefixed AudioContext fallback for older Safari versions, plays silent audio buffer to prime AudioContext, and plays silent MP3 to prime HTMLAudioElement. Updated useSoundEffects hook to use createAudioContext helper with webkit prefix support. Integrated audio unlock in game page with all user interaction handlers (buzz, play, validate, reveal, replay, nextSong). Created 18 comprehensive tests for useAudioUnlock hook covering AudioContext creation, webkit fallback, silent audio priming, cleanup, and iOS-specific behaviors. All 729 tests pass.
+Files: src/hooks/useAudioUnlock.ts, src/hooks/useAudioUnlock.test.ts, src/hooks/useSoundEffects.ts, src/app/game/page.tsx
+
+=== Issue 10.1: Gérer l'erreur "dossier audio vide" ===
+Timestamp: 2026-01-18T15:45:00Z
+Status: COMPLETED
+Commit: 3cda993
+Notes: Implemented empty library error handling. Updated /api/songs and /api/stats endpoints to return EMPTY_LIBRARY error (404 status) when no songs are found. Created EmptyLibraryError component displaying clear message, configured audio folder path, and retry button. Updated homepage to detect empty library state via LibraryStats callback and conditionally show EmptyLibraryError instead of game config form. Application gracefully handles empty or misconfigured audio folders without crashing. Created 10 comprehensive tests for EmptyLibraryError component. All 739 tests pass.
+Files: src/app/api/songs/route.ts, src/app/api/songs/route.test.ts, src/app/api/stats/route.ts, src/app/api/stats/route.test.ts, src/app/page.tsx, src/components/game/LibraryStats.tsx, src/components/game/EmptyLibraryError.tsx, src/components/game/EmptyLibraryError.test.tsx
+
+=== Issue 10.2: Gérer l'erreur "fichier audio introuvable" ===
+Timestamp: 2026-01-18T15:51:00Z
+Status: COMPLETED
+Commit: 3c4dff0
+Notes: Implemented graceful handling when audio files are moved/deleted after scanning. Added FILE_NOT_FOUND error code with JSON logging for server-side debugging. Created HEAD endpoint for file accessibility checks. Game page now uses HEAD request to verify audio files before loading and auto-skips missing files to load the next song. Client-side console warnings log skipped songs. Added 11 comprehensive tests (6 for game page, 5 for HEAD endpoint). All 750 tests pass.
+Files: src/app/api/audio/[id]/route.ts, src/app/api/audio/[id]/route.test.ts, src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 10.3: Gérer l'erreur réseau ===
+Timestamp: 2026-01-18T16:06:00Z
+Status: COMPLETED
+Commit: 116a560
+Notes: Implemented network error handling with timeout and retry mechanisms. Added fetchWithTimeout (10s default) and fetchWithRetry (3 retries with exponential backoff 1s, 2s, 3s) helpers in utils.ts. Created NetworkError class with TIMEOUT, NETWORK_ERROR, MAX_RETRIES types. Created NetworkErrorToast component with retry button and dismiss option for user-friendly error display. Integrated in game page loadRandomSong function to show toast on network failures with manual retry option. French error messages displayed. All 777 tests pass.
+Files: src/lib/utils.ts, src/lib/utils.test.ts, src/components/game/NetworkErrorToast.tsx, src/components/game/NetworkErrorToast.test.tsx, src/app/game/page.tsx
+
+=== Issue 10.4: Gérer le navigateur sans support audio ===
+Timestamp: 2026-01-18T16:13:00Z
+Status: COMPLETED
+Commit: c7c2b1b
+Notes: Implemented browser audio support detection at game page load. Created useAudioSupport hook that detects HTML5 Audio API support by checking if browser can play audio/mpeg (MP3) format. Created BrowserUnsupportedError component displaying error title, explanation message, and recommended browsers list (Chrome, Firefox, Safari, Edge, Opera). Integrated in game page with loading state during check and error display if unsupported. All effects use queueMicrotask to avoid ESLint setState-in-effect warnings. Created 30 comprehensive tests (9 for hook, 12 for component, 9 for page integration). All 807 tests pass.
+Files: src/hooks/useAudioSupport.ts, src/hooks/useAudioSupport.test.ts, src/components/game/BrowserUnsupportedError.tsx, src/components/game/BrowserUnsupportedError.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
+
+=== Issue 10.5: Ajouter un état de chargement global ===
+Timestamp: 2026-01-18T16:15:00Z
+Status: COMPLETED
+Commit: edb74cf
+Notes: Created LoadingScreen component with animated spinner and message. Added onLoadingChange callback to LibraryStats for parent notification. Updated homepage to show LoadingScreen during initial library fetch, preventing flash of empty content. Proper accessibility attributes (role="status", aria-live="polite", aria-busy="true") and screen reader support. Created 10 comprehensive tests for LoadingScreen component. All 817 tests pass.
+Files: src/components/ui/LoadingScreen.tsx, src/components/ui/LoadingScreen.test.tsx, src/app/page.tsx, src/components/game/LibraryStats.tsx
+

@@ -1,9 +1,11 @@
 # Epic 6 : Logique de jeu (State Machine)
 
 ## Objectif
+
 Implémenter la machine d'état qui gère le flux du jeu : transitions entre les états, gestion du timer, validation des réponses, etc.
 
 ## Dépendances
+
 - Epic 1 terminé (types définis)
 - Compréhension du flux de jeu
 
@@ -49,6 +51,7 @@ Implémenter la machine d'état qui gère le flux du jeu : transitions entre les
 ## Issues
 
 ### 6.1 Créer le hook useGameState
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -57,6 +60,7 @@ Hook React personnalisé qui encapsule toute la logique de la machine d'état du
 **Fichier** : `src/hooks/useGameState.ts`
 
 **Implémentation**
+
 ```typescript
 'use client'
 
@@ -95,7 +99,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'TICK_TIMER':
       const newRemaining = state.timerRemaining - 1
       if (newRemaining <= 0) {
-        return { ...state, status: 'reveal', timerRemaining: 0, isRevealed: true }
+        return {
+          ...state,
+          status: 'reveal',
+          timerRemaining: 0,
+          isRevealed: true,
+        }
       }
       return { ...state, timerRemaining: newRemaining }
 
@@ -117,9 +126,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         status: 'reveal',
         isRevealed: true,
         songsPlayed: state.songsPlayed + (state.status !== 'reveal' ? 1 : 0),
-        playedSongIds: state.currentSong && !state.playedSongIds.includes(state.currentSong.id)
-          ? [...state.playedSongIds, state.currentSong.id]
-          : state.playedSongIds,
+        playedSongIds:
+          state.currentSong &&
+          !state.playedSongIds.includes(state.currentSong.id)
+            ? [...state.playedSongIds, state.currentSong.id]
+            : state.playedSongIds,
       }
 
     case 'NEXT_SONG':
@@ -156,11 +167,17 @@ export function useGameState(config: GameConfig) {
   // Actions exposées
   const actions = {
     startGame: useCallback(() => dispatch({ type: 'START_GAME' }), []),
-    loadSong: useCallback((song: Song) => dispatch({ type: 'LOAD_SONG', song }), []),
+    loadSong: useCallback(
+      (song: Song) => dispatch({ type: 'LOAD_SONG', song }),
+      []
+    ),
     play: useCallback(() => dispatch({ type: 'PLAY' }), []),
     pause: useCallback(() => dispatch({ type: 'PLAY' }), []), // Toggle
     buzz: useCallback(() => dispatch({ type: 'BUZZ' }), []),
-    validate: useCallback((correct: boolean) => dispatch({ type: 'VALIDATE', correct }), []),
+    validate: useCallback(
+      (correct: boolean) => dispatch({ type: 'VALIDATE', correct }),
+      []
+    ),
     reveal: useCallback(() => dispatch({ type: 'REVEAL' }), []),
     nextSong: useCallback(() => dispatch({ type: 'NEXT_SONG' }), []),
     quit: useCallback(() => dispatch({ type: 'END_GAME' }), []),
@@ -178,6 +195,7 @@ export function useGameState(config: GameConfig) {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Hook utilisable dans les composants
 - [ ] State immutable
 - [ ] Actions typées
@@ -186,6 +204,7 @@ export function useGameState(config: GameConfig) {
 ---
 
 ### 6.2 Définir les états du jeu
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -203,6 +222,7 @@ Documenter et typer tous les états possibles du jeu.
 | `ended` | Partie terminée | RESET |
 
 **Type** (déjà dans types.ts)
+
 ```typescript
 export type GameStatus =
   | 'idle'
@@ -215,6 +235,7 @@ export type GameStatus =
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tous les états définis
 - [ ] Transitions documentées
 - [ ] Type exporté
@@ -222,12 +243,14 @@ export type GameStatus =
 ---
 
 ### 6.3 Implémenter la transition IDLE → LOADING
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Quand l'utilisateur démarre une partie, charger la première chanson.
 
 **Implémentation**
+
 ```typescript
 // Dans la page /game
 useEffect(() => {
@@ -239,7 +262,9 @@ useEffect(() => {
 
 async function loadRandomSong() {
   const exclude = state.playedSongIds.join(',')
-  const res = await fetch(`/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`)
+  const res = await fetch(
+    `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
+  )
   const data = await res.json()
 
   if (data.song) {
@@ -252,6 +277,7 @@ async function loadRandomSong() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Démarrage automatique au chargement de la page
 - [ ] Chanson chargée depuis l'API
 - [ ] Gestion du cas "plus de chansons"
@@ -259,12 +285,14 @@ async function loadRandomSong() {
 ---
 
 ### 6.4 Implémenter la transition LOADING → PLAYING
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Une fois la chanson chargée et l'audio prêt, démarrer la lecture.
 
 **Implémentation**
+
 ```typescript
 // Dans AudioPlayer
 const handleCanPlay = () => {
@@ -282,18 +310,21 @@ useEffect(() => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Transition automatique quand audio prêt
 - [ ] Lecture démarre immédiatement
 
 ---
 
 ### 6.5 Implémenter la transition PLAYING → BUZZED
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Réagir au clic sur le buzzer.
 
 **Implémentation**
+
 ```typescript
 // Dans le hook
 case 'BUZZ':
@@ -306,6 +337,7 @@ case 'BUZZ':
 ```
 
 **Critères d'acceptation**
+
 - [ ] Buzz ignoré si pas en état PLAYING
 - [ ] Transition immédiate vers TIMER
 - [ ] Audio pausé
@@ -313,6 +345,7 @@ case 'BUZZ':
 ---
 
 ### 6.6 Implémenter la transition BUZZED → TIMER
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -321,23 +354,27 @@ L'état BUZZED est transitoire, passe immédiatement à TIMER.
 **Note** : Dans l'implémentation actuelle, BUZZ va directement à TIMER. L'état BUZZED peut être utilisé pour une animation intermédiaire si nécessaire.
 
 **Critères d'acceptation**
+
 - [ ] Timer démarre immédiatement après buzz
 - [ ] Countdown visible
 
 ---
 
 ### 6.7 Implémenter la fin du timer
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Quand le timer atteint 0 ou qu'une validation arrive.
 
 **Cas de fin**
+
 1. **Timeout** : Timer à 0 → REVEAL (réponse incorrecte implicite)
 2. **Validation correcte** : → REVEAL avec +1 point
 3. **Validation incorrecte** : → REVEAL sans point
 
 **Implémentation**
+
 ```typescript
 case 'TICK_TIMER':
   const newRemaining = state.timerRemaining - 1
@@ -358,6 +395,7 @@ case 'TICK_TIMER':
 ```
 
 **Critères d'acceptation**
+
 - [ ] Timeout déclenche REVEAL
 - [ ] Timer s'arrête
 - [ ] Stats mises à jour
@@ -365,12 +403,14 @@ case 'TICK_TIMER':
 ---
 
 ### 6.8 Implémenter la validation de réponse
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Gérer les boutons "Correct" et "Incorrect" du MJ.
 
 **Implémentation**
+
 ```typescript
 case 'VALIDATE':
   return {
@@ -386,6 +426,7 @@ case 'VALIDATE':
 ```
 
 **Critères d'acceptation**
+
 - [ ] Score incrémenté si correct
 - [ ] Pas d'incrément si incorrect
 - [ ] Chanson ajoutée aux jouées
@@ -393,12 +434,14 @@ case 'VALIDATE':
 ---
 
 ### 6.9 Implémenter la transition vers REVEAL
+
 **Priorité** : P0 (Critique)
 
 **Description**
 L'état REVEAL affiche la réponse (titre, artiste, pochette nette).
 
 **Implémentation**
+
 ```typescript
 case 'REVEAL':
   return {
@@ -411,6 +454,7 @@ case 'REVEAL':
 ```
 
 **Critères d'acceptation**
+
 - [ ] isRevealed = true
 - [ ] Pochette nette
 - [ ] Infos affichées
@@ -418,12 +462,14 @@ case 'REVEAL':
 ---
 
 ### 6.10 Implémenter la transition REVEAL → LOADING
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Quand on clique "Chanson suivante", charger une nouvelle chanson.
 
 **Implémentation**
+
 ```typescript
 case 'NEXT_SONG':
   return {
@@ -445,18 +491,21 @@ useEffect(() => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Nouvelle chanson chargée
 - [ ] État réinitialisé pour la nouvelle manche
 
 ---
 
 ### 6.11 Gérer la liste des chansons déjà jouées
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Éviter de jouer la même chanson deux fois dans une session.
 
 **Implémentation**
+
 - Stocker les IDs dans `state.playedSongIds`
 - Passer à l'API dans le paramètre `exclude`
 
@@ -469,6 +518,7 @@ async function loadRandomSong() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Pas de répétition dans une session
 - [ ] Liste mise à jour après chaque chanson
 - [ ] Paramètre exclude envoyé à l'API
@@ -476,12 +526,14 @@ async function loadRandomSong() {
 ---
 
 ### 6.12 Détecter la fin de la bibliothèque
+
 **Priorité** : P1 (Important)
 
 **Description**
 Quand toutes les chansons ont été jouées, informer l'utilisateur.
 
 **Implémentation**
+
 ```typescript
 async function loadRandomSong() {
   const res = await fetch(...)
@@ -498,16 +550,20 @@ async function loadRandomSong() {
 ```
 
 **UI**
+
 ```tsx
-{allSongsPlayed && (
-  <div className="text-center p-6">
-    <h2 className="text-2xl font-bold">Félicitations !</h2>
-    <p>Vous avez écouté toute la bibliothèque !</p>
-  </div>
-)}
+{
+  allSongsPlayed && (
+    <div className="text-center p-6">
+      <h2 className="text-2xl font-bold">Félicitations !</h2>
+      <p>Vous avez écouté toute la bibliothèque !</p>
+    </div>
+  )
+}
 ```
 
 **Critères d'acceptation**
+
 - [ ] Détection quand plus de chansons
 - [ ] Message à l'utilisateur
 - [ ] Option de rejouer depuis le début
@@ -515,6 +571,7 @@ async function loadRandomSong() {
 ---
 
 ### 6.13 Créer le hook useAudioPlayer
+
 **Priorité** : P0 (Critique)
 
 **Description**
@@ -523,6 +580,7 @@ Hook dédié à la gestion du lecteur audio.
 **Fichier** : `src/hooks/useAudioPlayer.ts`
 
 **Implémentation**
+
 ```typescript
 'use client'
 
@@ -534,7 +592,11 @@ interface UseAudioPlayerOptions {
   onReady?: () => void
 }
 
-export function useAudioPlayer({ maxDuration, onEnded, onReady }: UseAudioPlayerOptions) {
+export function useAudioPlayer({
+  maxDuration,
+  onEnded,
+  onReady,
+}: UseAudioPlayerOptions) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -615,6 +677,7 @@ export function useAudioPlayer({ maxDuration, onEnded, onReady }: UseAudioPlayer
 ```
 
 **Critères d'acceptation**
+
 - [ ] Chargement des chansons
 - [ ] Play/pause/toggle
 - [ ] Progress tracking
@@ -623,12 +686,14 @@ export function useAudioPlayer({ maxDuration, onEnded, onReady }: UseAudioPlayer
 ---
 
 ### 6.14 Gérer le preloading de la chanson suivante
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Précharger la prochaine chanson pendant qu'on est en état REVEAL pour éviter les temps de chargement.
 
 **Implémentation**
+
 ```typescript
 const [nextSong, setNextSong] = useState<Song | null>(null)
 
@@ -640,7 +705,9 @@ useEffect(() => {
 }, [state.status])
 
 async function prefetchNextSong() {
-  const exclude = [...state.playedSongIds, state.currentSong?.id].filter(Boolean).join(',')
+  const exclude = [...state.playedSongIds, state.currentSong?.id]
+    .filter(Boolean)
+    .join(',')
   const res = await fetch(`/api/songs/random?exclude=${exclude}`)
   const data = await res.json()
   if (data.song) {
@@ -653,6 +720,7 @@ async function prefetchNextSong() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Chanson suivante préchargée
 - [ ] Transition instantanée
 - [ ] Pas de doublon
@@ -660,12 +728,14 @@ async function prefetchNextSong() {
 ---
 
 ### 6.15 Ajouter un mode "rejouer la même chanson"
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Option pour réécouter l'extrait actuel (ex: si personne n'a trouvé).
 
 **Implémentation**
+
 ```typescript
 const replay = useCallback(() => {
   if (audioRef.current) {
@@ -677,11 +747,13 @@ const replay = useCallback(() => {
 ```
 
 **UI**
+
 ```tsx
 <button onClick={replay}>Rejouer l'extrait</button>
 ```
 
 **Critères d'acceptation**
+
 - [ ] Audio repart du début
 - [ ] Timer pas réinitialisé
 - [ ] Visible en état approprié
@@ -707,4 +779,5 @@ const replay = useCallback(() => {
 - [ ] 6.15 Replay
 
 ## Estimation
+
 ~4-5 heures de travail

@@ -1,9 +1,11 @@
 # Epic 1 : Setup du projet
 
 ## Objectif
+
 Mettre en place les fondations techniques du projet : initialisation Next.js, configuration Tailwind avec un thème festif, structure des dossiers, et définition des types TypeScript.
 
 ## Prérequis
+
 - Node.js 18+ installé
 - npm ou yarn
 - Accès au dossier de travail
@@ -13,27 +15,32 @@ Mettre en place les fondations techniques du projet : initialisation Next.js, co
 ## Issues
 
 ### 1.1 Initialiser le projet Next.js
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Créer le projet Next.js avec les options suivantes :
+
 - TypeScript activé
 - App Router (pas Pages Router)
 - Dossier `src/` pour le code source
 - ESLint configuré
 
 **Commande**
+
 ```bash
 npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
 ```
 
 **Critères d'acceptation**
+
 - [ ] Le projet démarre avec `npm run dev`
 - [ ] TypeScript fonctionne (fichiers .tsx)
 - [ ] App Router est utilisé (`src/app/`)
 - [ ] ESLint est configuré
 
 **Fichiers concernés**
+
 - `package.json`
 - `tsconfig.json`
 - `next.config.js`
@@ -43,17 +50,20 @@ npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --
 ---
 
 ### 1.2 Configurer Tailwind CSS
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Tailwind est installé par défaut avec create-next-app, mais il faut personnaliser la configuration pour le thème festif et s'assurer que tous les chemins sont couverts.
 
 **Tâches**
+
 1. Vérifier que `tailwind.config.ts` inclut les bons chemins
 2. Configurer le thème avec les couleurs festives
 3. Ajouter les plugins utiles (forms, typography si nécessaire)
 
 **Configuration exemple**
+
 ```typescript
 // tailwind.config.ts
 import type { Config } from 'tailwindcss'
@@ -77,6 +87,7 @@ export default config
 ```
 
 **Critères d'acceptation**
+
 - [ ] Les classes Tailwind fonctionnent dans les composants
 - [ ] Le thème personnalisé est accessible
 - [ ] Pas d'erreurs de purge CSS en production
@@ -84,12 +95,14 @@ export default config
 ---
 
 ### 1.3 Définir la palette de couleurs festive
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Choisir et configurer une palette de couleurs qui évoque une ambiance de soirée/fête. Les couleurs doivent être suffisamment contrastées pour être lisibles et énergiques.
 
 **Palette suggérée**
+
 ```typescript
 colors: {
   // Couleurs principales
@@ -139,6 +152,7 @@ colors: {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Palette définie dans tailwind.config.ts
 - [ ] Contraste suffisant (WCAG AA minimum)
 - [ ] Test visuel sur fond sombre et clair
@@ -146,16 +160,19 @@ colors: {
 ---
 
 ### 1.4 Configurer les fonts
+
 **Priorité** : P1 (Important)
 
 **Description**
 Ajouter des polices qui renforcent l'ambiance festive. Utiliser Google Fonts via `next/font` pour une performance optimale.
 
 **Fonts suggérées**
+
 - **Titres** : Poppins (bold, moderne) ou Montserrat
 - **Corps** : Inter ou système par défaut
 
 **Implémentation**
+
 ```typescript
 // src/app/layout.tsx
 import { Poppins, Inter } from 'next/font/google'
@@ -181,6 +198,7 @@ export default function RootLayout({ children }) {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Fonts chargées sans flash (FOUT)
 - [ ] Variables CSS disponibles
 - [ ] Fallback système configuré
@@ -188,12 +206,14 @@ export default function RootLayout({ children }) {
 ---
 
 ### 1.5 Créer la structure des dossiers
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Organiser le code source de manière claire et maintenable.
 
 **Structure**
+
 ```
 src/
 ├── app/
@@ -237,6 +257,7 @@ src/
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tous les dossiers créés
 - [ ] Fichiers placeholder si nécessaire
 - [ ] Imports fonctionnels avec alias `@/`
@@ -244,12 +265,14 @@ src/
 ---
 
 ### 1.6 Configurer les variables d'environnement
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Définir les variables d'environnement pour la configuration de l'application, notamment le chemin vers les fichiers audio.
 
 **Fichier `.env.local`**
+
 ```env
 # Chemin vers le dossier contenant les fichiers audio
 AUDIO_FOLDER_PATH=/path/to/your/music
@@ -262,12 +285,14 @@ NODE_ENV=development
 ```
 
 **Fichier `.env.example`**
+
 ```env
 # Copier ce fichier en .env.local et remplir les valeurs
 AUDIO_FOLDER_PATH=/path/to/your/music
 ```
 
 **Accès dans le code**
+
 ```typescript
 // Côté serveur uniquement
 const audioPath = process.env.AUDIO_FOLDER_PATH
@@ -277,6 +302,7 @@ const audioPath = process.env.AUDIO_FOLDER_PATH
 ```
 
 **Critères d'acceptation**
+
 - [ ] `.env.local` créé (gitignored)
 - [ ] `.env.example` commité pour documentation
 - [ ] Variables accessibles dans les API routes
@@ -284,18 +310,17 @@ const audioPath = process.env.AUDIO_FOLDER_PATH
 ---
 
 ### 1.7 Configurer ESLint et Prettier
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Configurer des règles de linting cohérentes pour maintenir la qualité du code.
 
 **ESLint** (`.eslintrc.json`)
+
 ```json
 {
-  "extends": [
-    "next/core-web-vitals",
-    "next/typescript"
-  ],
+  "extends": ["next/core-web-vitals", "next/typescript"],
   "rules": {
     "@typescript-eslint/no-unused-vars": "warn",
     "react/no-unescaped-entities": "off"
@@ -304,6 +329,7 @@ Configurer des règles de linting cohérentes pour maintenir la qualité du code
 ```
 
 **Prettier** (`.prettierrc`)
+
 ```json
 {
   "semi": false,
@@ -314,6 +340,7 @@ Configurer des règles de linting cohérentes pour maintenir la qualité du code
 ```
 
 **Scripts package.json**
+
 ```json
 {
   "scripts": {
@@ -324,6 +351,7 @@ Configurer des règles de linting cohérentes pour maintenir la qualité du code
 ```
 
 **Critères d'acceptation**
+
 - [ ] `npm run lint` fonctionne
 - [ ] Pas d'erreurs bloquantes
 - [ ] Formatage cohérent
@@ -331,27 +359,29 @@ Configurer des règles de linting cohérentes pour maintenir la qualité du code
 ---
 
 ### 1.8 Créer le fichier de types global
+
 **Priorité** : P0 (Critique)
 
 **Description**
 Définir tous les types TypeScript utilisés dans l'application.
 
 **Fichier `src/lib/types.ts`**
+
 ```typescript
 // ============================================
 // Types pour les chansons
 // ============================================
 
 export interface Song {
-  id: string                    // Hash unique du fichier
-  title: string                 // Titre de la chanson
-  artist: string                // Artiste/groupe
-  album?: string                // Nom de l'album (optionnel)
-  year?: number                 // Année de sortie (optionnel)
-  duration: number              // Durée en secondes
-  filePath: string              // Chemin absolu du fichier
-  format: AudioFormat           // Format du fichier
-  hasCover: boolean             // Si une pochette est disponible
+  id: string // Hash unique du fichier
+  title: string // Titre de la chanson
+  artist: string // Artiste/groupe
+  album?: string // Nom de l'album (optionnel)
+  year?: number // Année de sortie (optionnel)
+  duration: number // Durée en secondes
+  filePath: string // Chemin absolu du fichier
+  format: AudioFormat // Format du fichier
+  hasCover: boolean // Si une pochette est disponible
 }
 
 export type AudioFormat = 'mp3' | 'wav' | 'ogg' | 'flac'
@@ -361,9 +391,9 @@ export type AudioFormat = 'mp3' | 'wav' | 'ogg' | 'flac'
 // ============================================
 
 export interface GameConfig {
-  guessMode: GuessMode          // Ce qu'il faut deviner
-  clipDuration: number          // Durée de l'extrait en secondes
-  timerDuration: number         // Temps pour répondre après buzz
+  guessMode: GuessMode // Ce qu'il faut deviner
+  clipDuration: number // Durée de l'extrait en secondes
+  timerDuration: number // Temps pour répondre après buzz
 }
 
 export type GuessMode = 'title' | 'artist' | 'both'
@@ -373,23 +403,23 @@ export type GuessMode = 'title' | 'artist' | 'both'
 // ============================================
 
 export interface GameState {
-  status: GameStatus            // État actuel de la machine
-  currentSong: Song | null      // Chanson en cours
-  score: number                 // Score actuel
-  songsPlayed: number           // Nombre de chansons jouées
-  playedSongIds: string[]       // IDs des chansons déjà jouées
-  timerRemaining: number        // Secondes restantes sur le timer
-  isRevealed: boolean           // Si la réponse est révélée
+  status: GameStatus // État actuel de la machine
+  currentSong: Song | null // Chanson en cours
+  score: number // Score actuel
+  songsPlayed: number // Nombre de chansons jouées
+  playedSongIds: string[] // IDs des chansons déjà jouées
+  timerRemaining: number // Secondes restantes sur le timer
+  isRevealed: boolean // Si la réponse est révélée
 }
 
 export type GameStatus =
-  | 'idle'      // En attente de démarrage
-  | 'loading'   // Chargement d'une chanson
-  | 'playing'   // Musique en lecture
-  | 'buzzed'    // Quelqu'un a buzzé
-  | 'timer'     // Timer en cours
-  | 'reveal'    // Réponse révélée
-  | 'ended'     // Partie terminée
+  | 'idle' // En attente de démarrage
+  | 'loading' // Chargement d'une chanson
+  | 'playing' // Musique en lecture
+  | 'buzzed' // Quelqu'un a buzzé
+  | 'timer' // Timer en cours
+  | 'reveal' // Réponse révélée
+  | 'ended' // Partie terminée
 
 // ============================================
 // Types pour les réponses API
@@ -428,6 +458,7 @@ export type GameAction =
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tous les types définis
 - [ ] Exports corrects
 - [ ] Utilisables dans tout le projet
@@ -446,4 +477,5 @@ export type GameAction =
 - [ ] 1.8 Types TypeScript définis
 
 ## Estimation
+
 ~2-3 heures de travail

@@ -14,17 +14,17 @@ Application web de blindtest musical permettant de jouer en solo ou en multijoue
 
 ## Gameplay
 
-| Aspect | Description |
-|--------|-------------|
-| Principe | Écouter un extrait, buzzer, répondre oralement, validation manuelle par le MJ |
-| À deviner | Configurable : titre seul, artiste seul, ou les deux |
-| Scoring | 1 point par bonne réponse |
-| Durée extraits | Configurable (5-60 secondes) |
-| Timer post-buzz | 5 secondes pour répondre |
-| Mauvaise réponse | Les autres peuvent rebuzzer (mode multi) |
-| Révélation | Titre + Artiste + Pochette d'album |
-| Structure | Mode libre (pas de limite de questions) |
-| Sélection | Aléatoire dans la bibliothèque |
+| Aspect           | Description                                                                   |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Principe         | Écouter un extrait, buzzer, répondre oralement, validation manuelle par le MJ |
+| À deviner        | Configurable : titre seul, artiste seul, ou les deux                          |
+| Scoring          | 1 point par bonne réponse                                                     |
+| Durée extraits   | Configurable (5-60 secondes)                                                  |
+| Timer post-buzz  | 5 secondes pour répondre                                                      |
+| Mauvaise réponse | Les autres peuvent rebuzzer (mode multi)                                      |
+| Révélation       | Titre + Artiste + Pochette d'album                                            |
+| Structure        | Mode libre (pas de limite de questions)                                       |
+| Sélection        | Aléatoire dans la bibliothèque                                                |
 
 ## Architecture
 
@@ -52,6 +52,7 @@ Application web de blindtest musical permettant de jouer en solo ou en multijoue
 ## Phases de développement
 
 ### Phase 1 : MVP Solo
+
 - Configuration de partie (mode devinette, durée extraits)
 - Lecture audio avec contrôles
 - Système de buzzer et timer
@@ -59,6 +60,7 @@ Application web de blindtest musical permettant de jouer en solo ou en multijoue
 - Affichage scores et révélation
 
 ### Phase 2 : Multijoueur (Futur)
+
 - Chaque joueur sur son téléphone via réseau local
 - QR code pour rejoindre la partie
 - Système de rebuzz après mauvaise réponse
@@ -82,10 +84,10 @@ Application web de blindtest musical permettant de jouer en solo ou en multijoue
 
 ## Sprints suggérés
 
-| Sprint | Focus | Issues clés |
-|--------|-------|-------------|
-| 1 | Fondations | Setup projet, scanner audio, API de base |
-| 2 | Interface | Pages accueil et jeu, composants principaux |
-| 3 | Logique | State machine, transitions, hooks |
-| 4 | Polish | Animations, responsive, gestion erreurs |
-| 5 | Finalisation | Effets sonores, build, déploiement |
+| Sprint | Focus        | Issues clés                                 |
+| ------ | ------------ | ------------------------------------------- |
+| 1      | Fondations   | Setup projet, scanner audio, API de base    |
+| 2      | Interface    | Pages accueil et jeu, composants principaux |
+| 3      | Logique      | State machine, transitions, hooks           |
+| 4      | Polish       | Animations, responsive, gestion erreurs     |
+| 5      | Finalisation | Effets sonores, build, déploiement          |

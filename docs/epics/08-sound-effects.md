@@ -1,9 +1,11 @@
 # Epic 8 : Audio et effets sonores
 
 ## Objectif
+
 Ajouter des effets sonores pour enrichir l'expérience de jeu : son de buzzer, jingles de victoire/défaite, tick-tock du timer.
 
 ## Dépendances
+
 - Epic 5-6 terminés (jeu fonctionnel)
 - Fichiers audio d'effets sonores
 
@@ -12,11 +14,13 @@ Ajouter des effets sonores pour enrichir l'expérience de jeu : son de buzzer, j
 ## Ressources audio suggérées
 
 **Sources gratuites**
+
 - [Freesound.org](https://freesound.org) - Effets sous licence Creative Commons
 - [Mixkit](https://mixkit.co/free-sound-effects/) - Effets gratuits
 - [Zapsplat](https://www.zapsplat.com) - Grande bibliothèque gratuite
 
 **Fichiers à préparer**
+
 ```
 public/sounds/
 ├── buzz.mp3        # Son de buzzer (~0.5s)
@@ -32,17 +36,20 @@ public/sounds/
 ## Issues
 
 ### 8.1 Ajouter un son de buzzer
+
 **Priorité** : P1 (Important)
 
 **Description**
 Jouer un son satisfaisant quand quelqu'un appuie sur le buzzer.
 
 **Caractéristiques du son**
+
 - Court (~0.5 seconde)
 - Impactant mais pas agressif
 - Style "game show" ou "buzzer électronique"
 
 **Implémentation**
+
 ```typescript
 // Dans BuzzerButton.tsx
 const buzzSound = useRef<HTMLAudioElement | null>(null)
@@ -59,6 +66,7 @@ const handleClick = () => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Son joué immédiatement au clic
 - [ ] Pas de latence perceptible
 - [ ] Volume approprié
@@ -66,17 +74,20 @@ const handleClick = () => {
 ---
 
 ### 8.2 Ajouter un son de bonne réponse
+
 **Priorité** : P1 (Important)
 
 **Description**
 Jingle de victoire quand le MJ valide une bonne réponse.
 
 **Caractéristiques du son**
+
 - Joyeux et célébratoire
 - ~1-2 secondes
 - Style "ding ding" ou fanfare courte
 
 **Implémentation**
+
 ```typescript
 function playCorrectSound() {
   const audio = new Audio('/sounds/correct.mp3')
@@ -88,6 +99,7 @@ function playCorrectSound() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Son joué après validation positive
 - [ ] Synchronisé avec les confettis
 - [ ] Durée appropriée
@@ -95,17 +107,20 @@ function playCorrectSound() {
 ---
 
 ### 8.3 Ajouter un son de mauvaise réponse
+
 **Priorité** : P1 (Important)
 
 **Description**
 Son d'erreur quand la réponse est incorrecte.
 
 **Caractéristiques du son**
+
 - Court et clair
 - Pas trop négatif/frustrant
 - Style "buzzer négatif" ou "whomp"
 
 **Implémentation**
+
 ```typescript
 function playIncorrectSound() {
   const audio = new Audio('/sounds/incorrect.mp3')
@@ -115,6 +130,7 @@ function playIncorrectSound() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Son joué après validation négative
 - [ ] Pas trop punitif
 - [ ] Synchronisé avec l'animation shake
@@ -122,17 +138,20 @@ function playIncorrectSound() {
 ---
 
 ### 8.4 Ajouter un son de fin de timer
+
 **Priorité** : P1 (Important)
 
 **Description**
 Alerte sonore quand le temps est écoulé (timeout).
 
 **Caractéristiques du son**
+
 - Court et distinctif
 - Indique clairement que le temps est fini
 - Style "buzzer de fin" ou "gong"
 
 **Implémentation**
+
 ```typescript
 // Dans useGameState, quand timer atteint 0
 useEffect(() => {
@@ -144,6 +163,7 @@ useEffect(() => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Son joué exactement à 0
 - [ ] Distinctif des autres sons
 - [ ] Indique clairement la fin du temps
@@ -151,17 +171,20 @@ useEffect(() => {
 ---
 
 ### 8.5 Ajouter un tick-tock pour le timer
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Son de tick à chaque seconde du countdown pour augmenter la tension.
 
 **Caractéristiques du son**
+
 - Très court (~100ms)
 - Subtil mais audible
 - Peut accélérer ou s'intensifier vers la fin
 
 **Implémentation**
+
 ```typescript
 const tickSound = useRef<HTMLAudioElement | null>(null)
 
@@ -178,6 +201,7 @@ useEffect(() => {
 ```
 
 **Option : intensification**
+
 ```typescript
 // Volume qui augmente vers la fin
 const volume = 0.2 + (5 - state.timerRemaining) * 0.1
@@ -185,6 +209,7 @@ tickSound.current.volume = Math.min(volume, 0.7)
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tick à chaque seconde
 - [ ] Volume approprié (pas gênant)
 - [ ] Optionnel : intensification
@@ -192,6 +217,7 @@ tickSound.current.volume = Math.min(volume, 0.7)
 ---
 
 ### 8.6 Créer un hook useSoundEffects
+
 **Priorité** : P1 (Important)
 
 **Description**
@@ -200,6 +226,7 @@ Hook centralisé pour gérer tous les effets sonores.
 **Fichier** : `src/hooks/useSoundEffects.ts`
 
 **Implémentation**
+
 ```typescript
 'use client'
 
@@ -239,7 +266,7 @@ export function useSoundEffects(): SoundEffects {
     })
 
     return () => {
-      Object.values(sounds.current).forEach(audio => {
+      Object.values(sounds.current).forEach((audio) => {
         audio.pause()
         audio.src = ''
       })
@@ -277,6 +304,7 @@ export function useSoundEffects(): SoundEffects {
 ```
 
 **Usage**
+
 ```tsx
 function GamePage() {
   const sfx = useSoundEffects()
@@ -297,6 +325,7 @@ function GamePage() {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Tous les sons accessibles
 - [ ] Préchargement au montage
 - [ ] Mute et volume fonctionnels
@@ -305,12 +334,14 @@ function GamePage() {
 ---
 
 ### 8.7 Ajouter une option mute effets sonores
+
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
 Toggle pour désactiver les effets sonores sans couper la musique.
 
 **Implémentation**
+
 ```tsx
 // Dans les paramètres ou en header de jeu
 const [sfxMuted, setSfxMuted] = useState(false)
@@ -326,6 +357,7 @@ useEffect(() => {
 ```
 
 **Persistance**
+
 ```typescript
 // Sauvegarder en localStorage
 useEffect(() => {
@@ -340,6 +372,7 @@ useEffect(() => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Toggle visible dans l'UI
 - [ ] État persisté en localStorage
 - [ ] Musique non affectée
@@ -347,12 +380,14 @@ useEffect(() => {
 ---
 
 ### 8.8 Gérer le volume principal
+
 **Priorité** : P1 (Important)
 
 **Description**
 Slider pour ajuster le volume de la musique du blindtest.
 
 **Implémentation**
+
 ```tsx
 const [musicVolume, setMusicVolume] = useState(0.7)
 
@@ -379,6 +414,7 @@ useEffect(() => {
 ```
 
 **Critères d'acceptation**
+
 - [ ] Slider de volume
 - [ ] Range 0-100%
 - [ ] Appliqué en temps réel
@@ -424,4 +460,5 @@ const unlockAudio = useCallback(() => {
 - [ ] 8.8 Volume principal
 
 ## Estimation
+
 ~2-3 heures de travail (+ temps pour trouver les bons sons)
