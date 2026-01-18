@@ -151,7 +151,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 10.1 Gérer l'erreur "dossier audio vide"
 - [x] 10.2 Gérer l'erreur "fichier audio introuvable"
 - [x] 10.3 Gérer l'erreur réseau
-- [ ] 10.4 Gérer le navigateur sans support audio
+- [x] 10.4 Gérer le navigateur sans support audio
 - [ ] 10.5 Ajouter un état de chargement global
 - [ ] 10.6 Gérer la perte de focus de la page
 - [ ] 10.7 Ajouter des messages d'erreur user-friendly

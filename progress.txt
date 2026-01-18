@@ -716,3 +716,10 @@ Commit: 116a560
 Notes: Implemented network error handling with timeout and retry mechanisms. Added fetchWithTimeout (10s default) and fetchWithRetry (3 retries with exponential backoff 1s, 2s, 3s) helpers in utils.ts. Created NetworkError class with TIMEOUT, NETWORK_ERROR, MAX_RETRIES types. Created NetworkErrorToast component with retry button and dismiss option for user-friendly error display. Integrated in game page loadRandomSong function to show toast on network failures with manual retry option. French error messages displayed. All 777 tests pass.
 Files: src/lib/utils.ts, src/lib/utils.test.ts, src/components/game/NetworkErrorToast.tsx, src/components/game/NetworkErrorToast.test.tsx, src/app/game/page.tsx
 
+=== Issue 10.4: Gérer le navigateur sans support audio ===
+Timestamp: 2026-01-18T16:13:00Z
+Status: COMPLETED
+Commit: c7c2b1b
+Notes: Implemented browser audio support detection at game page load. Created useAudioSupport hook that detects HTML5 Audio API support by checking if browser can play audio/mpeg (MP3) format. Created BrowserUnsupportedError component displaying error title, explanation message, and recommended browsers list (Chrome, Firefox, Safari, Edge, Opera). Integrated in game page with loading state during check and error display if unsupported. All effects use queueMicrotask to avoid ESLint setState-in-effect warnings. Created 30 comprehensive tests (9 for hook, 12 for component, 9 for page integration). All 807 tests pass.
+Files: src/hooks/useAudioSupport.ts, src/hooks/useAudioSupport.test.ts, src/components/game/BrowserUnsupportedError.tsx, src/components/game/BrowserUnsupportedError.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
+
