@@ -10,6 +10,46 @@ vi.mock('canvas-confetti', () => ({
 // Mock matchMedia
 const mockMatchMedia = vi.fn()
 
+// Mock Web Audio API
+const mockOscillatorStart = vi.fn()
+const mockOscillatorStop = vi.fn()
+const mockOscillatorConnect = vi.fn()
+const mockGainConnect = vi.fn()
+const mockSetValueAtTime = vi.fn()
+const mockLinearRampToValueAtTime = vi.fn()
+const mockExponentialRampToValueAtTime = vi.fn()
+const mockClose = vi.fn()
+const mockResume = vi.fn().mockResolvedValue(undefined)
+
+const createMockOscillator = () => ({
+  type: 'sine',
+  frequency: {
+    setValueAtTime: mockSetValueAtTime,
+  },
+  connect: mockOscillatorConnect,
+  start: mockOscillatorStart,
+  stop: mockOscillatorStop,
+})
+
+const createMockGain = () => ({
+  gain: {
+    setValueAtTime: mockSetValueAtTime,
+    linearRampToValueAtTime: mockLinearRampToValueAtTime,
+    exponentialRampToValueAtTime: mockExponentialRampToValueAtTime,
+  },
+  connect: mockGainConnect,
+})
+
+const MockAudioContext = vi.fn().mockImplementation(() => ({
+  currentTime: 0,
+  state: 'running',
+  createOscillator: vi.fn(createMockOscillator),
+  createGain: vi.fn(createMockGain),
+  destination: {},
+  close: mockClose,
+  resume: mockResume,
+}))
+
 import { useCorrectAnswerCelebration } from './useCorrectAnswerCelebration'
 
 describe('useCorrectAnswerCelebration', () => {
@@ -23,6 +63,9 @@ describe('useCorrectAnswerCelebration', () => {
       writable: true,
       value: mockMatchMedia,
     })
+
+    // Mock AudioContext
+    global.AudioContext = MockAudioContext as unknown as typeof AudioContext
   })
 
   afterEach(() => {
@@ -138,5 +181,108 @@ describe('useCorrectAnswerCelebration', () => {
     // First call should fire, second call should clear the first timeout
     // and start a new one
     expect(mockConfetti).toHaveBeenCalled()
+  })
+
+  // Sound effect tests
+  describe('correct answer sound', () => {
+    it('creates AudioContext when celebrate is called', () => {
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      expect(MockAudioContext).toHaveBeenCalled()
+    })
+
+    it('creates oscillators for the arpeggio notes', () => {
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      // Should create multiple oscillators (4 arpeggio notes + harmonics + chord)
+      const context = MockAudioContext.mock.results[0].value
+      expect(context.createOscillator).toHaveBeenCalled()
+      expect(context.createGain).toHaveBeenCalled()
+    })
+
+    it('starts and stops oscillators', () => {
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      expect(mockOscillatorStart).toHaveBeenCalled()
+      expect(mockOscillatorStop).toHaveBeenCalled()
+    })
+
+    it('plays sound even when reduced motion is preferred', () => {
+      mockMatchMedia.mockReturnValue({ matches: true })
+
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      // Sound should play even when reduced motion is enabled
+      expect(MockAudioContext).toHaveBeenCalled()
+      expect(mockOscillatorStart).toHaveBeenCalled()
+      // But confetti should NOT play
+      expect(mockConfetti).not.toHaveBeenCalled()
+    })
+
+    it('resumes AudioContext if suspended', () => {
+      const suspendedContext = {
+        currentTime: 0,
+        state: 'suspended',
+        createOscillator: vi.fn(createMockOscillator),
+        createGain: vi.fn(createMockGain),
+        destination: {},
+        close: mockClose,
+        resume: mockResume,
+      }
+      MockAudioContext.mockImplementationOnce(() => suspendedContext)
+
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      expect(mockResume).toHaveBeenCalled()
+    })
+
+    it('cleans up AudioContext on unmount', () => {
+      const { result, unmount } = renderHook(() =>
+        useCorrectAnswerCelebration()
+      )
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      unmount()
+
+      expect(mockClose).toHaveBeenCalled()
+    })
+
+    it('reuses AudioContext for multiple celebrations', () => {
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      // Should only create one AudioContext
+      expect(MockAudioContext).toHaveBeenCalledTimes(1)
+    })
   })
 })
