@@ -73,6 +73,8 @@ function GameContent() {
     null
   )
   const hasInitialized = useRef(false)
+  // Track if we're currently loading a song (to prevent duplicate loads)
+  const isLoadingSongRef = useRef(false)
   // Track if replay was triggered
   const [shouldReplay, setShouldReplay] = useState(false)
   // Track correct answer flash animation
@@ -328,15 +330,20 @@ function GameContent() {
   // This handles both initial load (after START_GAME) and subsequent loads (after NEXT_SONG)
   useEffect(() => {
     if (game.state.status === 'loading' && !game.state.currentSong) {
-      // Capture playedSongIds and nextSong to use in microtask
+      // Prevent duplicate loads - check if we're already loading
+      if (isLoadingSongRef.current) return
+      isLoadingSongRef.current = true
+
+      // Capture playedSongIds and nextSong to use in async function
       const playedIds = game.state.playedSongIds
       const preloadedSong = nextSong
-      // Use queueMicrotask to avoid calling setState synchronously in effect
-      queueMicrotask(() => {
-        // Reset the audioReady state for the new song
-        setAudioReadyForSongId(null)
-        // Load a new random song (excluding already played songs), using preloaded if available
-        void loadRandomSong(playedIds, preloadedSong)
+
+      // Reset the audioReady state for the new song
+      setAudioReadyForSongId(null)
+
+      // Load a new random song (excluding already played songs), using preloaded if available
+      void loadRandomSong(playedIds, preloadedSong).finally(() => {
+        isLoadingSongRef.current = false
       })
     }
   }, [
