@@ -18,6 +18,7 @@ import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAudioUnlock } from '@/hooks/useAudioUnlock'
+import { fetchWithRetry, NetworkError } from '@/lib/utils'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { Timer } from '@/components/game/Timer'
@@ -27,6 +28,7 @@ import { GameControls } from '@/components/game/GameControls'
 import { GameRecap } from '@/components/game/GameRecap'
 import { CorrectAnswerFlash } from '@/components/game/CorrectAnswerFlash'
 import { IncorrectAnswerFlash } from '@/components/game/IncorrectAnswerFlash'
+import { NetworkErrorToast } from '@/components/game/NetworkErrorToast'
 import { Button } from '@/components/ui/Button'
 import type { GameConfig, GuessMode, Song } from '@/lib/types'
 
@@ -72,6 +74,13 @@ function GameContent() {
   const [showIncorrectFlash, setShowIncorrectFlash] = useState(false)
   // Music volume (0-1)
   const [musicVolume, setMusicVolume] = useState(0.7)
+  // Network error state for retry toast
+  const [networkError, setNetworkError] = useState<{
+    show: boolean
+    message?: string
+  }>({ show: false })
+  // Store retry callback for when user clicks retry
+  const retryCallbackRef = useRef<(() => void) | null>(null)
 
   // Fullscreen mode
   const {
@@ -165,7 +174,8 @@ function GameContent() {
     const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
 
     try {
-      const res = await fetch(url)
+      // Use fetchWithRetry with 2 retries for prefetch (non-critical)
+      const res = await fetchWithRetry(url, {}, 2, 10000)
 
       if (!res.ok) {
         // No more songs available - will be handled when transitioning to next song
@@ -207,8 +217,12 @@ function GameContent() {
 
   // Load a random song from the API
   // If the audio file is not accessible, auto-skip and try another song
+  // Uses fetchWithRetry for network resilience with timeout and retry
   const loadRandomSong = useCallback(
     async (excludeIds: string[], preloadedSong: Song | null) => {
+      // Clear any previous network error
+      setNetworkError({ show: false })
+
       // If we have a preloaded song, verify it's still accessible
       if (preloadedSong) {
         const isAccessible = await checkAudioFileAccessible(preloadedSong.id)
@@ -229,7 +243,8 @@ function GameContent() {
       const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
 
       try {
-        const res = await fetch(url)
+        // Use fetchWithRetry with 10s timeout and 3 retries
+        const res = await fetchWithRetry(url, {}, 3, 10000)
 
         if (!res.ok) {
           if (res.status === 404) {
@@ -259,13 +274,40 @@ function GameContent() {
           setAllSongsPlayed(true)
           game.actions.quit()
         }
-      } catch {
-        // Network error - end the game
-        game.actions.quit()
+      } catch (error) {
+        // Network error - show toast with retry option
+        const isNetworkError = error instanceof NetworkError
+        const message = isNetworkError
+          ? error.type === 'TIMEOUT'
+            ? 'La requête a expiré. Vérifiez votre connexion.'
+            : error.type === 'MAX_RETRIES'
+              ? 'Impossible de contacter le serveur après plusieurs tentatives.'
+              : 'Erreur de connexion au serveur.'
+          : 'Une erreur réseau est survenue.'
+
+        // Store retry callback
+        retryCallbackRef.current = () => {
+          void loadRandomSong(excludeIds, null)
+        }
+
+        setNetworkError({ show: true, message })
       }
     },
     [game.actions, checkAudioFileAccessible]
   )
+
+  // Handle network error retry
+  const handleNetworkRetry = useCallback(() => {
+    setNetworkError({ show: false })
+    if (retryCallbackRef.current) {
+      retryCallbackRef.current()
+    }
+  }, [])
+
+  // Handle network error dismiss
+  const handleNetworkDismiss = useCallback(() => {
+    setNetworkError({ show: false })
+  }, [])
 
   // IDLE → LOADING transition: Start game automatically when page loads
   useEffect(() => {
@@ -700,6 +742,14 @@ function GameContent() {
 
       {/* Red flash overlay for incorrect answers */}
       <IncorrectAnswerFlash show={showIncorrectFlash} />
+
+      {/* Network error toast with retry option */}
+      <NetworkErrorToast
+        show={networkError.show}
+        message={networkError.message}
+        onRetry={handleNetworkRetry}
+        onDismiss={handleNetworkDismiss}
+      />
     </motion.main>
   )
 }
