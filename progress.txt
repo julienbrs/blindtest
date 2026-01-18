@@ -723,3 +723,10 @@ Commit: c7c2b1b
 Notes: Implemented browser audio support detection at game page load. Created useAudioSupport hook that detects HTML5 Audio API support by checking if browser can play audio/mpeg (MP3) format. Created BrowserUnsupportedError component displaying error title, explanation message, and recommended browsers list (Chrome, Firefox, Safari, Edge, Opera). Integrated in game page with loading state during check and error display if unsupported. All effects use queueMicrotask to avoid ESLint setState-in-effect warnings. Created 30 comprehensive tests (9 for hook, 12 for component, 9 for page integration). All 807 tests pass.
 Files: src/hooks/useAudioSupport.ts, src/hooks/useAudioSupport.test.ts, src/components/game/BrowserUnsupportedError.tsx, src/components/game/BrowserUnsupportedError.test.tsx, src/app/game/page.tsx, src/app/game/page.test.tsx
 
+=== Issue 10.5: Ajouter un état de chargement global ===
+Timestamp: 2026-01-18T16:15:00Z
+Status: COMPLETED
+Commit: edb74cf
+Notes: Created LoadingScreen component with animated spinner and message. Added onLoadingChange callback to LibraryStats for parent notification. Updated homepage to show LoadingScreen during initial library fetch, preventing flash of empty content. Proper accessibility attributes (role="status", aria-live="polite", aria-busy="true") and screen reader support. Created 10 comprehensive tests for LoadingScreen component. All 817 tests pass.
+Files: src/components/ui/LoadingScreen.tsx, src/components/ui/LoadingScreen.test.tsx, src/app/page.tsx, src/components/game/LibraryStats.tsx
+

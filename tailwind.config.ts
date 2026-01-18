@@ -8,13 +8,13 @@ const config: Config = {
   ],
   theme: {
     screens: {
-      portrait: { raw: '(orientation: portrait)' },
-      landscape: { raw: '(orientation: landscape)' },
       sm: '640px',
       md: '768px',
       lg: '1024px',
       xl: '1280px',
       '2xl': '1536px',
+      portrait: { raw: '(orientation: portrait)' },
+      landscape: { raw: '(orientation: landscape)' },
     },
     extend: {
       fontFamily: {
