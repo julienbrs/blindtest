@@ -590,3 +590,10 @@ Commit: e531744
 Notes: Implemented buzzer sound using Web Audio API for immediate playback with no latency. Created playBuzzSound function that generates a game show-style buzz sound using square wave oscillators at 200/400/600/800 Hz frequencies with harmonics and volume envelope (quick attack, sustain, decay). Sound plays immediately on click (~350ms duration, 0.7 volume). Added AudioContext ref with proper cleanup on unmount. Handles browser autoplay policy by resuming suspended context. Created comprehensive test suite with Web Audio API mocks (14 tests). All 529 tests pass.
 Files: src/components/game/BuzzerButton.tsx, src/components/game/BuzzerButton.test.tsx
 
+=== Issue 8.2: Ajouter un son de bonne réponse ===
+Timestamp: 2026-01-18T05:42:00Z
+Status: COMPLETED
+Commit: f7af771
+Notes: Implemented celebratory correct answer sound using Web Audio API in useCorrectAnswerCelebration hook. Created playCorrectSound function that generates a joyful ascending arpeggio (C5, E5, G5, C6) with sine wave oscillators and harmonic overtones for richness. Sound includes a final chord for emphasis (~1.2s duration, 0.6 volume). Sound is synchronized with confetti animation and plays immediately on validation. Sound plays even when reduced motion is preferred (only visual effects disabled). Added AudioContext cleanup on unmount. Created 7 comprehensive tests for sound functionality. All 536 tests pass.
+Files: src/hooks/useCorrectAnswerCelebration.ts, src/hooks/useCorrectAnswerCelebration.test.ts
+
