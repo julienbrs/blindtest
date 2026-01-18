@@ -618,3 +618,10 @@ Commit: b8cd5d2
 Notes: Implemented tick-tock sound for timer using Web Audio API. Tick sound plays at each second of countdown using sine wave oscillator (~80ms duration). Added tick-tock effect (two sounds) when remaining <= 5 seconds for added urgency. Volume intensifies as time decreases (0.2 at 5s to 0.5 at 1s). Pitch also increases slightly in final 3 seconds for urgency effect. Sound is subtle but audible, not distracting. Created 9 comprehensive tests for tick-tock functionality (559 tests total pass).
 Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
 
+=== Issue 8.6: Créer un hook useSoundEffects ===
+Timestamp: 2026-01-18T10:56:00Z
+Status: COMPLETED
+Commit: a676931
+Notes: Created centralized useSoundEffects hook for managing all game sounds via Web Audio API. Hook provides methods for all sound effects: buzz, correct, incorrect, timeout, tick (with intensity based on remaining seconds), and reveal. Added volume control (0-1 range with clamping) and mute functionality. All sounds generated using oscillators for low latency. AudioContext is created lazily and reused across calls. Handles browser autoplay policy by resuming suspended context. Proper cleanup on unmount. Created comprehensive test suite with 29 tests covering all methods, mute, volume, AudioContext handling, and callback stability. All 588 tests pass.
+Files: src/hooks/useSoundEffects.ts, src/hooks/useSoundEffects.test.ts
+
