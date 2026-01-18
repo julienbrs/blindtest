@@ -2,6 +2,48 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react'
 import { BuzzerButton } from './BuzzerButton'
 
+// Mock Web Audio API - factory functions to create fresh mocks
+function createMockOscillator() {
+  return {
+    connect: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    type: 'sine' as OscillatorType,
+    frequency: { setValueAtTime: vi.fn() },
+  }
+}
+
+function createMockGainNode() {
+  return {
+    connect: vi.fn(),
+    gain: {
+      setValueAtTime: vi.fn(),
+      linearRampToValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
+  }
+}
+
+function createMockAudioContext() {
+  const mockOscillator = createMockOscillator()
+  const mockGainNode = createMockGainNode()
+  return {
+    createOscillator: vi.fn(() => mockOscillator),
+    createGain: vi.fn(() => mockGainNode),
+    currentTime: 0,
+    state: 'running' as AudioContextState,
+    resume: vi.fn(() => Promise.resolve()),
+    close: vi.fn(() => Promise.resolve()),
+    destination: {},
+    _mockOscillator: mockOscillator, // Expose for assertions
+    _mockGainNode: mockGainNode,
+  }
+}
+
+// Store original AudioContext
+const originalAudioContext = globalThis.AudioContext
+let mockAudioContext: ReturnType<typeof createMockAudioContext>
+
 describe('BuzzerButton', () => {
   let originalVibrate: typeof navigator.vibrate | undefined
   let mockVibrate: ReturnType<typeof vi.fn>
@@ -19,6 +61,12 @@ describe('BuzzerButton', () => {
       writable: true,
       configurable: true,
     })
+
+    // Create fresh mock AudioContext for each test
+    mockAudioContext = createMockAudioContext()
+    globalThis.AudioContext = vi.fn(
+      () => mockAudioContext
+    ) as unknown as typeof AudioContext
   })
 
   afterEach(() => {
@@ -32,6 +80,9 @@ describe('BuzzerButton', () => {
       writable: true,
       configurable: true,
     })
+
+    // Restore AudioContext
+    globalThis.AudioContext = originalAudioContext
   })
 
   it('renders the buzzer button with BUZZ! text', () => {
@@ -167,5 +218,29 @@ describe('BuzzerButton', () => {
     expect(button).toBeInTheDocument()
     // The button should be a motion.button (Framer Motion component)
     expect(button.tagName).toBe('BUTTON')
+  })
+
+  it('plays buzz sound when clicked', () => {
+    render(<BuzzerButton onBuzz={() => {}} />)
+
+    const button = screen.getByRole('button', { name: /buzz/i })
+    fireEvent.click(button)
+
+    // AudioContext should have been created
+    expect(globalThis.AudioContext).toHaveBeenCalled()
+    // Oscillators should have been created and started
+    expect(mockAudioContext.createOscillator).toHaveBeenCalled()
+    expect(mockAudioContext.createGain).toHaveBeenCalled()
+    expect(mockAudioContext._mockOscillator.start).toHaveBeenCalled()
+  })
+
+  it('does not play sound when disabled', () => {
+    render(<BuzzerButton onBuzz={() => {}} disabled />)
+
+    const button = screen.getByRole('button', { name: /buzz/i })
+    fireEvent.click(button)
+
+    // AudioContext should NOT have been created when disabled
+    expect(globalThis.AudioContext).not.toHaveBeenCalled()
   })
 })
