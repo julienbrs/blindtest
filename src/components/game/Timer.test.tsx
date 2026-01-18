@@ -18,6 +18,7 @@ const mockGainNode = {
   gain: {
     setValueAtTime: vi.fn(),
     exponentialRampToValueAtTime: vi.fn(),
+    linearRampToValueAtTime: vi.fn(),
   },
   connect: vi.fn(),
 }
@@ -335,13 +336,22 @@ describe('Timer', () => {
       expect(globalThis.AudioContext).not.toHaveBeenCalled()
     })
 
-    it('does not play sound when remaining stays above 0', () => {
+    it('does not play timeout sound when remaining stays above 0', () => {
       const { rerender } = render(<Timer duration={5} remaining={3} />)
+
+      // Clear mock calls from tick sounds
+      vi.clearAllMocks()
+
       rerender(<Timer duration={5} remaining={2} />)
       rerender(<Timer duration={5} remaining={1} />)
 
-      // No sound should play until it reaches 0
-      expect(globalThis.AudioContext).not.toHaveBeenCalled()
+      // Tick sounds will play, but not timeout sound (3 oscillators)
+      // Each tick creates 2 oscillators when remaining <= 5 (tick + tock)
+      // So we should see oscillators for ticks, but not the 3-oscillator timeout sound
+      const oscillatorCalls =
+        mockAudioContext.createOscillator.mock.calls.length
+      // At remaining=2 and remaining=1, each creates 2 oscillators (tick+tock) = 4 total
+      expect(oscillatorCalls).toBe(4)
     })
 
     it('plays sound only once even if remaining stays at 0', () => {
@@ -413,6 +423,143 @@ describe('Timer', () => {
       expect(mockAudioContext.createOscillator).toHaveBeenCalledTimes(3)
       // Should create 3 gain nodes
       expect(mockAudioContext.createGain).toHaveBeenCalledTimes(3)
+    })
+  })
+
+  describe('tick-tock sound', () => {
+    beforeEach(() => {
+      vi.clearAllMocks()
+    })
+
+    it('plays tick sound when remaining changes from one second to another', () => {
+      const { rerender } = render(<Timer duration={10} remaining={10} />)
+
+      // Clear the initial tick that plays on first render
+      vi.clearAllMocks()
+
+      // Change to 9 seconds
+      rerender(<Timer duration={10} remaining={9} />)
+
+      // Should create oscillator for tick sound
+      expect(globalThis.AudioContext).toHaveBeenCalled()
+      expect(mockAudioContext.createOscillator).toHaveBeenCalled()
+    })
+
+    it('plays tick sound at each second of countdown', () => {
+      const { rerender } = render(<Timer duration={5} remaining={5} />)
+
+      // Clear initial tick
+      vi.clearAllMocks()
+
+      // Count down through multiple seconds
+      rerender(<Timer duration={5} remaining={4} />)
+      const callsAfter4 = mockAudioContext.createOscillator.mock.calls.length
+
+      rerender(<Timer duration={5} remaining={3} />)
+      const callsAfter3 = mockAudioContext.createOscillator.mock.calls.length
+
+      rerender(<Timer duration={5} remaining={2} />)
+      const callsAfter2 = mockAudioContext.createOscillator.mock.calls.length
+
+      // Each second should trigger more oscillator calls
+      expect(callsAfter3).toBeGreaterThan(callsAfter4)
+      expect(callsAfter2).toBeGreaterThan(callsAfter3)
+    })
+
+    it('does not play tick when remaining does not change', () => {
+      const { rerender } = render(<Timer duration={5} remaining={3} />)
+
+      // Clear initial tick
+      vi.clearAllMocks()
+
+      // Re-render with same remaining value
+      rerender(<Timer duration={5} remaining={3} />)
+
+      // Should not create new oscillators for same value
+      expect(mockAudioContext.createOscillator).not.toHaveBeenCalled()
+    })
+
+    it('does not play tick when remaining is 0', () => {
+      const { rerender } = render(<Timer duration={5} remaining={1} />)
+
+      // Clear any previous sounds
+      vi.clearAllMocks()
+
+      // Transition to 0 - only timeout sound should play, not tick
+      rerender(<Timer duration={5} remaining={0} />)
+
+      // The oscillators created should be for timeout sound (3 oscillators)
+      // not for tick (would be 1 or 2 oscillators)
+      expect(mockAudioContext.createOscillator).toHaveBeenCalledTimes(3)
+    })
+
+    it('plays tick-tock (two sounds) when remaining is 5 or less', () => {
+      const { rerender } = render(<Timer duration={10} remaining={6} />)
+
+      // Clear initial tick
+      vi.clearAllMocks()
+
+      // Change to 5 seconds - should play tick + tock
+      rerender(<Timer duration={10} remaining={5} />)
+
+      // Should create 2 oscillators (tick + tock)
+      expect(mockAudioContext.createOscillator).toHaveBeenCalledTimes(2)
+    })
+
+    it('plays only tick (one sound) when remaining is > 5', () => {
+      const { rerender } = render(<Timer duration={10} remaining={8} />)
+
+      // Clear initial tick
+      vi.clearAllMocks()
+
+      // Change to 7 seconds - should only play tick (no tock)
+      rerender(<Timer duration={10} remaining={7} />)
+
+      // Should create 1 oscillator (just tick)
+      expect(mockAudioContext.createOscillator).toHaveBeenCalledTimes(1)
+    })
+
+    it('resets tick tracking when timer resets to higher value', () => {
+      const { rerender } = render(<Timer duration={5} remaining={3} />)
+
+      // Clear initial tick
+      vi.clearAllMocks()
+
+      // Tick at 2
+      rerender(<Timer duration={5} remaining={2} />)
+      expect(mockAudioContext.createOscillator).toHaveBeenCalled()
+
+      vi.clearAllMocks()
+
+      // Reset timer to full duration
+      rerender(<Timer duration={5} remaining={5} />)
+
+      // Should play tick for the reset
+      expect(mockAudioContext.createOscillator).toHaveBeenCalled()
+    })
+
+    it('intensifies tick volume as time decreases (higher volume at lower remaining)', () => {
+      const { rerender } = render(<Timer duration={10} remaining={8} />)
+
+      // Clear initial
+      vi.clearAllMocks()
+
+      // Tick at 7 (high remaining, lower volume)
+      rerender(<Timer duration={10} remaining={7} />)
+
+      // Get the gain setValueAtTime call for the first tick
+      const highRemainingGainCalls = mockGainNode.gain.setValueAtTime.mock.calls
+
+      vi.clearAllMocks()
+
+      // Tick at 2 (low remaining, higher volume)
+      rerender(<Timer duration={10} remaining={2} />)
+
+      const lowRemainingGainCalls = mockGainNode.gain.setValueAtTime.mock.calls
+
+      // Volume calls should be made for both
+      expect(highRemainingGainCalls.length).toBeGreaterThan(0)
+      expect(lowRemainingGainCalls.length).toBeGreaterThan(0)
     })
   })
 })

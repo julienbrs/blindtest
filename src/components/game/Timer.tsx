@@ -15,6 +15,78 @@ export function Timer({ duration, remaining, onTimeout }: TimerProps) {
   const audioContextRef = useRef<AudioContext | null>(null)
   const prevRemainingRef = useRef<number>(remaining)
   const hasPlayedTimeoutSoundRef = useRef(false)
+  const hasPlayedTickForSecondRef = useRef<number | null>(null)
+
+  // Generate tick sound using Web Audio API - a short, subtle click
+  const playTickSound = useCallback((remainingSeconds: number) => {
+    try {
+      // Create or resume AudioContext
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext()
+      }
+      const ctx = audioContextRef.current
+
+      // Resume if suspended (browser autoplay policy)
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+
+      const now = ctx.currentTime
+
+      // Volume intensifies as time runs out (0.2 at 5s -> 0.5 at 1s)
+      // Base volume 0.2, increases by ~0.075 per second under 5
+      const baseVolume = 0.2
+      const intensification =
+        remainingSeconds <= 5 ? (5 - remainingSeconds) * 0.075 : 0
+      const volume = Math.min(baseVolume + intensification, 0.5)
+
+      // Pitch also increases slightly as time runs out for urgency
+      const basePitch = 800
+      const pitchBoost =
+        remainingSeconds <= 3 ? (3 - remainingSeconds) * 100 : 0
+      const pitch = basePitch + pitchBoost
+
+      // Create a short "tick" sound - a brief high-pitched click
+      const tickOsc = ctx.createOscillator()
+      const tickGain = ctx.createGain()
+
+      tickOsc.type = 'sine'
+      tickOsc.frequency.setValueAtTime(pitch, now)
+
+      // Very short envelope for a click sound (~80ms)
+      tickGain.gain.setValueAtTime(0, now)
+      tickGain.gain.linearRampToValueAtTime(volume, now + 0.005) // Quick attack
+      tickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08) // Quick decay
+
+      tickOsc.connect(tickGain)
+      tickGain.connect(ctx.destination)
+
+      tickOsc.start(now)
+      tickOsc.stop(now + 0.1)
+
+      // Add a subtle "tock" for the second part of tick-tock effect
+      // Only when remaining <= 5 for added urgency
+      if (remainingSeconds <= 5 && remainingSeconds > 0) {
+        const tockOsc = ctx.createOscillator()
+        const tockGain = ctx.createGain()
+
+        tockOsc.type = 'sine'
+        tockOsc.frequency.setValueAtTime(pitch * 0.75, now + 0.1) // Lower pitch for "tock"
+
+        tockGain.gain.setValueAtTime(0, now + 0.1)
+        tockGain.gain.linearRampToValueAtTime(volume * 0.6, now + 0.105)
+        tockGain.gain.exponentialRampToValueAtTime(0.01, now + 0.18)
+
+        tockOsc.connect(tockGain)
+        tockGain.connect(ctx.destination)
+
+        tockOsc.start(now + 0.1)
+        tockOsc.stop(now + 0.2)
+      }
+    } catch {
+      // Ignore audio errors (e.g., if AudioContext is not supported)
+    }
+  }, [])
 
   // Generate timeout sound using Web Audio API - a distinctive "time's up" buzzer/gong
   const playTimeoutSound = useCallback(() => {
@@ -80,6 +152,25 @@ export function Timer({ duration, remaining, onTimeout }: TimerProps) {
       // Ignore audio errors (e.g., if AudioContext is not supported)
     }
   }, [])
+
+  // Play tick sound at each second of the countdown
+  useEffect(() => {
+    // Only play tick when remaining changes to a new value > 0
+    // and we haven't already played for this second
+    if (
+      remaining > 0 &&
+      remaining !== hasPlayedTickForSecondRef.current &&
+      prevRemainingRef.current !== remaining
+    ) {
+      hasPlayedTickForSecondRef.current = remaining
+      playTickSound(remaining)
+    }
+
+    // Reset tick tracking when timer resets
+    if (remaining > prevRemainingRef.current) {
+      hasPlayedTickForSecondRef.current = null
+    }
+  }, [remaining, playTickSound])
 
   // Play timeout sound when timer reaches 0
   useEffect(() => {
