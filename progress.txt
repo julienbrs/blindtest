@@ -562,3 +562,17 @@ Commit: 9f57045
 Notes: Enhanced Timer component with urgency-based styling using absolute second thresholds per epic 7.7 specs. Colors: green (>5s), yellow (5-4s), orange (3-2s), red (1s). Animations: no pulse (>3s), léger pulse (3-2s with 0.6s duration), pulse rapide + clignotement (1s with 0.25s duration). Added orange glow for warning state and intense red glow for critical state. Text changes to "Dépêchez-vous !" at 3-2s and "VITE !" at 1s. All effects respect prefers-reduced-motion accessibility setting. Updated test suite with 7 additional tests for new urgency states. All 498 tests pass.
 Files: src/components/game/Timer.tsx, src/components/game/Timer.test.tsx
 
+=== Issue 7.8: Ajouter des icônes ===
+Timestamp: 2026-01-18T03:45:00Z
+Status: COMPLETED
+Commit: 2e1f81c
+Notes: Installed @heroicons/react package for consistent icon library. Replaced all custom SVG icons with Heroicons throughout the application. Added icons to: GameControls (PlayIcon, PauseIcon, CheckIcon, XMarkIcon, ArrowRightIcon, EyeIcon, ArrowPathIcon), homepage (MusicalNoteIcon, SpeakerWaveIcon, MicrophoneIcon), LibraryStats (MusicalNoteIcon, UserGroupIcon), GameRecap stats and buttons (TrophyIcon, MusicalNoteIcon, CheckCircleIcon, ChartBarIcon, HomeIcon, PlayIcon), GameConfigForm (PlayIcon, ChevronRightIcon, ClockIcon, Cog6ToothIcon), game page quit button (ArrowRightOnRectangleIcon, XMarkIcon), and SongReveal (MusicalNoteIcon replacing emoji). All icons use consistent sizing (h-4/h-5/h-6 based on context) and colors (currentColor or themed). Updated SongReveal tests for new icon implementation. All 498 tests pass.
+Files: package.json, package-lock.json, src/components/game/GameControls.tsx, src/components/game/GameRecap.tsx, src/components/game/LibraryStats.tsx, src/components/game/GameConfigForm.tsx, src/components/game/SongReveal.tsx, src/components/game/SongReveal.test.tsx, src/app/page.tsx, src/app/game/page.tsx
+
+=== Issue 7.9: Créer un thème sombre ===
+Timestamp: 2026-01-18T04:10:00Z
+Status: COMPLETED
+Commit: 1714084
+Notes: Implemented dark theme feature with smooth transitions. Created ThemeContext for dark/festive theme state management with localStorage persistence. Created ThemeToggle component with animated sun/moon icons using Framer Motion (spring animation on knob). Created ThemedLayout wrapper component that applies theme class and passes isDark to FestiveBackground. Enhanced FestiveBackground with darker gradient (#0f0a1f, #1a1333, #0d0d1a) and darker orb colors for dark mode. Added dark theme toggle in GameConfigForm advanced settings section. All theme changes use 500ms transitions for smooth switching. Created comprehensive test suites (7 tests for ThemeContext, 8 tests for ThemeToggle, 6 dark theme tests for FestiveBackground). All 519 tests pass.
+Files: src/contexts/ThemeContext.tsx, src/contexts/ThemeContext.test.tsx, src/components/ui/ThemeToggle.tsx, src/components/ui/ThemeToggle.test.tsx, src/components/layout/ThemedLayout.tsx, src/components/ui/FestiveBackground.tsx, src/components/ui/FestiveBackground.test.tsx, src/components/game/GameConfigForm.tsx, src/app/layout.tsx
+

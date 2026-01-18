@@ -120,8 +120,8 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 7.5 Ajouter l'animation de bonne réponse
 - [x] 7.6 Ajouter l'animation de mauvaise réponse
 - [x] 7.7 Styliser le timer avec urgence
-- [ ] 7.8 Ajouter des icônes
-- [ ] 7.9 Créer un thème sombre
+- [x] 7.8 Ajouter des icônes
+- [x] 7.9 Créer un thème sombre
 - [ ] 7.10 Ajouter des particules de fond
 
 ### Epic 8: Sound Effects (docs/epics/08-sound-effects.md)
