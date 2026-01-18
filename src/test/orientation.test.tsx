@@ -78,8 +78,6 @@ afterEach(cleanup)
 
 // Type for tailwind config screens object
 interface ScreenConfig {
-  portrait: { raw: string }
-  landscape: { raw: string }
   sm: string
   md: string
   lg: string
@@ -88,22 +86,7 @@ interface ScreenConfig {
 }
 
 describe('Orientation: Tailwind Config', () => {
-  it('should have portrait and landscape screen variants configured', async () => {
-    // Import and verify tailwind config has the screen variants
-    const tailwindConfig = await import('../../tailwind.config')
-    const config = tailwindConfig.default
-    const screens = config.theme?.screens as ScreenConfig | undefined
-
-    expect(screens).toBeDefined()
-    expect(screens?.portrait).toEqual({
-      raw: '(orientation: portrait)',
-    })
-    expect(screens?.landscape).toEqual({
-      raw: '(orientation: landscape)',
-    })
-  })
-
-  it('should retain standard breakpoints', async () => {
+  it('should have standard breakpoints configured', async () => {
     const tailwindConfig = await import('../../tailwind.config')
     const config = tailwindConfig.default
     const screens = config.theme?.screens as ScreenConfig | undefined
@@ -113,6 +96,20 @@ describe('Orientation: Tailwind Config', () => {
     expect(screens?.lg).toBe('1024px')
     expect(screens?.xl).toBe('1280px')
     expect(screens?.['2xl']).toBe('1536px')
+  })
+
+  it('should have portrait and landscape variants defined in globals.css', async () => {
+    // In Tailwind v4, orientation variants are defined using @variant in CSS
+    // This test verifies the CSS file contains the expected declarations
+    const fs = await import('fs')
+    const path = await import('path')
+    const cssPath = path.resolve(process.cwd(), 'src/app/globals.css')
+    const cssContent = fs.readFileSync(cssPath, 'utf-8')
+
+    expect(cssContent).toContain('@variant portrait')
+    expect(cssContent).toContain('@variant landscape')
+    expect(cssContent).toContain('(orientation: portrait)')
+    expect(cssContent).toContain('(orientation: landscape)')
   })
 })
 
