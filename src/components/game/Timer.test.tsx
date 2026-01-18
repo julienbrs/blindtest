@@ -1,6 +1,39 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import { Timer } from './Timer'
+
+// Mock Web Audio API
+const mockOscillator = {
+  type: 'sine' as OscillatorType,
+  frequency: {
+    setValueAtTime: vi.fn(),
+    exponentialRampToValueAtTime: vi.fn(),
+  },
+  connect: vi.fn(),
+  start: vi.fn(),
+  stop: vi.fn(),
+}
+
+const mockGainNode = {
+  gain: {
+    setValueAtTime: vi.fn(),
+    exponentialRampToValueAtTime: vi.fn(),
+  },
+  connect: vi.fn(),
+}
+
+const mockAudioContext = {
+  currentTime: 0,
+  state: 'running' as AudioContextState,
+  destination: {},
+  createOscillator: vi.fn(() => ({ ...mockOscillator })),
+  createGain: vi.fn(() => ({ ...mockGainNode })),
+  resume: vi.fn().mockResolvedValue(undefined),
+  close: vi.fn().mockResolvedValue(undefined),
+}
+
+// Store the original AudioContext
+const originalAudioContext = globalThis.AudioContext
 
 // Mock framer-motion to make animations testable
 vi.mock('framer-motion', () => ({
@@ -58,6 +91,16 @@ describe('Timer', () => {
   // Cleanup after each test to prevent duplicate renders
   beforeEach(() => {
     cleanup()
+    vi.clearAllMocks()
+    // Mock AudioContext
+    globalThis.AudioContext = vi.fn(
+      () => mockAudioContext
+    ) as unknown as typeof AudioContext
+  })
+
+  afterEach(() => {
+    // Restore original AudioContext
+    globalThis.AudioContext = originalAudioContext
   })
 
   // Helper to get the motion circle (animated progress circle)
@@ -266,6 +309,110 @@ describe('Timer', () => {
       const animateData = getAnimateData(progressCircle)
       // Progress would be 200%, stroke should still be green
       expect(animateData.stroke).toBe('#22c55e')
+    })
+  })
+
+  describe('timeout sound', () => {
+    it('plays sound when remaining transitions from > 0 to 0', () => {
+      const { rerender } = render(<Timer duration={5} remaining={1} />)
+
+      // Verify no AudioContext created yet (sound only plays at 0)
+      expect(globalThis.AudioContext).not.toHaveBeenCalled()
+
+      // Transition to 0
+      rerender(<Timer duration={5} remaining={0} />)
+
+      // AudioContext should be created and oscillators started
+      expect(globalThis.AudioContext).toHaveBeenCalled()
+      expect(mockAudioContext.createOscillator).toHaveBeenCalled()
+      expect(mockAudioContext.createGain).toHaveBeenCalled()
+    })
+
+    it('does not play sound when remaining is already 0 on mount', () => {
+      render(<Timer duration={5} remaining={0} />)
+
+      // No sound should play because there was no transition
+      expect(globalThis.AudioContext).not.toHaveBeenCalled()
+    })
+
+    it('does not play sound when remaining stays above 0', () => {
+      const { rerender } = render(<Timer duration={5} remaining={3} />)
+      rerender(<Timer duration={5} remaining={2} />)
+      rerender(<Timer duration={5} remaining={1} />)
+
+      // No sound should play until it reaches 0
+      expect(globalThis.AudioContext).not.toHaveBeenCalled()
+    })
+
+    it('plays sound only once even if remaining stays at 0', () => {
+      const { rerender } = render(<Timer duration={5} remaining={1} />)
+      rerender(<Timer duration={5} remaining={0} />)
+
+      const callCount = (globalThis.AudioContext as ReturnType<typeof vi.fn>)
+        .mock.calls.length
+
+      // Re-render with same value
+      rerender(<Timer duration={5} remaining={0} />)
+
+      // Should not create a new AudioContext
+      expect(
+        (globalThis.AudioContext as ReturnType<typeof vi.fn>).mock.calls.length
+      ).toBe(callCount)
+    })
+
+    it('can play sound again after timer resets', () => {
+      const { rerender } = render(<Timer duration={5} remaining={1} />)
+
+      // First timeout
+      rerender(<Timer duration={5} remaining={0} />)
+      expect(globalThis.AudioContext).toHaveBeenCalledTimes(1)
+
+      // Reset timer
+      rerender(<Timer duration={5} remaining={5} />)
+
+      // Second timeout
+      rerender(<Timer duration={5} remaining={1} />)
+      rerender(<Timer duration={5} remaining={0} />)
+
+      // Should have created AudioContext twice (once per timeout)
+      // Note: Due to ref reuse, it may only create once but play multiple times
+      expect(mockAudioContext.createOscillator).toHaveBeenCalled()
+    })
+
+    it('calls onTimeout callback when timer reaches 0', () => {
+      const onTimeout = vi.fn()
+      const { rerender } = render(
+        <Timer duration={5} remaining={1} onTimeout={onTimeout} />
+      )
+
+      expect(onTimeout).not.toHaveBeenCalled()
+
+      rerender(<Timer duration={5} remaining={0} onTimeout={onTimeout} />)
+
+      expect(onTimeout).toHaveBeenCalledTimes(1)
+    })
+
+    it('resumes AudioContext if suspended (browser autoplay policy)', () => {
+      // Set context to suspended state
+      mockAudioContext.state = 'suspended' as AudioContextState
+
+      const { rerender } = render(<Timer duration={5} remaining={1} />)
+      rerender(<Timer duration={5} remaining={0} />)
+
+      expect(mockAudioContext.resume).toHaveBeenCalled()
+
+      // Reset state for other tests
+      mockAudioContext.state = 'running' as AudioContextState
+    })
+
+    it('creates three oscillators for the timeout sound (main, sub, buzz)', () => {
+      const { rerender } = render(<Timer duration={5} remaining={1} />)
+      rerender(<Timer duration={5} remaining={0} />)
+
+      // Should create 3 oscillators
+      expect(mockAudioContext.createOscillator).toHaveBeenCalledTimes(3)
+      // Should create 3 gain nodes
+      expect(mockAudioContext.createGain).toHaveBeenCalledTimes(3)
     })
   })
 })

@@ -1,15 +1,116 @@
 'use client'
 
+import { useRef, useEffect, useCallback } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 
 interface TimerProps {
   duration: number
   remaining: number
+  onTimeout?: () => void
 }
 
-export function Timer({ duration, remaining }: TimerProps) {
+export function Timer({ duration, remaining, onTimeout }: TimerProps) {
   const progress = (remaining / duration) * 100
   const prefersReducedMotion = useReducedMotion()
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const prevRemainingRef = useRef<number>(remaining)
+  const hasPlayedTimeoutSoundRef = useRef(false)
+
+  // Generate timeout sound using Web Audio API - a distinctive "time's up" buzzer/gong
+  const playTimeoutSound = useCallback(() => {
+    try {
+      // Create or resume AudioContext
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext()
+      }
+      const ctx = audioContextRef.current
+
+      // Resume if suspended (browser autoplay policy)
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+
+      const now = ctx.currentTime
+      const volume = 0.5
+
+      // Create a descending "time's up" buzzer sound
+      // Similar to game show timeout buzzer
+
+      // Main tone - descending frequency
+      const mainOsc = ctx.createOscillator()
+      const mainGain = ctx.createGain()
+      mainOsc.type = 'sawtooth'
+      mainOsc.frequency.setValueAtTime(400, now)
+      mainOsc.frequency.exponentialRampToValueAtTime(150, now + 0.5)
+      mainGain.gain.setValueAtTime(volume * 0.6, now)
+      mainGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5)
+      mainOsc.connect(mainGain)
+      mainGain.connect(ctx.destination)
+
+      // Sub bass for impact
+      const subOsc = ctx.createOscillator()
+      const subGain = ctx.createGain()
+      subOsc.type = 'sine'
+      subOsc.frequency.setValueAtTime(100, now)
+      subOsc.frequency.exponentialRampToValueAtTime(50, now + 0.4)
+      subGain.gain.setValueAtTime(volume * 0.5, now)
+      subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4)
+      subOsc.connect(subGain)
+      subGain.connect(ctx.destination)
+
+      // Add a brief "buzz" overtone for harshness
+      const buzzOsc = ctx.createOscillator()
+      const buzzGain = ctx.createGain()
+      buzzOsc.type = 'square'
+      buzzOsc.frequency.setValueAtTime(200, now)
+      buzzOsc.frequency.exponentialRampToValueAtTime(80, now + 0.3)
+      buzzGain.gain.setValueAtTime(volume * 0.3, now)
+      buzzGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+      buzzOsc.connect(buzzGain)
+      buzzGain.connect(ctx.destination)
+
+      // Start and stop oscillators
+      mainOsc.start(now)
+      mainOsc.stop(now + 0.5)
+      subOsc.start(now)
+      subOsc.stop(now + 0.4)
+      buzzOsc.start(now)
+      buzzOsc.stop(now + 0.3)
+    } catch {
+      // Ignore audio errors (e.g., if AudioContext is not supported)
+    }
+  }, [])
+
+  // Play timeout sound when timer reaches 0
+  useEffect(() => {
+    // Reset the flag when timer is reset (remaining goes back up)
+    if (remaining > 0 && hasPlayedTimeoutSoundRef.current) {
+      hasPlayedTimeoutSoundRef.current = false
+    }
+
+    // Play sound only when transitioning from > 0 to 0
+    if (
+      remaining === 0 &&
+      prevRemainingRef.current > 0 &&
+      !hasPlayedTimeoutSoundRef.current
+    ) {
+      hasPlayedTimeoutSoundRef.current = true
+      playTimeoutSound()
+      onTimeout?.()
+    }
+
+    prevRemainingRef.current = remaining
+  }, [remaining, onTimeout, playTimeoutSound])
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+    }
+  }, [])
 
   // Color transitions based on absolute seconds (per epic 7.7):
   // 5-4s = Yellow (Normal)
