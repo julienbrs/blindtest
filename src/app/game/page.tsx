@@ -399,10 +399,10 @@ function GameContent() {
           score={game.state.score}
           songsPlayed={game.state.songsPlayed}
         />
-        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           {/* Music Volume Slider - Hidden on very small screens, compact on mobile */}
           <div
-            className="hidden items-center gap-1 rounded-lg bg-white/10 px-2 py-1 sm:flex sm:gap-2 sm:px-3 sm:py-1.5"
+            className="hidden min-h-[44px] items-center gap-2 rounded-lg bg-white/10 px-3 py-2 sm:flex"
             data-testid="music-volume-control"
           >
             <MusicalNoteIcon
@@ -416,12 +416,12 @@ function GameContent() {
               step={0.1}
               value={musicVolume}
               onChange={handleMusicVolumeChange}
-              className="w-14 cursor-pointer accent-purple-500 sm:w-20 md:w-24"
+              className="h-6 w-16 cursor-pointer accent-purple-500 sm:w-20 md:w-24"
               aria-label="Volume de la musique"
               data-testid="music-volume-slider"
             />
             <span
-              className="w-7 text-xs text-purple-300 sm:w-8"
+              className="w-8 text-xs text-purple-300"
               data-testid="music-volume-percentage"
             >
               {Math.round(musicVolume * 100)}%
@@ -481,7 +481,7 @@ function GameContent() {
                   onClick={() => setShowQuitConfirm(false)}
                   variant="secondary"
                   size="md"
-                  className="flex flex-1 items-center justify-center gap-2"
+                  className="flex min-w-[44px] flex-1 items-center justify-center gap-2"
                 >
                   <XMarkIcon className="h-5 w-5" />
                   Annuler
@@ -490,7 +490,7 @@ function GameContent() {
                   onClick={() => router.push('/')}
                   variant="danger"
                   size="md"
-                  className="flex flex-1 items-center justify-center gap-2"
+                  className="flex min-w-[44px] flex-1 items-center justify-center gap-2"
                 >
                   <ArrowRightOnRectangleIcon className="h-5 w-5" />
                   Quitter

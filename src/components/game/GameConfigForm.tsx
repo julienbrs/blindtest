@@ -271,7 +271,7 @@ export function GameConfigForm() {
           {modes.map((mode) => (
             <label
               key={mode.value}
-              className={`flex cursor-pointer items-center rounded-lg p-4 transition-all ${
+              className={`flex min-h-[48px] cursor-pointer items-center rounded-lg p-4 transition-all ${
                 guessMode === mode.value
                   ? 'border-2 border-purple-400 bg-purple-500/30'
                   : 'border-2 border-transparent bg-white/5 hover:bg-white/10'
@@ -344,7 +344,7 @@ export function GameConfigForm() {
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex w-full items-center justify-center gap-2 text-purple-300 transition-colors hover:text-white"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg p-3 text-purple-300 transition-colors hover:bg-white/5 hover:text-white"
         >
           <ChevronRightIcon
             className={`h-4 w-4 transform transition-transform duration-200 ${showAdvanced ? 'rotate-90' : ''}`}
@@ -389,7 +389,7 @@ export function GameConfigForm() {
             </div>
 
             {/* No timer toggle */}
-            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 p-3 transition-colors hover:bg-white/10">
+            <label className="flex min-h-[48px] cursor-pointer items-center justify-between rounded-lg bg-white/5 p-4 transition-colors hover:bg-white/10">
               <div>
                 <div className="font-medium">Mode sans timer</div>
                 <div className="text-sm text-purple-200">
@@ -414,7 +414,7 @@ export function GameConfigForm() {
             </label>
 
             {/* Random start point toggle */}
-            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 p-3 transition-colors hover:bg-white/10">
+            <label className="flex min-h-[48px] cursor-pointer items-center justify-between rounded-lg bg-white/5 p-4 transition-colors hover:bg-white/10">
               <div>
                 <div className="font-medium">Départ aléatoire</div>
                 <div className="text-sm text-purple-200">
@@ -441,7 +441,7 @@ export function GameConfigForm() {
             </label>
 
             {/* Dark theme toggle */}
-            <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 p-3 transition-colors hover:bg-white/10">
+            <label className="flex min-h-[48px] cursor-pointer items-center justify-between rounded-lg bg-white/5 p-4 transition-colors hover:bg-white/10">
               <div className="flex items-center gap-3">
                 <MoonIcon className="h-5 w-5 text-purple-400" />
                 <div>

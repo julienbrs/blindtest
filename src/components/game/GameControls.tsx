@@ -42,7 +42,7 @@ export function GameControls({
   const showReplayButton = status === 'reveal' && onReplay
 
   return (
-    <footer className="mt-4 flex flex-col items-center gap-3 sm:mt-6 sm:gap-4">
+    <footer className="mt-4 flex flex-col items-center gap-4 sm:mt-6">
       {/* Next song button - visible only in reveal state */}
       {showNextButton && (
         <Button
@@ -71,7 +71,7 @@ export function GameControls({
 
       {/* Validation buttons - visible after buzz */}
       {showValidationButtons && (
-        <div className="flex w-full gap-2 sm:gap-4">
+        <div className="flex w-full gap-4">
           <Button
             onClick={() => onValidate(true)}
             variant="success"
@@ -109,7 +109,7 @@ export function GameControls({
       {/* Play/Pause button - always visible for MJ control */}
       <button
         onClick={isPlaying ? onPause : onPlay}
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-purple-400/50 sm:h-14 sm:w-14 md:h-16 md:w-16"
+        className="flex h-12 w-12 min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20 focus:outline-none focus:ring-4 focus:ring-purple-400/50 sm:h-14 sm:w-14 md:h-16 md:w-16"
         aria-label={isPlaying ? 'Pause' : 'Play'}
       >
         {isPlaying ? (
