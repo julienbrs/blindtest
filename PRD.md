@@ -126,7 +126,7 @@ After this task, all subsequent issues run with full feedback loops.
 
 ### Epic 8: Sound Effects (docs/epics/08-sound-effects.md)
 
-- [ ] 8.1 Ajouter un son de buzzer
+- [x] 8.1 Ajouter un son de buzzer
 - [ ] 8.2 Ajouter un son de bonne réponse
 - [ ] 8.3 Ajouter un son de mauvaise réponse
 - [ ] 8.4 Ajouter un son de fin de timer
