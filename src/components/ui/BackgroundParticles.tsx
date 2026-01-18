@@ -27,6 +27,27 @@ function useReducedMotion() {
   )
 }
 
+// Detect mobile devices for performance optimization
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      // Check screen width and touch support for mobile detection
+      const hasTouchScreen =
+        'ontouchstart' in window || navigator.maxTouchPoints > 0
+      const isSmallScreen = window.innerWidth < 768
+      setIsMobile(hasTouchScreen && isSmallScreen)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  return isMobile
+}
+
 interface BackgroundParticlesProps {
   isDark?: boolean
 }
@@ -36,6 +57,7 @@ export function BackgroundParticles({
 }: BackgroundParticlesProps) {
   const [init, setInit] = useState(false)
   const reducedMotion = useReducedMotion()
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     // Don't initialize if reduced motion is preferred
@@ -48,6 +70,11 @@ export function BackgroundParticles({
     })
   }, [reducedMotion])
 
+  // Mobile performance optimization: reduce particle count and FPS
+  const particleCount = isMobile ? 15 : 30
+  const fpsLimit = isMobile ? 30 : 60
+  const particleSpeed = isMobile ? 0.3 : 0.4
+
   const options: ISourceOptions = useMemo(
     () => ({
       fullScreen: false,
@@ -56,10 +83,10 @@ export function BackgroundParticles({
           value: 'transparent',
         },
       },
-      fpsLimit: 60,
+      fpsLimit,
       particles: {
         number: {
-          value: 30,
+          value: particleCount,
           density: {
             enable: true,
           },
@@ -72,7 +99,7 @@ export function BackgroundParticles({
         opacity: {
           value: { min: 0.05, max: isDark ? 0.12 : 0.2 },
           animation: {
-            enable: true,
+            enable: !isMobile, // Disable opacity animation on mobile
             speed: 0.3,
             sync: false,
           },
@@ -80,14 +107,14 @@ export function BackgroundParticles({
         size: {
           value: { min: 2, max: 6 },
           animation: {
-            enable: true,
+            enable: !isMobile, // Disable size animation on mobile
             speed: 1,
             sync: false,
           },
         },
         move: {
           enable: true,
-          speed: 0.4,
+          speed: particleSpeed,
           direction: 'none',
           random: true,
           straight: false,
@@ -100,7 +127,7 @@ export function BackgroundParticles({
         },
         twinkle: {
           particles: {
-            enable: true,
+            enable: !isMobile, // Disable twinkle on mobile for performance
             frequency: 0.03,
             opacity: 1,
             color: {
@@ -109,9 +136,9 @@ export function BackgroundParticles({
           },
         },
       },
-      detectRetina: true,
+      detectRetina: !isMobile, // Disable retina on mobile to reduce rendering load
     }),
-    [isDark]
+    [isDark, isMobile, particleCount, fpsLimit, particleSpeed]
   )
 
   // Don't render if reduced motion is preferred or not initialized

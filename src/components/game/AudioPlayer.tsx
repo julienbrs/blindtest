@@ -1,6 +1,27 @@
 'use client'
 
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+
+/**
+ * Simple debounce function for performance optimization.
+ * Returns a debounced version of the callback that will only execute
+ * after the specified delay has passed since the last call.
+ */
+function debounce<T extends (...args: Parameters<T>) => void>(
+  fn: T,
+  delay: number
+): T {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+  return ((...args: Parameters<T>) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+    timeoutId = setTimeout(() => {
+      fn(...args)
+      timeoutId = null
+    }, delay)
+  }) as T
+}
 
 interface AudioPlayerProps {
   songId: string | undefined
@@ -81,11 +102,18 @@ export function AudioPlayer({
     }
   }, [shouldReplay, isLoaded, onReplayComplete])
 
-  const handleTimeUpdate = () => {
+  // Debounced time update to reduce re-renders on mobile (100ms delay)
+  // We still want smooth UI updates, so use a short delay
+  const debouncedSetTime = useMemo(
+    () => debounce((time: number) => setCurrentTime(time), 100),
+    []
+  )
+
+  const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime)
+      debouncedSetTime(audioRef.current.currentTime)
     }
-  }
+  }, [debouncedSetTime])
 
   const handleCanPlay = () => {
     setIsLoaded(true)

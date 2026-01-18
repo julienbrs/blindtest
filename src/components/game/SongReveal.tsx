@@ -4,6 +4,10 @@ import Image from 'next/image'
 import { MusicalNoteIcon } from '@heroicons/react/24/solid'
 import type { Song, GuessMode } from '@/lib/types'
 
+// Base64 1x1 purple blur placeholder for instant loading
+const PLACEHOLDER_BLUR =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOUl5NaAwABfgDfMlTqNgAAAABJRU5ErkJggg=='
+
 interface SongRevealProps {
   song: Song | null
   isRevealed: boolean
@@ -27,6 +31,11 @@ export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
           src={`/api/cover/${song.id}`}
           alt="Pochette album"
           fill
+          sizes="(max-width: 640px) 192px, (max-width: 768px) 224px, 256px"
+          quality={75}
+          placeholder="blur"
+          blurDataURL={PLACEHOLDER_BLUR}
+          priority
           className={`object-cover transition-all duration-500 ${
             isRevealed ? '' : 'scale-110 blur-xl'
           }`}

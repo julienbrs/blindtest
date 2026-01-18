@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useSyncExternalStore } from 'react'
+import { useMemo, useSyncExternalStore, useState, useEffect } from 'react'
 
 interface Orb {
   id: number
@@ -115,6 +115,27 @@ function useReducedMotion() {
   )
 }
 
+// Detect mobile devices for performance optimization
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      // Check screen width and touch support for mobile detection
+      const hasTouchScreen =
+        'ontouchstart' in window || navigator.maxTouchPoints > 0
+      const isSmallScreen = window.innerWidth < 768
+      setIsMobile(hasTouchScreen && isSmallScreen)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  return isMobile
+}
+
 // Festive gradient (colorful, vibrant)
 const FESTIVE_GRADIENT =
   'linear-gradient(-45deg, #1e1b4b, #581c87, #be185d, #1e1b4b)'
@@ -128,8 +149,14 @@ interface FestiveBackgroundProps {
 }
 
 export function FestiveBackground({ isDark = false }: FestiveBackgroundProps) {
-  const orbs = useMemo(() => PRE_GENERATED_ORBS, [])
   const reducedMotion = useReducedMotion()
+  const isMobile = useIsMobile()
+
+  // Mobile optimization: reduce number of orbs from 6 to 3
+  const orbs = useMemo(
+    () => (isMobile ? PRE_GENERATED_ORBS.slice(0, 3) : PRE_GENERATED_ORBS),
+    [isMobile]
+  )
 
   const gradient = isDark ? DARK_GRADIENT : FESTIVE_GRADIENT
 
@@ -156,7 +183,7 @@ export function FestiveBackground({ isDark = false }: FestiveBackgroundProps) {
         }}
       />
 
-      {/* Floating orbs */}
+      {/* Floating orbs - reduced on mobile for performance */}
       {orbs.map((orb) => (
         <div
           key={orb.id}
@@ -166,7 +193,7 @@ export function FestiveBackground({ isDark = false }: FestiveBackgroundProps) {
             top: orb.top,
             width: orb.size,
             height: orb.size,
-            filter: 'blur(60px)',
+            filter: isMobile ? 'blur(40px)' : 'blur(60px)', // Lighter blur on mobile
             animationDelay: orb.animationDelay,
             animationDuration: orb.animationDuration,
           }}

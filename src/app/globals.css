@@ -96,3 +96,24 @@ h6 {
 .animate-fade-in {
   animation: fade-in 0.5s ease-out forwards;
 }
+
+/* Respect prefers-reduced-motion for all animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* GPU acceleration for animated elements */
+.animate-gradient-shift,
+.animate-float-orb,
+.animate-pulse-subtle,
+.animate-fade-in {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
