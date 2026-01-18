@@ -18,6 +18,7 @@ import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAudioUnlock } from '@/hooks/useAudioUnlock'
+import { useAudioSupport } from '@/hooks/useAudioSupport'
 import { fetchWithRetry, NetworkError } from '@/lib/utils'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
@@ -29,6 +30,7 @@ import { GameRecap } from '@/components/game/GameRecap'
 import { CorrectAnswerFlash } from '@/components/game/CorrectAnswerFlash'
 import { IncorrectAnswerFlash } from '@/components/game/IncorrectAnswerFlash'
 import { NetworkErrorToast } from '@/components/game/NetworkErrorToast'
+import { BrowserUnsupportedError } from '@/components/game/BrowserUnsupportedError'
 import { Button } from '@/components/ui/Button'
 import type { GameConfig, GuessMode, Song } from '@/lib/types'
 
@@ -59,6 +61,11 @@ function GameContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const shouldReduceMotion = useReducedMotion()
+
+  // Check browser audio support at load time
+  const { isSupported: isAudioSupported, isChecking: isCheckingAudio } =
+    useAudioSupport()
+
   const [showQuitConfirm, setShowQuitConfirm] = useState(false)
   const [allSongsPlayed, setAllSongsPlayed] = useState(false)
   // Track which song ID triggered the audio ready state
@@ -491,6 +498,20 @@ function GameContent() {
       exit: 'exit',
       transition,
     }
+  }
+
+  // Show loading screen while checking audio support
+  if (isCheckingAudio) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
+      </div>
+    )
+  }
+
+  // Show error screen if browser doesn't support audio
+  if (!isAudioSupported) {
+    return <BrowserUnsupportedError />
   }
 
   // Show recap screen when game is ended

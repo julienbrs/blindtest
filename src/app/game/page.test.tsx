@@ -102,6 +102,17 @@ vi.mock('@/hooks/useFullscreen', () => ({
   }),
 }))
 
+// Mock useAudioSupport hook
+let mockIsAudioSupported = true
+let mockIsCheckingAudio = false
+
+vi.mock('@/hooks/useAudioSupport', () => ({
+  useAudioSupport: () => ({
+    isSupported: mockIsAudioSupported,
+    isChecking: mockIsCheckingAudio,
+  }),
+}))
+
 // Track volume passed to AudioPlayer
 let lastVolumeReceived: number | undefined
 
@@ -201,6 +212,9 @@ function resetMockState() {
   mockIsFullscreen = false
   mockIsFullscreenSupported = true
   mockToggleFullscreen.mockClear()
+  // Reset audio support mock state
+  mockIsAudioSupported = true
+  mockIsCheckingAudio = false
 }
 
 describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
@@ -1220,5 +1234,101 @@ describe('GamePage - Fullscreen Mode (Issue 9.7)', () => {
 
     const fullscreenToggle = screen.getByTestId('fullscreen-toggle')
     expect(fullscreenToggle).toHaveClass('flex', 'items-center')
+  })
+})
+
+describe('GamePage - Browser Audio Support Detection (Issue 10.4)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+  })
+
+  it('shows loading spinner while checking audio support', () => {
+    mockIsCheckingAudio = true
+    render(<GamePage />)
+
+    // Should show loading spinner
+    const spinner = document.querySelector('.animate-spin')
+    expect(spinner).toBeInTheDocument()
+  })
+
+  it('does not show game UI while checking audio support', () => {
+    mockIsCheckingAudio = true
+    render(<GamePage />)
+
+    // Game UI should not be visible
+    expect(screen.queryByTestId('audio-player')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('score-display')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('game-controls')).not.toBeInTheDocument()
+  })
+
+  it('shows BrowserUnsupportedError when audio is not supported', () => {
+    mockIsAudioSupported = false
+    mockIsCheckingAudio = false
+    render(<GamePage />)
+
+    expect(screen.getByTestId('browser-unsupported-error')).toBeInTheDocument()
+  })
+
+  it('displays error message about unsupported browser', () => {
+    mockIsAudioSupported = false
+    mockIsCheckingAudio = false
+    render(<GamePage />)
+
+    expect(
+      screen.getByRole('heading', { name: /navigateur non supporté/i })
+    ).toBeInTheDocument()
+  })
+
+  it('displays recommended browsers list when audio not supported', () => {
+    mockIsAudioSupported = false
+    mockIsCheckingAudio = false
+    render(<GamePage />)
+
+    expect(screen.getByText(/navigateurs recommandés/i)).toBeInTheDocument()
+    expect(screen.getByText(/google chrome/i)).toBeInTheDocument()
+    expect(screen.getByText(/mozilla firefox/i)).toBeInTheDocument()
+    expect(screen.getByText(/safari/i)).toBeInTheDocument()
+  })
+
+  it('does not show game UI when audio is not supported', () => {
+    mockIsAudioSupported = false
+    mockIsCheckingAudio = false
+    render(<GamePage />)
+
+    expect(screen.queryByTestId('audio-player')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('score-display')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('buzzer-button')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('game-controls')).not.toBeInTheDocument()
+  })
+
+  it('shows game UI when audio is supported', () => {
+    mockIsAudioSupported = true
+    mockIsCheckingAudio = false
+    render(<GamePage />)
+
+    expect(screen.getByTestId('audio-player')).toBeInTheDocument()
+    expect(screen.getByTestId('score-display')).toBeInTheDocument()
+    expect(screen.getByTestId('game-controls')).toBeInTheDocument()
+  })
+
+  it('does not show error when audio is supported', () => {
+    mockIsAudioSupported = true
+    mockIsCheckingAudio = false
+    render(<GamePage />)
+
+    expect(
+      screen.queryByTestId('browser-unsupported-error')
+    ).not.toBeInTheDocument()
+  })
+
+  it('checks audio support at page load', () => {
+    // This test verifies the check happens by observing the behavior
+    mockIsAudioSupported = true
+    mockIsCheckingAudio = false
+    render(<GamePage />)
+
+    // If check happened and passed, we should see normal game UI
+    expect(screen.getByTestId('audio-player')).toBeInTheDocument()
   })
 })
