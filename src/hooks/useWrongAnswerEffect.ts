@@ -69,11 +69,20 @@ function playIncorrectSound(audioContext: AudioContext, volume = 0.5): void {
   clickOsc.stop(now + 0.05)
 }
 
+interface UseWrongAnswerEffectOptions {
+  respectReducedMotion?: boolean
+  /** Optional callback to play incorrect sound (when provided, internal sound is disabled) */
+  onPlaySound?: () => void
+}
+
 /**
  * Hook to trigger visual and audio feedback effects when a wrong answer is given.
  * Includes a shake effect that can be applied to a container and a "whomp" sound.
  */
-export function useWrongAnswerEffect(respectReducedMotion = true) {
+export function useWrongAnswerEffect(
+  options: UseWrongAnswerEffectOptions = {}
+) {
+  const { respectReducedMotion = true, onPlaySound } = options
   const [isShaking, setIsShaking] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -89,15 +98,19 @@ export function useWrongAnswerEffect(respectReducedMotion = true) {
   }, [])
 
   const triggerShake = useCallback(() => {
-    // Play sound (always, regardless of reduced motion - sound is not a visual effect)
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext()
+    // Play sound - use external callback if provided, otherwise use internal sound
+    if (onPlaySound) {
+      onPlaySound()
+    } else {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext()
+      }
+      // Resume context if suspended (browser autoplay policy)
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume()
+      }
+      playIncorrectSound(audioContextRef.current)
     }
-    // Resume context if suspended (browser autoplay policy)
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume()
-    }
-    playIncorrectSound(audioContextRef.current)
 
     // Check for reduced motion preference (affects visuals only, not sound)
     if (
@@ -119,7 +132,7 @@ export function useWrongAnswerEffect(respectReducedMotion = true) {
     timeoutRef.current = setTimeout(() => {
       setIsShaking(false)
     }, 400) // Duration matches the shake animation
-  }, [respectReducedMotion])
+  }, [respectReducedMotion, onPlaySound])
 
   // Cleanup function to cancel any pending timeout
   const cleanup = useCallback(() => {

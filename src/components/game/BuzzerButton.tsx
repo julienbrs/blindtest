@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 interface BuzzerButtonProps {
   onBuzz: () => void
   disabled?: boolean
+  /** Optional callback to play buzzer sound (when provided, internal sound is disabled) */
+  onPlaySound?: () => void
 }
 
 /**
@@ -59,7 +61,11 @@ function playBuzzSound(
   })
 }
 
-export function BuzzerButton({ onBuzz, disabled = false }: BuzzerButtonProps) {
+export function BuzzerButton({
+  onBuzz,
+  disabled = false,
+  onPlaySound,
+}: BuzzerButtonProps) {
   const [justBuzzed, setJustBuzzed] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
 
@@ -75,8 +81,12 @@ export function BuzzerButton({ onBuzz, disabled = false }: BuzzerButtonProps) {
 
   const handleClick = useCallback(() => {
     if (!disabled) {
-      // Play buzzer sound immediately
-      playBuzzSound(audioContextRef)
+      // Play buzzer sound - use external callback if provided, otherwise use internal sound
+      if (onPlaySound) {
+        onPlaySound()
+      } else {
+        playBuzzSound(audioContextRef)
+      }
 
       // Trigger mobile vibration if supported
       if (typeof navigator.vibrate === 'function') {
@@ -89,7 +99,7 @@ export function BuzzerButton({ onBuzz, disabled = false }: BuzzerButtonProps) {
 
       onBuzz()
     }
-  }, [disabled, onBuzz])
+  }, [disabled, onBuzz, onPlaySound])
 
   return (
     <div className="relative">

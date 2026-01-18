@@ -49,6 +49,44 @@ vi.mock('@/hooks/useGameState', () => ({
   }),
 }))
 
+// Mock useSoundEffects hook
+let mockSfxIsMuted = false
+const mockSfxSetMuted = vi.fn((muted: boolean) => {
+  mockSfxIsMuted = muted
+})
+
+vi.mock('@/hooks/useSoundEffects', () => ({
+  useSoundEffects: () => ({
+    buzz: vi.fn(),
+    correct: vi.fn(),
+    incorrect: vi.fn(),
+    timeout: vi.fn(),
+    tick: vi.fn(),
+    reveal: vi.fn(),
+    setMuted: mockSfxSetMuted,
+    setVolume: vi.fn(),
+    isMuted: mockSfxIsMuted,
+    volume: 0.7,
+  }),
+}))
+
+// Mock useCorrectAnswerCelebration hook
+vi.mock('@/hooks/useCorrectAnswerCelebration', () => ({
+  useCorrectAnswerCelebration: () => ({
+    celebrate: vi.fn(),
+    cleanup: vi.fn(),
+  }),
+}))
+
+// Mock useWrongAnswerEffect hook
+vi.mock('@/hooks/useWrongAnswerEffect', () => ({
+  useWrongAnswerEffect: () => ({
+    isShaking: false,
+    triggerShake: vi.fn(),
+    cleanup: vi.fn(),
+  }),
+}))
+
 // Mock child components to simplify testing
 vi.mock('@/components/game/AudioPlayer', () => ({
   AudioPlayer: ({
@@ -127,6 +165,9 @@ function resetMockState() {
     isRevealed: false,
     timerRemaining: 5,
   }
+  // Reset SFX mock state
+  mockSfxIsMuted = false
+  mockSfxSetMuted.mockClear()
 }
 
 describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
@@ -588,5 +629,80 @@ describe('GamePage - Next Song Preloading (Issue 6.14)', () => {
     expect(screen.getByTestId('song-reveal')).toBeInTheDocument()
     // The exclude list will be: song1,song2,song3,current123
     // This is verified by the implementation logic
+  })
+})
+
+describe('GamePage - SFX Mute Toggle (Issue 8.7)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+    // Clear localStorage mock
+    Storage.prototype.getItem = vi.fn(() => null)
+    Storage.prototype.setItem = vi.fn()
+  })
+
+  it('renders SFX mute toggle button in header', () => {
+    render(<GamePage />)
+
+    const sfxToggle = screen.getByTestId('sfx-mute-toggle')
+    expect(sfxToggle).toBeInTheDocument()
+  })
+
+  it('SFX toggle button shows speaker icon when not muted', () => {
+    mockSfxIsMuted = false
+    render(<GamePage />)
+
+    const sfxToggle = screen.getByTestId('sfx-mute-toggle')
+    expect(sfxToggle).toHaveAttribute('aria-label', 'Couper les effets sonores')
+  })
+
+  it('SFX toggle shows SFX label on desktop', () => {
+    render(<GamePage />)
+
+    const sfxToggle = screen.getByTestId('sfx-mute-toggle')
+    expect(sfxToggle.textContent).toContain('SFX')
+  })
+
+  it('clicking toggle calls setMuted with toggled value', () => {
+    mockSfxIsMuted = false
+    render(<GamePage />)
+
+    const sfxToggle = screen.getByTestId('sfx-mute-toggle')
+    fireEvent.click(sfxToggle)
+
+    expect(mockSfxSetMuted).toHaveBeenCalledWith(true)
+  })
+
+  it('saves muted state to localStorage on toggle', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
+    mockSfxIsMuted = false
+    render(<GamePage />)
+
+    const sfxToggle = screen.getByTestId('sfx-mute-toggle')
+    fireEvent.click(sfxToggle)
+
+    expect(setItemSpy).toHaveBeenCalledWith('sfx_muted', 'true')
+  })
+
+  it('loads muted state from localStorage on mount', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockReturnValue('true')
+    render(<GamePage />)
+
+    // setMuted should be called with the saved value
+    expect(mockSfxSetMuted).toHaveBeenCalledWith(true)
+  })
+
+  it('handles invalid localStorage value gracefully', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockReturnValue('invalid json{')
+
+    // Should not throw
+    expect(() => render(<GamePage />)).not.toThrow()
+  })
+
+  it('SFX toggle does not affect music playback (AudioPlayer is independent)', () => {
+    render(<GamePage />)
+
+    // AudioPlayer should still be rendered regardless of SFX mute state
+    expect(screen.getByTestId('audio-player')).toBeInTheDocument()
   })
 })

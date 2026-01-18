@@ -139,7 +139,9 @@ describe('useCorrectAnswerCelebration', () => {
   it('ignores reduced motion when respectReducedMotion is false', () => {
     mockMatchMedia.mockReturnValue({ matches: true })
 
-    const { result } = renderHook(() => useCorrectAnswerCelebration(false))
+    const { result } = renderHook(() =>
+      useCorrectAnswerCelebration({ respectReducedMotion: false })
+    )
 
     act(() => {
       result.current.celebrate()

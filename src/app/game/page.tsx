@@ -3,10 +3,16 @@
 import { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { ArrowRightOnRectangleIcon, XMarkIcon } from '@heroicons/react/24/solid'
+import {
+  ArrowRightOnRectangleIcon,
+  XMarkIcon,
+  SpeakerWaveIcon,
+  SpeakerXMarkIcon,
+} from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
 import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
+import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { Timer } from '@/components/game/Timer'
@@ -60,16 +66,19 @@ function GameContent() {
   // Track incorrect answer flash animation
   const [showIncorrectFlash, setShowIncorrectFlash] = useState(false)
 
-  // Celebration effects for correct answers
-  const { celebrate, cleanup: cleanupCelebration } =
-    useCorrectAnswerCelebration()
+  // Sound effects hook - must be before effects that use it
+  const sfx = useSoundEffects()
 
-  // Wrong answer effects (shake)
+  // Celebration effects for correct answers - use centralized sfx hook
+  const { celebrate, cleanup: cleanupCelebration } =
+    useCorrectAnswerCelebration({ onPlaySound: sfx.correct })
+
+  // Wrong answer effects (shake) - use centralized sfx hook
   const {
     isShaking,
     triggerShake,
     cleanup: cleanupShake,
-  } = useWrongAnswerEffect()
+  } = useWrongAnswerEffect({ onPlaySound: sfx.incorrect })
 
   // Preloading state for the next song
   const [nextSong, setNextSong] = useState<Song | null>(null)
@@ -87,6 +96,26 @@ function GameContent() {
   }
 
   const game = useGameState(config)
+
+  // Load SFX muted state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('sfx_muted')
+    if (saved !== null) {
+      try {
+        const muted = JSON.parse(saved) as boolean
+        sfx.setMuted(muted)
+      } catch {
+        // Ignore invalid JSON
+      }
+    }
+  }, [sfx])
+
+  // Handle SFX mute toggle with localStorage persistence
+  const handleToggleSfxMute = useCallback(() => {
+    const newMuted = !sfx.isMuted
+    sfx.setMuted(newMuted)
+    localStorage.setItem('sfx_muted', JSON.stringify(newMuted))
+  }, [sfx])
 
   // Prefetch the next song during REVEAL state
   const prefetchNextSong = useCallback(async (excludeIds: string[]) => {
@@ -346,15 +375,37 @@ function GameContent() {
           score={game.state.score}
           songsPlayed={game.state.songsPlayed}
         />
-        <Button
-          onClick={() => setShowQuitConfirm(true)}
-          variant="secondary"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <ArrowRightOnRectangleIcon className="h-4 w-4" />
-          Quitter
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* SFX Mute Toggle Button */}
+          <Button
+            onClick={handleToggleSfxMute}
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-2"
+            aria-label={
+              sfx.isMuted
+                ? 'Activer les effets sonores'
+                : 'Couper les effets sonores'
+            }
+            data-testid="sfx-mute-toggle"
+          >
+            {sfx.isMuted ? (
+              <SpeakerXMarkIcon className="h-4 w-4" />
+            ) : (
+              <SpeakerWaveIcon className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">SFX</span>
+          </Button>
+          <Button
+            onClick={() => setShowQuitConfirm(true)}
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <ArrowRightOnRectangleIcon className="h-4 w-4" />
+            Quitter
+          </Button>
+        </div>
       </header>
 
       {/* Quit confirmation modal */}
@@ -447,7 +498,10 @@ function GameContent() {
                 className="flex items-center justify-center"
                 {...getAnimationProps(fadeSlideUp)}
               >
-                <BuzzerButton onBuzz={game.actions.buzz} />
+                <BuzzerButton
+                  onBuzz={game.actions.buzz}
+                  onPlaySound={sfx.buzz}
+                />
               </motion.div>
             )}
 
@@ -461,6 +515,8 @@ function GameContent() {
                 <Timer
                   duration={config.timerDuration}
                   remaining={game.state.timerRemaining}
+                  onPlayTick={sfx.tick}
+                  onPlayTimeout={sfx.timeout}
                 />
               </motion.div>
             )}

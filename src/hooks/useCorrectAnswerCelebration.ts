@@ -78,11 +78,20 @@ function playCorrectSound(audioContext: AudioContext, volume = 0.6): void {
   })
 }
 
+interface UseCorrectAnswerCelebrationOptions {
+  respectReducedMotion?: boolean
+  /** Optional callback to play correct sound (when provided, internal sound is disabled) */
+  onPlaySound?: () => void
+}
+
 /**
  * Hook to trigger celebration effects when a correct answer is given.
  * Includes confetti animation, green flash overlay, and celebratory sound.
  */
-export function useCorrectAnswerCelebration(respectReducedMotion = true) {
+export function useCorrectAnswerCelebration(
+  options: UseCorrectAnswerCelebrationOptions = {}
+) {
+  const { respectReducedMotion = true, onPlaySound } = options
   const confettiRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
 
@@ -103,15 +112,19 @@ export function useCorrectAnswerCelebration(respectReducedMotion = true) {
       respectReducedMotion &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    // Play celebration sound (always, regardless of reduced motion)
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext()
+    // Play celebration sound - use external callback if provided, otherwise use internal sound
+    if (onPlaySound) {
+      onPlaySound()
+    } else {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext()
+      }
+      // Resume context if suspended (browser autoplay policy)
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume()
+      }
+      playCorrectSound(audioContextRef.current)
     }
-    // Resume context if suspended (browser autoplay policy)
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume()
-    }
-    playCorrectSound(audioContextRef.current)
 
     // Skip visual effects if reduced motion is preferred
     if (prefersReducedMotion) {
@@ -148,7 +161,7 @@ export function useCorrectAnswerCelebration(respectReducedMotion = true) {
         colors: ['#ec4899', '#8b5cf6', '#fbbf24'],
       })
     }, 150)
-  }, [respectReducedMotion])
+  }, [respectReducedMotion, onPlaySound])
 
   // Cleanup function to cancel any pending confetti
   const cleanup = useCallback(() => {

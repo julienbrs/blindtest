@@ -133,7 +133,9 @@ describe('useWrongAnswerEffect', () => {
       })),
     })
 
-    const { result } = renderHook(() => useWrongAnswerEffect(false))
+    const { result } = renderHook(() =>
+      useWrongAnswerEffect({ respectReducedMotion: false })
+    )
 
     act(() => {
       result.current.triggerShake()

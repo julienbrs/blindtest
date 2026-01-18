@@ -7,9 +7,19 @@ interface TimerProps {
   duration: number
   remaining: number
   onTimeout?: () => void
+  /** Optional callback to play tick sound (when provided, internal sound is disabled) */
+  onPlayTick?: (remainingSeconds: number) => void
+  /** Optional callback to play timeout sound (when provided, internal sound is disabled) */
+  onPlayTimeout?: () => void
 }
 
-export function Timer({ duration, remaining, onTimeout }: TimerProps) {
+export function Timer({
+  duration,
+  remaining,
+  onTimeout,
+  onPlayTick,
+  onPlayTimeout,
+}: TimerProps) {
   const progress = (remaining / duration) * 100
   const prefersReducedMotion = useReducedMotion()
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -163,14 +173,19 @@ export function Timer({ duration, remaining, onTimeout }: TimerProps) {
       prevRemainingRef.current !== remaining
     ) {
       hasPlayedTickForSecondRef.current = remaining
-      playTickSound(remaining)
+      // Use external callback if provided, otherwise use internal sound
+      if (onPlayTick) {
+        onPlayTick(remaining)
+      } else {
+        playTickSound(remaining)
+      }
     }
 
     // Reset tick tracking when timer resets
     if (remaining > prevRemainingRef.current) {
       hasPlayedTickForSecondRef.current = null
     }
-  }, [remaining, playTickSound])
+  }, [remaining, playTickSound, onPlayTick])
 
   // Play timeout sound when timer reaches 0
   useEffect(() => {
@@ -186,12 +201,17 @@ export function Timer({ duration, remaining, onTimeout }: TimerProps) {
       !hasPlayedTimeoutSoundRef.current
     ) {
       hasPlayedTimeoutSoundRef.current = true
-      playTimeoutSound()
+      // Use external callback if provided, otherwise use internal sound
+      if (onPlayTimeout) {
+        onPlayTimeout()
+      } else {
+        playTimeoutSound()
+      }
       onTimeout?.()
     }
 
     prevRemainingRef.current = remaining
-  }, [remaining, onTimeout, playTimeoutSound])
+  }, [remaining, onTimeout, playTimeoutSound, onPlayTimeout])
 
   // Cleanup AudioContext on unmount
   useEffect(() => {
