@@ -7,6 +7,9 @@ vi.mock('canvas-confetti', () => ({
   default: (...args: unknown[]) => mockConfetti(...args),
 }))
 
+// Mock navigator.vibrate
+const mockVibrate = vi.fn()
+
 // Mock matchMedia
 const mockMatchMedia = vi.fn()
 
@@ -62,6 +65,12 @@ describe('useCorrectAnswerCelebration', () => {
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: mockMatchMedia,
+    })
+
+    // Mock navigator.vibrate
+    Object.defineProperty(navigator, 'vibrate', {
+      writable: true,
+      value: mockVibrate,
     })
 
     // Mock AudioContext
@@ -285,6 +294,50 @@ describe('useCorrectAnswerCelebration', () => {
 
       // Should only create one AudioContext
       expect(MockAudioContext).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  // Vibration tests
+  describe('haptic feedback', () => {
+    it('triggers vibration pattern on correct answer', () => {
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      // Should trigger celebratory pattern: buzz-pause-buzz [100, 50, 100]
+      expect(mockVibrate).toHaveBeenCalledWith([100, 50, 100])
+    })
+
+    it('fails silently when vibrate is not supported', () => {
+      // Remove vibrate function to simulate iOS Safari
+      Object.defineProperty(navigator, 'vibrate', {
+        writable: true,
+        value: undefined,
+      })
+
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      // Should not throw
+      expect(() => {
+        act(() => {
+          result.current.celebrate()
+        })
+      }).not.toThrow()
+    })
+
+    it('triggers vibration even with reduced motion preference', () => {
+      mockMatchMedia.mockReturnValue({ matches: true })
+
+      const { result } = renderHook(() => useCorrectAnswerCelebration())
+
+      act(() => {
+        result.current.celebrate()
+      })
+
+      // Vibration should still work (it's haptic feedback, not visual)
+      expect(mockVibrate).toHaveBeenCalledWith([100, 50, 100])
     })
   })
 })

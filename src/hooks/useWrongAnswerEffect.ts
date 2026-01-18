@@ -3,6 +3,21 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 
 /**
+ * Triggers haptic feedback vibration for incorrect answer.
+ * Uses a longer vibration (200ms) to indicate a mistake.
+ * Fails silently on iOS Safari or unsupported browsers.
+ */
+function triggerIncorrectVibration(): void {
+  if (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.vibrate === 'function'
+  ) {
+    // Single longer vibration for incorrect answer
+    navigator.vibrate(200)
+  }
+}
+
+/**
  * Plays an "incorrect answer" sound using Web Audio API.
  * Creates a short, clear negative buzzer sound that's not too punitive.
  * Style: descending "whomp" tone (~0.4 seconds)
@@ -98,6 +113,9 @@ export function useWrongAnswerEffect(
   }, [])
 
   const triggerShake = useCallback(() => {
+    // Trigger haptic feedback for mobile devices
+    triggerIncorrectVibration()
+
     // Play sound - use external callback if provided, otherwise use internal sound
     if (onPlaySound) {
       onPlaySound()

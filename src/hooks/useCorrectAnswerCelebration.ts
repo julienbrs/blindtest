@@ -4,6 +4,21 @@ import { useCallback, useRef, useEffect } from 'react'
 import confetti from 'canvas-confetti'
 
 /**
+ * Triggers haptic feedback vibration for correct answer.
+ * Pattern: buzz-pause-buzz for a celebratory feel.
+ * Fails silently on iOS Safari or unsupported browsers.
+ */
+function triggerCorrectVibration(): void {
+  if (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.vibrate === 'function'
+  ) {
+    // Pattern: 100ms buzz, 50ms pause, 100ms buzz
+    navigator.vibrate([100, 50, 100])
+  }
+}
+
+/**
  * Plays a celebratory "correct answer" sound using Web Audio API.
  * Creates a joyful ascending arpeggio with chime-like tones.
  */
@@ -111,6 +126,9 @@ export function useCorrectAnswerCelebration(
     const prefersReducedMotion =
       respectReducedMotion &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    // Trigger haptic feedback for mobile devices
+    triggerCorrectVibration()
 
     // Play celebration sound - use external callback if provided, otherwise use internal sound
     if (onPlaySound) {

@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useWrongAnswerEffect } from './useWrongAnswerEffect'
 
+// Mock navigator.vibrate
+const mockVibrate = vi.fn()
+
 // Mock Web Audio API
 const mockOscillator = {
   type: 'sine',
@@ -50,6 +53,12 @@ describe('useWrongAnswerEffect', () => {
         removeEventListener: vi.fn(),
         dispatchEvent: vi.fn(),
       })),
+    })
+
+    // Mock navigator.vibrate
+    Object.defineProperty(navigator, 'vibrate', {
+      writable: true,
+      value: mockVibrate,
     })
 
     // Mock AudioContext
@@ -360,6 +369,60 @@ describe('useWrongAnswerEffect', () => {
       unmount()
 
       expect(closeSpy).toHaveBeenCalled()
+    })
+  })
+
+  // Vibration tests
+  describe('haptic feedback', () => {
+    it('triggers vibration on incorrect answer', () => {
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      // Should trigger longer vibration (200ms) for incorrect answer
+      expect(mockVibrate).toHaveBeenCalledWith(200)
+    })
+
+    it('fails silently when vibrate is not supported', () => {
+      // Remove vibrate function to simulate iOS Safari
+      Object.defineProperty(navigator, 'vibrate', {
+        writable: true,
+        value: undefined,
+      })
+
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      // Should not throw
+      expect(() => {
+        act(() => {
+          result.current.triggerShake()
+        })
+      }).not.toThrow()
+    })
+
+    it('triggers vibration even with reduced motion preference', () => {
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation((query: string) => ({
+          matches: query === '(prefers-reduced-motion: reduce)',
+          media: query,
+          onchange: null,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        })),
+      })
+
+      const { result } = renderHook(() => useWrongAnswerEffect())
+
+      act(() => {
+        result.current.triggerShake()
+      })
+
+      // Vibration should still work (it's haptic feedback, not visual)
+      expect(mockVibrate).toHaveBeenCalledWith(200)
     })
   })
 })

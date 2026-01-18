@@ -653,3 +653,10 @@ Commit: d0a272a
 Notes: Enlarged touch targets to meet Apple/Google 44-48px recommendations. Updated Button component with min-h-[44px] for sm size and min-h-[48px] for md/lg sizes. Added min-h-[48px] min-w-[48px] to GameControls play/pause button. Increased button spacing to gap-4 (16px) throughout to prevent accidental taps. Added min-h-[48px] to mode selection labels and toggle buttons in GameConfigForm. Updated advanced settings toggle with min-h-[44px] and proper padding. Enhanced volume slider container with proper sizing. All 617 tests pass.
 Files: src/components/ui/Button.tsx, src/components/game/GameControls.tsx, src/components/game/GameConfigForm.tsx, src/app/game/page.tsx, src/components/game/GameRecap.tsx
 
+=== Issue 9.3: Tester sur différentes tailles d'écran ===
+Timestamp: 2026-01-18T11:35:00Z
+Status: COMPLETED
+Commit: 438926a
+Notes: Created comprehensive responsive test suite (src/test/responsive.test.tsx) with 43 tests covering 7 device viewports: iPhone SE (375×667), iPhone 14 (390×844), iPhone 14 Pro Max (430×932), Pixel 5 (393×851), iPad Mini (744×1133), iPad Pro (1024×1366), Desktop HD (1920×1080). Tests verify responsive CSS classes on Button, BuzzerButton, Timer, SongReveal, ScoreDisplay, and GameControls components. Touch target compliance verified (44-48px minimum per Apple/Google guidelines). Tailwind breakpoints documented (sm: 640px, md: 768px, lg: 1024px, xl: 1280px). All 660 tests pass.
+Files: src/test/responsive.test.tsx
+
