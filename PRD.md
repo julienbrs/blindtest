@@ -138,7 +138,7 @@ After this task, all subsequent issues run with full feedback loops.
 ### Epic 9: Responsive (docs/epics/09-responsive.md)
 
 - [x] 9.1 Adapter le layout pour mobile
-- [ ] 9.2 Agrandir les zones tactiles
+- [x] 9.2 Agrandir les zones tactiles
 - [ ] 9.3 Tester sur différentes tailles d'écran
 - [ ] 9.4 Ajouter la vibration mobile au buzz
 - [ ] 9.5 Optimiser les performances mobile
