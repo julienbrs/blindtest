@@ -339,23 +339,30 @@ function GameContent() {
   // LOADING state handler: Load a random song when in loading state with no current song
   // This handles both initial load (after START_GAME) and subsequent loads (after NEXT_SONG)
   useEffect(() => {
-    if (game.state.status === 'loading' && !game.state.currentSong) {
-      // Prevent duplicate loads - check if we're already loading
-      if (isLoadingSongRef.current) return
-      isLoadingSongRef.current = true
-
-      // Capture playedSongIds and nextSong to use in async function
-      const playedIds = game.state.playedSongIds
-      const preloadedSong = nextSong
-
-      // Reset the audioReady state for the new song
-      setAudioReadyForSongId(null)
-
-      // Load a new random song (excluding already played songs), using preloaded if available
-      void loadRandomSong(playedIds, preloadedSong).finally(() => {
-        isLoadingSongRef.current = false
-      })
+    // Only proceed if we need to load (loading state, no current song)
+    if (game.state.status !== 'loading' || game.state.currentSong) {
+      // Reset loading flag when not in loading state
+      isLoadingSongRef.current = false
+      return
     }
+
+    // Prevent duplicate loads - check if we're already loading
+    if (isLoadingSongRef.current) {
+      return
+    }
+    isLoadingSongRef.current = true
+
+    // Capture values for the async function
+    const playedIds = game.state.playedSongIds
+    const preloadedSong = nextSong
+
+    // Reset the audioReady state for the new song
+    setAudioReadyForSongId(null)
+
+    // Load a new random song (excluding already played songs), using preloaded if available
+    void loadRandomSong(playedIds, preloadedSong)
+    // Note: we intentionally don't reset isLoadingSongRef here
+    // It will be reset when status changes away from 'loading' or currentSong is set
   }, [
     game.state.status,
     game.state.currentSong,
