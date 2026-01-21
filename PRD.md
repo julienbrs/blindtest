@@ -185,7 +185,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 13.7 Implémenter le hook useRoom
 - [x] 13.8 Créer le composant Lobby
 - [x] 13.9 Implémenter la présence des joueurs
-- [ ] 13.10 Créer le hook useMultiplayerGame
+- [x] 13.10 Créer le hook useMultiplayerGame
 - [ ] 13.11 Implémenter la synchronisation audio
 - [ ] 13.12 Implémenter la résolution du buzz
 - [ ] 13.13 Créer les contrôles host
