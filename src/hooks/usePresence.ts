@@ -11,6 +11,12 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 const GRACE_PERIOD_MS = 5000
 
 /**
+ * Interval for updating last_seen_at in the database (heartbeat)
+ * This keeps the player's presence record fresh for reconnection
+ */
+const HEARTBEAT_INTERVAL_MS = 10000
+
+/**
  * Presence state for a player
  */
 interface PresenceState {
@@ -201,6 +207,22 @@ export function usePresence(options: UsePresenceOptions): UsePresenceResult {
       scheduleTombstone(key)
     })
 
+    // Heartbeat interval to update last_seen_at in database
+    // This allows reconnection logic to know if player is still active
+    let heartbeatInterval: NodeJS.Timeout | null = null
+
+    const updateLastSeen = async () => {
+      try {
+        await supabase
+          .from('players')
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq('id', playerId)
+      } catch (err) {
+        // Silently ignore heartbeat errors - they're not critical
+        console.debug('Heartbeat update failed:', err)
+      }
+    }
+
     // Subscribe and track presence
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
@@ -221,8 +243,16 @@ export function usePresence(options: UsePresenceOptions): UsePresenceResult {
           next.set(playerId, true)
           return next
         })
+
+        // Update last_seen_at immediately and start heartbeat
+        await updateLastSeen()
+        heartbeatInterval = setInterval(updateLastSeen, HEARTBEAT_INTERVAL_MS)
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
         setIsConnected(false)
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval)
+          heartbeatInterval = null
+        }
       }
     })
 
@@ -231,6 +261,9 @@ export function usePresence(options: UsePresenceOptions): UsePresenceResult {
     // Cleanup on unmount or when dependencies change
     return () => {
       clearAllTombstones()
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval)
+      }
       channel.unsubscribe()
       channelRef.current = null
       setIsConnected(false)

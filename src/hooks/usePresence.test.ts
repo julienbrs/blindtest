@@ -57,10 +57,22 @@ function createMockSupabase() {
     presenceState: vi.fn(() => trackedState),
   }
 
+  // Mock database operations for heartbeat
+  const mockUpdate = vi.fn().mockReturnValue({
+    eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+  })
+
+  const mockFrom = vi.fn().mockReturnValue({
+    update: mockUpdate,
+  })
+
   return {
     channel: vi.fn().mockReturnValue(mockChannel),
+    from: mockFrom,
     _mocks: {
       mockChannel,
+      mockFrom,
+      mockUpdate,
       triggerPresenceEvent: (event: string, payload: unknown) => {
         presenceHandlers.forEach((h) => {
           if (h.event === event) {
@@ -154,8 +166,9 @@ describe('usePresence', () => {
         })
       )
 
+      // Only advance enough to trigger subscription, not heartbeat
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(mockSupabase.channel).toHaveBeenCalledWith(
@@ -179,7 +192,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       // Should have subscribed to sync, join, and leave events
@@ -210,7 +223,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(mockSupabase._mocks.mockChannel.track).toHaveBeenCalledWith({
@@ -229,7 +242,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(result.current.isConnected).toBe(true)
@@ -244,7 +257,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(result.current.isOnline('player-123')).toBe(true)
@@ -261,7 +274,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       // Simulate another player joining
@@ -281,7 +294,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       // First, mark player-456 as online
@@ -317,7 +330,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       // Join
@@ -363,7 +376,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(result.current.isOnline('unknown-player')).toBe(false)
@@ -378,7 +391,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       act(() => {
@@ -399,7 +412,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       unmount()
@@ -416,7 +429,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       // Create a tombstone
@@ -450,7 +463,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(mockSupabase.channel).toHaveBeenCalledWith(
@@ -462,7 +475,7 @@ describe('usePresence', () => {
       rerender({ roomId: 'room-456' })
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(mockSupabase._mocks.mockChannel.unsubscribe).toHaveBeenCalled()
@@ -483,7 +496,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(result.current.isConnected).toBe(true)
@@ -505,7 +518,7 @@ describe('usePresence', () => {
       )
 
       await act(async () => {
-        await vi.runAllTimersAsync()
+        vi.advanceTimersByTime(100)
       })
 
       expect(result.current.isConnected).toBe(true)
@@ -516,6 +529,85 @@ describe('usePresence', () => {
       })
 
       expect(result.current.isConnected).toBe(false)
+    })
+  })
+
+  describe('heartbeat', () => {
+    it('should update last_seen_at on subscription', async () => {
+      renderHook(() =>
+        usePresence({
+          roomId: 'room-123',
+          playerId: 'player-123',
+        })
+      )
+
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+
+      // Should have called from('players')
+      expect(mockSupabase.from).toHaveBeenCalledWith('players')
+    })
+
+    it('should send heartbeat every 10 seconds', async () => {
+      renderHook(() =>
+        usePresence({
+          roomId: 'room-123',
+          playerId: 'player-123',
+        })
+      )
+
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+
+      // Initial heartbeat on subscription
+      expect(mockSupabase.from).toHaveBeenCalledTimes(1)
+
+      // Advance 10 seconds
+      await act(async () => {
+        vi.advanceTimersByTime(10000)
+      })
+
+      // Should have called heartbeat again
+      expect(mockSupabase.from).toHaveBeenCalledTimes(2)
+
+      // Advance another 10 seconds
+      await act(async () => {
+        vi.advanceTimersByTime(10000)
+      })
+
+      // Should have called heartbeat again
+      expect(mockSupabase.from).toHaveBeenCalledTimes(3)
+    })
+
+    it('should stop heartbeat when connection closes', async () => {
+      renderHook(() =>
+        usePresence({
+          roomId: 'room-123',
+          playerId: 'player-123',
+        })
+      )
+
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+
+      // Initial heartbeat
+      expect(mockSupabase.from).toHaveBeenCalledTimes(1)
+
+      // Close connection
+      act(() => {
+        mockSupabase._mocks.triggerSubscribe('CLOSED')
+      })
+
+      // Advance 20 seconds
+      await act(async () => {
+        vi.advanceTimersByTime(20000)
+      })
+
+      // Should not have called more heartbeats
+      expect(mockSupabase.from).toHaveBeenCalledTimes(1)
     })
   })
 })

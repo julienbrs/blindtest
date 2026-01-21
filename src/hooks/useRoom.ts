@@ -641,6 +641,12 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
 
   /**
    * Reconnect to a room using stored player ID
+   *
+   * This function handles player reconnection when they return to a game:
+   * 1. Checks if the room still exists and is active
+   * 2. Verifies the stored player ID exists in this room
+   * 3. Updates last_seen_at to mark the player as active again
+   * 4. Synchronizes the current game state (room status, song, scores)
    */
   const reconnectToRoom = useCallback(
     async (code: string): Promise<boolean> => {
@@ -660,7 +666,7 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
       try {
         const supabase = getSupabaseClient()
 
-        // Check if room exists
+        // Check if room exists and is not ended
         const { data: roomData, error: roomError } = await supabase
           .from('rooms')
           .select('*')
@@ -668,6 +674,11 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
           .single()
 
         if (roomError || !roomData) {
+          return false
+        }
+
+        // Room exists but game ended - cannot reconnect
+        if (roomData.status === 'ended') {
           return false
         }
 
@@ -683,11 +694,19 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
           return false
         }
 
+        // Update last_seen_at to mark the player as active again
+        // This is crucial for the grace period mechanism - it resets the
+        // player's presence timer so they won't be removed during the grace period
+        await supabase
+          .from('players')
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq('id', storedPlayerId)
+
         // Success - set state
         setMyPlayerId(storedPlayerId)
         setRoom(dbRowToRoom(roomData))
 
-        // Fetch all players
+        // Fetch all players with current scores (sync game state)
         const { data: playersData } = await supabase
           .from('players')
           .select('*')

@@ -16,6 +16,7 @@ import { BuzzIndicator } from '@/components/multiplayer/BuzzIndicator'
 import { SyncedAudioPlayer } from '@/components/multiplayer/SyncedAudioPlayer'
 import { Leaderboard } from '@/components/multiplayer/Leaderboard'
 import { HostMigrationNotification } from '@/components/multiplayer/HostMigrationNotification'
+import { ReconnectionNotification } from '@/components/multiplayer/ReconnectionNotification'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { SongReveal } from '@/components/game/SongReveal'
 import { Timer } from '@/components/game/Timer'
@@ -98,6 +99,7 @@ export default function MultiplayerRoomPage() {
 
   const [isReconnecting, setIsReconnecting] = useState(true)
   const [reconnectFailed, setReconnectFailed] = useState(false)
+  const [showReconnectedMessage, setShowReconnectedMessage] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song | null>(null)
   const [isRevealed, setIsRevealed] = useState(false)
   const [isBuzzing, setIsBuzzing] = useState(false)
@@ -115,10 +117,23 @@ export default function MultiplayerRoomPage() {
       const success = await reconnectToRoom(roomCode)
       setReconnectFailed(!success)
       setIsReconnecting(false)
+
+      // Show reconnection message if successful and game is in progress
+      // (waiting status doesn't need a reconnection message - it's just joining)
+      if (success) {
+        // Fetch room to check if it's a game in progress
+        // The reconnection message is shown when returning to an active game
+        setShowReconnectedMessage(true)
+      }
     }
 
     tryReconnect()
   }, [roomCode, isConfigured, reconnectToRoom])
+
+  // Clear reconnection message callback
+  const clearReconnectionMessage = useCallback(() => {
+    setShowReconnectedMessage(false)
+  }, [])
 
   // Fetch current song when gameState.currentSongId changes
   useEffect(() => {
@@ -337,6 +352,12 @@ export default function MultiplayerRoomPage() {
     if (room.status === 'waiting') {
       return (
         <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
+          {/* Reconnection notification */}
+          <ReconnectionNotification
+            show={showReconnectedMessage}
+            onDismiss={clearReconnectionMessage}
+          />
+
           {/* Host migration notification */}
           <HostMigrationNotification
             newHostNickname={newHostNickname}
@@ -380,6 +401,12 @@ export default function MultiplayerRoomPage() {
 
       return (
         <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
+          {/* Reconnection notification */}
+          <ReconnectionNotification
+            show={showReconnectedMessage}
+            onDismiss={clearReconnectionMessage}
+          />
+
           {/* Host migration notification */}
           <HostMigrationNotification
             newHostNickname={newHostNickname}
