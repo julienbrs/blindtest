@@ -14,6 +14,7 @@ import { Lobby } from '@/components/multiplayer/Lobby'
 import { HostControls } from '@/components/multiplayer/HostControls'
 import { BuzzIndicator } from '@/components/multiplayer/BuzzIndicator'
 import { SyncedAudioPlayer } from '@/components/multiplayer/SyncedAudioPlayer'
+import { Leaderboard } from '@/components/multiplayer/Leaderboard'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { SongReveal } from '@/components/game/SongReveal'
 import { Timer } from '@/components/game/Timer'
@@ -369,112 +370,130 @@ export default function MultiplayerRoomPage() {
             </p>
           </motion.div>
 
-          <div className="flex w-full max-w-lg flex-col items-center gap-6">
-            {/* Audio Player */}
-            {gameState.currentSongId && (
-              <motion.div
-                className="w-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <SyncedAudioPlayer
-                  songId={gameState.currentSongId}
-                  startedAt={gameState.currentSongStartedAt}
-                  isPlaying={
-                    gameState.status === 'playing' && !shouldPauseAudio
-                  }
-                  maxDuration={room.settings.clipDuration ?? 30}
-                  onEnded={handleAudioEnded}
-                />
-              </motion.div>
-            )}
-
-            {/* Song cover with blur (reveal when appropriate) */}
-            {currentSong && (
-              <motion.div
-                className="w-full"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <SongReveal
-                  song={currentSong}
-                  guessMode={room.settings.guessMode ?? 'both'}
-                  isRevealed={isRevealed}
-                />
-              </motion.div>
-            )}
-
-            {/* Buzz indicator (shows who buzzed) */}
-            {currentBuzzer && (
-              <BuzzIndicator
-                buzzes={currentBuzzes}
+          {/* Main game layout with sidebar on larger screens */}
+          <div className="flex w-full max-w-5xl flex-col gap-6 lg:flex-row lg:items-start">
+            {/* Leaderboard (mobile: collapsible at top, desktop: sidebar) */}
+            <motion.div
+              className="w-full lg:sticky lg:top-8 lg:w-72 lg:flex-shrink-0"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Leaderboard
                 players={players}
-                currentBuzzer={currentBuzzer}
                 myPlayerId={myPlayer?.id ?? null}
+                compact
               />
-            )}
+            </motion.div>
 
-            {/* Timer (when someone is answering) */}
-            {timerActive && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <Timer
-                  duration={room.settings.timerDuration ?? 5}
-                  remaining={timerRemaining}
-                  onTimeout={handleTimerEnd}
-                />
-              </motion.div>
-            )}
-
-            {/* Buzzer button (for non-host or host when playing) */}
-            {canBuzz && (
-              <motion.div
-                className="w-full"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <BuzzerButton
-                  disabled={!canBuzz || isBuzzing}
-                  onBuzz={handleBuzz}
-                />
-              </motion.div>
-            )}
-
-            {/* Host Controls */}
-            {isHost && (
-              <motion.div
-                className="w-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <Card variant="elevated" className="p-4">
-                  <HostControls
-                    gameStatus={gameState.status}
-                    isRevealed={isRevealed}
-                    hasBuzzer={currentBuzzer !== null}
-                    onValidate={handleValidate}
-                    onNextSong={handleNextSong}
-                    onReveal={handleReveal}
-                    onEndGame={handleEndGame}
-                    isLoading={isLoading}
+            {/* Main game content */}
+            <div className="flex w-full max-w-lg flex-1 flex-col items-center gap-6 lg:mx-auto">
+              {/* Audio Player */}
+              {gameState.currentSongId && (
+                <motion.div
+                  className="w-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <SyncedAudioPlayer
+                    songId={gameState.currentSongId}
+                    startedAt={gameState.currentSongStartedAt}
+                    isPlaying={
+                      gameState.status === 'playing' && !shouldPauseAudio
+                    }
+                    maxDuration={room.settings.clipDuration ?? 30}
+                    onEnded={handleAudioEnded}
                   />
-                </Card>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
 
-            {/* Leave button for non-hosts */}
-            {!isHost && (
-              <Button
-                variant="secondary"
-                onClick={handleLeaveRoom}
-                className="mt-4"
-              >
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Quitter la partie
-              </Button>
-            )}
+              {/* Song cover with blur (reveal when appropriate) */}
+              {currentSong && (
+                <motion.div
+                  className="w-full"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <SongReveal
+                    song={currentSong}
+                    guessMode={room.settings.guessMode ?? 'both'}
+                    isRevealed={isRevealed}
+                  />
+                </motion.div>
+              )}
+
+              {/* Buzz indicator (shows who buzzed) */}
+              {currentBuzzer && (
+                <BuzzIndicator
+                  buzzes={currentBuzzes}
+                  players={players}
+                  currentBuzzer={currentBuzzer}
+                  myPlayerId={myPlayer?.id ?? null}
+                />
+              )}
+
+              {/* Timer (when someone is answering) */}
+              {timerActive && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <Timer
+                    duration={room.settings.timerDuration ?? 5}
+                    remaining={timerRemaining}
+                    onTimeout={handleTimerEnd}
+                  />
+                </motion.div>
+              )}
+
+              {/* Buzzer button (for non-host or host when playing) */}
+              {canBuzz && (
+                <motion.div
+                  className="w-full"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <BuzzerButton
+                    disabled={!canBuzz || isBuzzing}
+                    onBuzz={handleBuzz}
+                  />
+                </motion.div>
+              )}
+
+              {/* Host Controls */}
+              {isHost && (
+                <motion.div
+                  className="w-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <Card variant="elevated" className="p-4">
+                    <HostControls
+                      gameStatus={gameState.status}
+                      isRevealed={isRevealed}
+                      hasBuzzer={currentBuzzer !== null}
+                      onValidate={handleValidate}
+                      onNextSong={handleNextSong}
+                      onReveal={handleReveal}
+                      onEndGame={handleEndGame}
+                      isLoading={isLoading}
+                    />
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* Leave button for non-hosts */}
+              {!isHost && (
+                <Button
+                  variant="secondary"
+                  onClick={handleLeaveRoom}
+                  className="mt-4"
+                >
+                  <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                  Quitter la partie
+                </Button>
+              )}
+            </div>
           </div>
         </main>
       )
