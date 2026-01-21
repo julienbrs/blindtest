@@ -190,7 +190,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 13.12 Implémenter la résolution du buzz
 - [x] 13.13 Créer les contrôles host
 - [x] 13.14 Afficher les scores de tous les joueurs
-- [ ] 13.15 Gérer la migration de host
+- [x] 13.15 Gérer la migration de host
 - [ ] 13.16 Gérer la reconnexion des joueurs
 - [ ] 13.17 Créer le récap multijoueur
 - [ ] 13.18 Nettoyer les rooms expirées
