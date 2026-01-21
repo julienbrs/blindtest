@@ -135,6 +135,7 @@ export interface ApiResponse<T> {
 export interface SongsListResponse {
   songs: Song[]
   total: number
+  totalInLibrary?: number // Total songs in library before filtering
 }
 
 export interface RandomSongResponse {

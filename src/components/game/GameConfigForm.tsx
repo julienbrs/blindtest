@@ -13,8 +13,14 @@ import type { GuessMode, StartPosition } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useTheme } from '@/contexts/ThemeContext'
+import {
+  LibraryFilters,
+  defaultFilters,
+  type LibraryFiltersState,
+} from './LibraryFilters'
 
 const STORAGE_KEY = 'blindtest_config'
+const FILTERS_STORAGE_KEY = 'blindtest_filters'
 
 const validGuessModes: GuessMode[] = ['title', 'artist', 'both']
 const validStartPositions: StartPosition[] = [
@@ -29,6 +35,32 @@ interface SavedConfig {
   timerDuration: number
   noTimer: boolean
   startPosition: StartPosition
+}
+
+function loadSavedFilters(): LibraryFiltersState {
+  if (typeof window === 'undefined') return defaultFilters
+
+  const saved = localStorage.getItem(FILTERS_STORAGE_KEY)
+  if (!saved) return defaultFilters
+
+  try {
+    const config = JSON.parse(saved)
+    return {
+      selectedArtists: Array.isArray(config.selectedArtists)
+        ? config.selectedArtists
+        : [],
+      yearMin:
+        typeof config.yearMin === 'number' && config.yearMin > 0
+          ? config.yearMin
+          : null,
+      yearMax:
+        typeof config.yearMax === 'number' && config.yearMax > 0
+          ? config.yearMax
+          : null,
+    }
+  } catch {
+    return defaultFilters
+  }
 }
 
 function loadSavedConfig(): SavedConfig | null {
@@ -124,6 +156,9 @@ export function GameConfigForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [hasMounted, setHasMounted] = useState(false)
+  const [filters, setFilters] = useState<LibraryFiltersState>(defaultFilters)
+  const [filteredCount, setFilteredCount] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
 
   // Load saved config on mount (client-side only)
   // This is a legitimate use case for setState in useEffect - hydrating state from localStorage
@@ -138,8 +173,39 @@ export function GameConfigForm() {
       setStartPosition(savedConfig.startPosition)
       /* eslint-enable react-hooks/set-state-in-effect */
     }
+    const savedFilters = loadSavedFilters()
+    setFilters(savedFilters)
     setHasMounted(true)
   }, [])
+
+  // Fetch song counts based on filters
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        // Build filter query params
+        const params = new URLSearchParams()
+        if (filters.selectedArtists.length > 0) {
+          params.set('artists', filters.selectedArtists.join(','))
+        }
+        if (filters.yearMin !== null) {
+          params.set('yearMin', filters.yearMin.toString())
+        }
+        if (filters.yearMax !== null) {
+          params.set('yearMax', filters.yearMax.toString())
+        }
+
+        const res = await fetch(`/api/songs?${params.toString()}`)
+        if (res.ok) {
+          const data = await res.json()
+          setFilteredCount(data.total || 0)
+          setTotalCount(data.totalInLibrary || data.total || 0)
+        }
+      } catch {
+        // Silently fail - counts are not critical
+      }
+    }
+    fetchCounts()
+  }, [filters])
 
   // Save config to localStorage whenever it changes (after mount)
   const saveConfig = useCallback((config: SavedConfig) => {
@@ -214,14 +280,42 @@ export function GameConfigForm() {
     [hasMounted, saveConfig, getCurrentConfig]
   )
 
+  // Handler for filter changes - saves immediately
+  const handleFiltersChange = useCallback(
+    (newFilters: LibraryFiltersState) => {
+      setFilters(newFilters)
+      if (hasMounted) {
+        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(newFilters))
+      }
+    },
+    [hasMounted]
+  )
+
   const validateForm = async (): Promise<boolean> => {
-    // Check that there are songs available
+    // Check that there are songs available (with filters applied)
     try {
-      const res = await fetch('/api/songs')
+      const params = new URLSearchParams()
+      if (filters.selectedArtists.length > 0) {
+        params.set('artists', filters.selectedArtists.join(','))
+      }
+      if (filters.yearMin !== null) {
+        params.set('yearMin', filters.yearMin.toString())
+      }
+      if (filters.yearMax !== null) {
+        params.set('yearMax', filters.yearMax.toString())
+      }
+
+      const res = await fetch(`/api/songs?${params.toString()}`)
       const data = await res.json()
       if (data.total === 0) {
+        const hasFilters =
+          filters.selectedArtists.length > 0 ||
+          filters.yearMin !== null ||
+          filters.yearMax !== null
         setValidationError(
-          'Aucune chanson disponible. Vérifiez votre dossier audio.'
+          hasFilters
+            ? 'Aucune chanson ne correspond aux filtres sélectionnés.'
+            : 'Aucune chanson disponible. Vérifiez votre dossier audio.'
         )
         return false
       }
@@ -257,6 +351,17 @@ export function GameConfigForm() {
       timer: noTimer ? '0' : timerDuration.toString(),
       startPosition: startPosition,
     })
+
+    // Add filter params if active
+    if (filters.selectedArtists.length > 0) {
+      params.set('artists', filters.selectedArtists.join(','))
+    }
+    if (filters.yearMin !== null) {
+      params.set('yearMin', filters.yearMin.toString())
+    }
+    if (filters.yearMax !== null) {
+      params.set('yearMax', filters.yearMax.toString())
+    }
 
     router.push(`/game?${params.toString()}`)
   }
@@ -306,6 +411,16 @@ export function GameConfigForm() {
             </label>
           ))}
         </div>
+      </Card>
+
+      {/* Filtres bibliothèque */}
+      <Card className="p-6">
+        <LibraryFilters
+          filters={filters}
+          onChange={handleFiltersChange}
+          filteredCount={filteredCount}
+          totalCount={totalCount}
+        />
       </Card>
 
       {/* Durée des extraits */}

@@ -161,6 +161,34 @@ function GameContent() {
     return 'beginning'
   }, [searchParams])
 
+  // Parse library filters from URL
+  const libraryFilters = useMemo(() => {
+    const artists = searchParams.get('artists')
+    const yearMin = searchParams.get('yearMin')
+    const yearMax = searchParams.get('yearMax')
+
+    return {
+      artists: artists ? artists.split(',').map((a) => a.trim()) : [],
+      yearMin: yearMin ? parseInt(yearMin, 10) : null,
+      yearMax: yearMax ? parseInt(yearMax, 10) : null,
+    }
+  }, [searchParams])
+
+  // Build filter query string for API calls
+  const filterQueryString = useMemo(() => {
+    const params = new URLSearchParams()
+    if (libraryFilters.artists.length > 0) {
+      params.set('artists', libraryFilters.artists.join(','))
+    }
+    if (libraryFilters.yearMin !== null) {
+      params.set('yearMin', libraryFilters.yearMin.toString())
+    }
+    if (libraryFilters.yearMax !== null) {
+      params.set('yearMax', libraryFilters.yearMax.toString())
+    }
+    return params.toString()
+  }, [libraryFilters])
+
   const game = useGameState(config)
 
   // Load SFX muted state from localStorage on mount
@@ -238,41 +266,53 @@ function GameContent() {
   )
 
   // Prefetch the next song during REVEAL state
-  const prefetchNextSong = useCallback(async (excludeIds: string[]) => {
-    if (isPrefetchingRef.current) return
-    isPrefetchingRef.current = true
+  const prefetchNextSong = useCallback(
+    async (excludeIds: string[]) => {
+      if (isPrefetchingRef.current) return
+      isPrefetchingRef.current = true
 
-    const exclude = excludeIds.join(',')
-    const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
-
-    try {
-      // Use fetchWithRetry with 2 retries for prefetch (non-critical)
-      const res = await fetchWithRetry(url, {}, 2, 10000)
-
-      if (!res.ok) {
-        // No more songs available - will be handled when transitioning to next song
-        isPrefetchingRef.current = false
-        return
+      // Build URL with exclude and filter params
+      const params = new URLSearchParams()
+      if (excludeIds.length > 0) {
+        params.set('exclude', excludeIds.join(','))
       }
+      if (filterQueryString) {
+        // Append filter params
+        const filterParams = new URLSearchParams(filterQueryString)
+        filterParams.forEach((value, key) => params.set(key, value))
+      }
+      const url = `/api/songs/random?${params.toString()}`
 
-      const data = (await res.json()) as { song: Song }
-      if (data.song) {
-        setNextSong(data.song)
-        // Preload the audio
-        if (preloadedAudioRef.current) {
-          preloadedAudioRef.current.pause()
-          preloadedAudioRef.current.src = ''
+      try {
+        // Use fetchWithRetry with 2 retries for prefetch (non-critical)
+        const res = await fetchWithRetry(url, {}, 2, 10000)
+
+        if (!res.ok) {
+          // No more songs available - will be handled when transitioning to next song
+          isPrefetchingRef.current = false
+          return
         }
-        const audio = new Audio(`/api/audio/${data.song.id}`)
-        audio.preload = 'auto'
-        preloadedAudioRef.current = audio
+
+        const data = (await res.json()) as { song: Song }
+        if (data.song) {
+          setNextSong(data.song)
+          // Preload the audio
+          if (preloadedAudioRef.current) {
+            preloadedAudioRef.current.pause()
+            preloadedAudioRef.current.src = ''
+          }
+          const audio = new Audio(`/api/audio/${data.song.id}`)
+          audio.preload = 'auto'
+          preloadedAudioRef.current = audio
+        }
+      } catch {
+        // Silently fail - will load normally when needed
+      } finally {
+        isPrefetchingRef.current = false
       }
-    } catch {
-      // Silently fail - will load normally when needed
-    } finally {
-      isPrefetchingRef.current = false
-    }
-  }, [])
+    },
+    [filterQueryString]
+  )
 
   // Check if an audio file is accessible via HEAD request
   const checkAudioFileAccessible = useCallback(
@@ -340,8 +380,17 @@ function GameContent() {
         setNextSong(null)
       }
 
-      const exclude = excludeIds.join(',')
-      const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
+      // Build URL with exclude and filter params
+      const params = new URLSearchParams()
+      if (excludeIds.length > 0) {
+        params.set('exclude', excludeIds.join(','))
+      }
+      if (filterQueryString) {
+        // Append filter params
+        const filterParams = new URLSearchParams(filterQueryString)
+        filterParams.forEach((value, key) => params.set(key, value))
+      }
+      const url = `/api/songs/random?${params.toString()}`
 
       try {
         // Use fetchWithRetry with 10s timeout and 3 retries
@@ -413,7 +462,7 @@ function GameContent() {
         setNetworkError({ show: true, message })
       }
     },
-    [game.actions, checkAudioFileAccessible]
+    [game.actions, checkAudioFileAccessible, filterQueryString]
   )
 
   // Handle network error retry
