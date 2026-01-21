@@ -793,3 +793,31 @@ Commit: e33abf3
 Notes: Implemented custom playlist feature for themed games. Created Playlist type in types.ts with id, name, songIds, createdAt, and optional updatedAt fields. Created usePlaylists hook with full CRUD operations (create, update, delete, getPlaylist) and song management (addSong, removeSong, toggleSong), all persisted to localStorage under 'blindtest_playlists' key. Created PlaylistManager component with: playlist list display with song counts, "Toute la bibliothèque" default option, create/rename/delete functionality, and PlaylistEditor sub-component for song selection with search filtering. Integrated into GameConfigForm with collapsible playlist section, localStorage persistence for selected playlist ID. Game page reads playlist ID from URL param, loads playlist songIds from localStorage, and passes to API via 'include' query param. Songs API updated to support 'include' filter for playlist song IDs. Comprehensive test suites: 31 tests for usePlaylists hook, 20 tests for PlaylistManager component. Fixed pre-existing ESLint warnings in test files.
 Files: src/lib/types.ts, src/hooks/usePlaylists.ts, src/hooks/usePlaylists.test.ts, src/components/game/PlaylistManager.tsx, src/components/game/PlaylistManager.test.tsx, src/components/game/GameConfigForm.tsx, src/app/game/page.tsx
 
+=== Issue 12.1: Tester le scan de fichiers audio ===
+Timestamp: 2026-01-21T12:00:00Z
+Status: COMPLETED
+Commit: 3ab3d3c
+Notes: Created comprehensive test suite for audio scanner functionality as per Epic 12 specification. Test file located at src/lib/__tests__/audioScanner.test.ts. Tests organized into fixture-based tests (matching Epic 12 spec) and comprehensive unit tests for extended coverage. Created test fixtures in test-fixtures/music/ with sample files (test.mp3, Artist - Title.mp3, corrupted.mp3, document.txt, subfolder/nested.mp3). Installed @vitest/coverage-v8 for coverage reporting. Achieved 84.57% statement coverage, 90.17% branch coverage, and 100% function coverage on audioScanner.ts, exceeding the 80% requirement.
+Files: src/lib/__tests__/audioScanner.test.ts, test-fixtures/music/, package.json, package-lock.json
+
+
+=== Issue 12.2: Tester les API routes ===
+Timestamp: 2026-01-21T12:56:00Z
+Status: COMPLETED
+Commit: 204149f
+Notes: Created centralized API routes test file at src/app/api/__tests__/songs.test.ts with 20 comprehensive integration tests. Tests cover GET /api/songs (list, metadata, totalInLibrary), GET /api/songs/random (random selection, exclude, include, filters), GET /api/songs/[id] (get by ID, validation), error cases (404 empty library, 404 not found, 400 invalid ID, 500 server errors), and filter functionality (artist filter, year min/max, combined filters). All tests use appropriate mocks for audioScanner module. Additional comprehensive tests already exist in individual route test files.
+Files: src/app/api/__tests__/songs.test.ts
+=== Issue 12.3: Tester la machine d'état du jeu ===
+Timestamp: 2026-01-21T13:03:00Z
+Status: COMPLETED
+Commit: b60d9b2
+Notes: Created comprehensive test suite for useGameState hook and gameReducer at src/hooks/__tests__/useGameState.test.ts with 125 tests. Tests cover all 14 actions (START_GAME, LOAD_SONG, PLAY, PAUSE, RESUME, BUZZ, TICK_TIMER, VALIDATE, REVEAL, NEXT_SONG, END_GAME, RESET, CLIP_ENDED, REPLAY), all state transitions, edge cases (null currentSong handling, rapid pause/resume, multi-song game flow), noTimer mode behavior, immutability, and action callback stability. Also fixed 2 timing issues in existing tests (pause/resume tests). Achieved 99.01% statement coverage, 96.96% branch coverage, and 100% function coverage on useGameState.ts.
+Files: src/hooks/__tests__/useGameState.test.ts, src/hooks/useGameState.test.ts (fixed tests)
+
+=== Issue 12.6: Ajouter des tests unitaires ===
+Timestamp: 2026-01-21T16:00:00Z
+Status: COMPLETED
+Commit: pending
+Notes: Created comprehensive unit test suite for utility functions at src/lib/__tests__/utils.test.ts with 69 tests. Tests cover all utility functions: cn() class name utility (11 tests), parseFileName() filename parsing (15 tests), generateSongId() ID generation (8 tests), getStartPosition() song position calculation (14 tests), NetworkError class (6 tests), fetchWithTimeout() (7 tests), and fetchWithRetry() (8 tests). All edge cases covered including empty strings, unicode, special characters, boundary conditions, and error handling. Achieved 96.42% statement coverage, 90.9% branch coverage, and 100% function coverage on utils.ts, exceeding the 90% requirement.
+Files: src/lib/__tests__/utils.test.ts
+

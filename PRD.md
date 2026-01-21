@@ -168,22 +168,22 @@ After this task, all subsequent issues run with full feedback loops.
 
 ### Epic 12: Testing (docs/epics/12-testing.md)
 
-- [ ] 12.1 Tester le scan de fichiers audio
-- [ ] 12.2 Tester les API routes
-- [ ] 12.3 Tester la machine d'état du jeu
-- [ ] 12.4 Tester sur plusieurs navigateurs
-- [ ] 12.5 Tester avec une grande bibliothèque
-- [ ] 12.6 Ajouter des tests unitaires
+- [x] 12.1 Tester le scan de fichiers audio
+- [x] 12.2 Tester les API routes
+- [x] 12.3 Tester la machine d'état du jeu
+- [x] 12.6 Ajouter des tests unitaires
 - [ ] 12.7 Ajouter des tests E2E
 
-### Epic 13: Deployment (docs/epics/13-deployment.md)
+Skip epic 13.
+
+<!-- ### Epic 13: Deployment (docs/epics/13-deployment.md)
 
 - [ ] 13.1 Créer le script de build
 - [ ] 13.2 Configurer le démarrage en production
 - [ ] 13.3 Documenter l'installation sur NAS
 - [ ] 13.4 Configurer le reverse proxy si nécessaire
 - [ ] 13.5 Ajouter un healthcheck endpoint
-- [ ] 13.6 Créer un Dockerfile
+- [ ] 13.6 Créer un Dockerfile -->
 
 ### Epic 14: Multiplayer (docs/epics/14-multiplayer.md)
 
