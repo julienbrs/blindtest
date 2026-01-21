@@ -24,9 +24,19 @@ export interface GameConfig {
   guessMode: GuessMode // Ce qu'il faut deviner
   clipDuration: number // Durée de l'extrait en secondes
   timerDuration: number // Temps pour répondre après buzz
+  noTimer: boolean // Si true, pas de timer - validation manuelle uniquement
 }
 
 export type GuessMode = 'title' | 'artist' | 'both'
+
+/**
+ * StartPosition - Options for where to start playback in a song
+ *
+ * - `beginning`: Start from the beginning of the song (0 seconds)
+ * - `random`: Start at a random point between 10% and 50% of the song duration
+ * - `skip_intro`: Skip the intro - start after the first 30 seconds (or 20% of song if shorter)
+ */
+export type StartPosition = 'beginning' | 'random' | 'skip_intro'
 
 // ============================================
 // Types pour l'état du jeu
@@ -40,6 +50,7 @@ export interface GameState {
   playedSongIds: string[] // IDs des chansons déjà jouées
   timerRemaining: number // Secondes restantes sur le timer
   isRevealed: boolean // Si la réponse est révélée
+  previousStatus: 'playing' | 'timer' | 'buzzed' | null // État avant pause (pour resume)
 }
 
 /**
@@ -107,6 +118,7 @@ export type GameStatus =
   | 'playing' // Musique en lecture
   | 'buzzed' // Quelqu'un a buzzé (transitoire)
   | 'timer' // Timer en cours
+  | 'paused' // Jeu en pause (perte de focus)
   | 'reveal' // Réponse révélée
   | 'ended' // Partie terminée
 
@@ -137,7 +149,9 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'LOAD_SONG'; song: Song }
   | { type: 'PLAY' }
-  | { type: 'BUZZ'; timerDuration: number }
+  | { type: 'PAUSE'; previousStatus: 'playing' | 'timer' | 'buzzed' }
+  | { type: 'RESUME' }
+  | { type: 'BUZZ'; timerDuration: number; noTimer: boolean }
   | { type: 'TICK_TIMER' }
   | { type: 'VALIDATE'; correct: boolean }
   | { type: 'REVEAL' }

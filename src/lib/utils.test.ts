@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { cn, fetchWithTimeout, fetchWithRetry, NetworkError } from './utils'
+import {
+  cn,
+  fetchWithTimeout,
+  fetchWithRetry,
+  NetworkError,
+  getStartPosition,
+} from './utils'
+import type { Song } from './types'
 
 describe('cn', () => {
   it('combines class names', () => {
@@ -194,4 +201,188 @@ describe('fetchWithRetry', () => {
       }
     )
   }, 15000)
+})
+
+describe('getStartPosition', () => {
+  // Helper to create a mock song with specified duration
+  const createMockSong = (duration: number): Song => ({
+    id: 'test-song-id',
+    title: 'Test Song',
+    artist: 'Test Artist',
+    duration,
+    filePath: '/path/to/song.mp3',
+    format: 'mp3',
+    hasCover: false,
+  })
+
+  describe('beginning mode', () => {
+    it('returns 0 for beginning mode', () => {
+      const song = createMockSong(180) // 3 minutes
+      expect(getStartPosition(song, 'beginning', 20)).toBe(0)
+    })
+
+    it('returns 0 for beginning mode even with short songs', () => {
+      const song = createMockSong(30) // 30 seconds
+      expect(getStartPosition(song, 'beginning', 20)).toBe(0)
+    })
+  })
+
+  describe('random mode', () => {
+    it('returns a value between 10% and 50% of duration for normal songs', () => {
+      const song = createMockSong(200) // 200 seconds
+      const clipDuration = 20
+
+      // Test multiple times due to randomness
+      for (let i = 0; i < 100; i++) {
+        const start = getStartPosition(song, 'random', clipDuration)
+        const minExpected = song.duration * 0.1 // 20
+        const maxExpected = Math.min(
+          song.duration * 0.5,
+          song.duration - clipDuration
+        ) // 100 or 180 = 100
+
+        expect(start).toBeGreaterThanOrEqual(minExpected)
+        expect(start).toBeLessThanOrEqual(maxExpected)
+      }
+    })
+
+    it('respects clip duration constraint (does not start too late)', () => {
+      const song = createMockSong(100) // 100 seconds
+      const clipDuration = 40
+
+      // Test multiple times
+      for (let i = 0; i < 100; i++) {
+        const start = getStartPosition(song, 'random', clipDuration)
+        // Should not exceed song.duration - clipDuration = 60
+        expect(start + clipDuration).toBeLessThanOrEqual(song.duration)
+      }
+    })
+
+    it('returns 0 for songs where safe range is invalid', () => {
+      const song = createMockSong(50) // 50 seconds
+      const clipDuration = 47
+
+      // minStart = 5, safeMaxStart = min(25, 3) = 3, which is < minStart (5)
+      // Should fall back to 0
+      const start = getStartPosition(song, 'random', clipDuration)
+      expect(start).toBe(0)
+    })
+  })
+
+  describe('skip_intro mode', () => {
+    it('skips first 30 seconds for long songs', () => {
+      const song = createMockSong(300) // 5 minutes
+      const clipDuration = 20
+
+      const start = getStartPosition(song, 'skip_intro', clipDuration)
+      expect(start).toBe(30)
+    })
+
+    it('skips 20% of duration for shorter songs', () => {
+      const song = createMockSong(100) // 100 seconds, 20% = 20 seconds
+      const clipDuration = 20
+
+      const start = getStartPosition(song, 'skip_intro', clipDuration)
+      expect(start).toBe(20)
+    })
+
+    it('respects clip duration constraint', () => {
+      const song = createMockSong(80) // 80 seconds
+      const clipDuration = 60
+
+      // Skip would be min(30, 16) = 16, but safeStart = min(16, 20) = 16
+      const start = getStartPosition(song, 'skip_intro', clipDuration)
+      expect(start + clipDuration).toBeLessThanOrEqual(song.duration)
+    })
+
+    it('returns 0 if skip would leave no room for clip', () => {
+      const song = createMockSong(40) // 40 seconds
+      const clipDuration = 35
+
+      // Skip would be min(30, 8) = 8, safeStart = min(8, 5) = 5
+      // Should still work with 5 second skip
+      const start = getStartPosition(song, 'skip_intro', clipDuration)
+      expect(start + clipDuration).toBeLessThanOrEqual(song.duration)
+    })
+  })
+
+  describe('short song handling', () => {
+    it('returns 0 when song duration equals clip duration', () => {
+      const song = createMockSong(20)
+      expect(getStartPosition(song, 'random', 20)).toBe(0)
+      expect(getStartPosition(song, 'skip_intro', 20)).toBe(0)
+    })
+
+    it('returns 0 when song is shorter than clip duration', () => {
+      const song = createMockSong(15)
+      expect(getStartPosition(song, 'random', 20)).toBe(0)
+      expect(getStartPosition(song, 'skip_intro', 20)).toBe(0)
+    })
+
+    it('returns valid positions for very short songs (< 10 seconds)', () => {
+      const song = createMockSong(8)
+      const clipDuration = 5
+
+      // For 8s song with 5s clip:
+      // random: minStart=0.8, maxStart=4, safeMaxStart=min(4,3)=3 - valid range [0.8, 3]
+      for (let i = 0; i < 10; i++) {
+        const randomStart = getStartPosition(song, 'random', clipDuration)
+        expect(randomStart + clipDuration).toBeLessThanOrEqual(song.duration)
+      }
+
+      // skip_intro: skipAmount=min(30,1.6)=1.6, safeStart=min(1.6,3)=1.6
+      const skipStart = getStartPosition(song, 'skip_intro', clipDuration)
+      expect(skipStart).toBeCloseTo(1.6, 1)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('handles exact boundary conditions correctly', () => {
+      const song = createMockSong(100)
+      const clipDuration = 50
+
+      // For random: minStart = 10, maxStart = 50, safeMaxStart = 50
+      // Should produce values in [10, 50] range
+      for (let i = 0; i < 50; i++) {
+        const start = getStartPosition(song, 'random', clipDuration)
+        expect(start).toBeGreaterThanOrEqual(10)
+        expect(start).toBeLessThanOrEqual(50)
+      }
+    })
+
+    it('returns 0 for unknown mode (default case)', () => {
+      const song = createMockSong(180)
+      // @ts-expect-error - Testing invalid mode
+      expect(getStartPosition(song, 'invalid_mode', 20)).toBe(0)
+    })
+
+    it('handles 0 duration song gracefully', () => {
+      const song = createMockSong(0)
+      expect(getStartPosition(song, 'beginning', 20)).toBe(0)
+      expect(getStartPosition(song, 'random', 20)).toBe(0)
+      expect(getStartPosition(song, 'skip_intro', 20)).toBe(0)
+    })
+
+    it('ensures start + clipDuration never exceeds song duration', () => {
+      // Test various combinations
+      const testCases = [
+        { duration: 60, clip: 20 },
+        { duration: 120, clip: 30 },
+        { duration: 180, clip: 45 },
+        { duration: 240, clip: 60 },
+        { duration: 45, clip: 40 },
+      ]
+
+      for (const { duration, clip } of testCases) {
+        const song = createMockSong(duration)
+
+        for (const mode of ['random', 'skip_intro'] as const) {
+          for (let i = 0; i < 10; i++) {
+            const start = getStartPosition(song, mode, clip)
+            expect(start + clip).toBeLessThanOrEqual(duration)
+          }
+        }
+      }
+    })
+  })
 })

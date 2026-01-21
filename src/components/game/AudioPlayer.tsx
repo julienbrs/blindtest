@@ -32,6 +32,8 @@ interface AudioPlayerProps {
   shouldReplay?: boolean
   onReplayComplete?: () => void
   volume?: number
+  /** Start position in seconds (for skipping intros or starting at random point) */
+  startPosition?: number
 }
 
 export function AudioPlayer({
@@ -43,6 +45,7 @@ export function AudioPlayer({
   shouldReplay,
   onReplayComplete,
   volume = 0.7,
+  startPosition = 0,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -81,26 +84,28 @@ export function AudioPlayer({
     }
   }, [isPlaying, isLoaded])
 
-  // Limit playback duration - stop at maxDuration
+  // Limit playback duration - stop when clip duration is reached
+  // With start position offset, we stop at startPosition + maxDuration
   useEffect(() => {
-    if (currentTime >= maxDuration) {
+    const clipEnd = startPosition + maxDuration
+    if (currentTime >= clipEnd) {
       audioRef.current?.pause()
       handleEnded()
     }
-  }, [currentTime, maxDuration, handleEnded])
+  }, [currentTime, maxDuration, startPosition, handleEnded])
 
-  // Handle replay - reset audio to beginning and start playing
+  // Handle replay - reset audio to start position and start playing
   // Uses queueMicrotask to avoid setState-in-effect linting warning
   useEffect(() => {
     if (shouldReplay && audioRef.current && isLoaded) {
-      audioRef.current.currentTime = 0
+      audioRef.current.currentTime = startPosition
       queueMicrotask(() => {
-        setCurrentTime(0)
+        setCurrentTime(startPosition)
       })
       audioRef.current.play().catch(console.error)
       onReplayComplete?.()
     }
-  }, [shouldReplay, isLoaded, onReplayComplete])
+  }, [shouldReplay, isLoaded, onReplayComplete, startPosition])
 
   // Debounced time update to reduce re-renders on mobile (100ms delay)
   // We still want smooth UI updates, so use a short delay
@@ -117,6 +122,14 @@ export function AudioPlayer({
 
   const handleCanPlay = () => {
     setIsLoaded(true)
+    // Apply start position when audio loads (for skipping intros or random start)
+    if (audioRef.current && startPosition > 0) {
+      audioRef.current.currentTime = startPosition
+      // Update displayed time to match start position
+      queueMicrotask(() => {
+        setCurrentTime(startPosition)
+      })
+    }
     // Notify parent that audio is ready to play, passing the song ID
     if (songId) {
       onReady?.(songId)
@@ -125,7 +138,8 @@ export function AudioPlayer({
 
   const handleLoadStart = () => {
     // Reset state when a new song starts loading
-    setCurrentTime(0)
+    // Set currentTime to startPosition as that's where playback will begin
+    setCurrentTime(startPosition)
     setIsLoaded(false)
   }
 
@@ -134,8 +148,12 @@ export function AudioPlayer({
     handleEnded()
   }
 
-  const progress = (currentTime / maxDuration) * 100
-  const remainingTime = maxDuration - currentTime
+  // Calculate progress based on how much of the clip has been played
+  // When using a start position offset, currentTime is the absolute audio position
+  // Progress = (currentTime - startPosition) / maxDuration
+  const clipElapsed = Math.max(0, currentTime - startPosition)
+  const progress = (clipElapsed / maxDuration) * 100
+  const remainingTime = maxDuration - clipElapsed
   const isNearEnd = remainingTime <= 5 && remainingTime > 0
 
   // Determine bar gradient based on remaining time
@@ -163,9 +181,9 @@ export function AudioPlayer({
         />
       </div>
 
-      {/* Time display */}
+      {/* Time display - shows elapsed time within the clip, not absolute audio time */}
       <div className="mt-2 flex justify-between text-sm">
-        <span className="text-purple-300">{formatTime(currentTime)}</span>
+        <span className="text-purple-300">{formatTime(clipElapsed)}</span>
         <span
           className={
             isNearEnd ? 'text-red-400 font-semibold' : 'text-purple-300'

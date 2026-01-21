@@ -153,16 +153,16 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 10.3 Gérer l'erreur réseau
 - [x] 10.4 Gérer le navigateur sans support audio
 - [x] 10.5 Ajouter un état de chargement global
-- [ ] 10.6 Gérer la perte de focus de la page
-- [ ] 10.7 Ajouter des messages d'erreur user-friendly
-- [ ] 10.8 Logger les erreurs côté serveur
+- [x] 10.6 Gérer la perte de focus de la page
+- [x] 10.7 Ajouter des messages d'erreur user-friendly
+- [x] 10.8 Logger les erreurs côté serveur
 
 ### Epic 11: Configuration (docs/epics/11-configuration.md)
 
-- [ ] 11.1 Permettre de configurer le chemin audio
-- [ ] 11.2 Permettre de changer le timer (pas que 5s)
-- [ ] 11.3 Ajouter un mode "sans timer"
-- [ ] 11.4 Permettre de définir un point de départ dans la chanson
+- [x] 11.1 Permettre de configurer le chemin audio
+- [x] 11.2 Permettre de changer le timer (pas que 5s)
+- [x] 11.3 Ajouter un mode "sans timer"
+- [x] 11.4 Permettre de définir un point de départ dans la chanson
 - [ ] 11.5 Ajouter des filtres sur la bibliothèque
 - [ ] 11.6 Créer des playlists personnalisées
 
