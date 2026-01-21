@@ -163,8 +163,8 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 11.2 Permettre de changer le timer (pas que 5s)
 - [x] 11.3 Ajouter un mode "sans timer"
 - [x] 11.4 Permettre de définir un point de départ dans la chanson
-- [ ] 11.5 Ajouter des filtres sur la bibliothèque
-- [ ] 11.6 Créer des playlists personnalisées
+- [x] 11.5 Ajouter des filtres sur la bibliothèque
+- [x] 11.6 Créer des playlists personnalisées
 
 ### Epic 12: Testing (docs/epics/12-testing.md)
 

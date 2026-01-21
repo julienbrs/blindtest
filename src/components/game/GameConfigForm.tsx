@@ -8,6 +8,7 @@ import {
   ClockIcon,
   Cog6ToothIcon,
   MoonIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/solid'
 import type { GuessMode, StartPosition } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
@@ -18,9 +19,12 @@ import {
   defaultFilters,
   type LibraryFiltersState,
 } from './LibraryFilters'
+import { PlaylistManager } from './PlaylistManager'
+import { usePlaylists } from '@/hooks/usePlaylists'
 
 const STORAGE_KEY = 'blindtest_config'
 const FILTERS_STORAGE_KEY = 'blindtest_filters'
+const PLAYLIST_SELECTION_KEY = 'blindtest_selected_playlist'
 
 const validGuessModes: GuessMode[] = ['title', 'artist', 'both']
 const validStartPositions: StartPosition[] = [
@@ -147,6 +151,7 @@ const modes: { value: GuessMode; label: string; description: string }[] = [
 export function GameConfigForm() {
   const router = useRouter()
   const { isDark, toggle: toggleTheme } = useTheme()
+  const { getPlaylist } = usePlaylists()
   const [guessMode, setGuessMode] = useState<GuessMode>('both')
   const [clipDuration, setClipDuration] = useState(20)
   const [timerDuration, setTimerDuration] = useState(5)
@@ -159,6 +164,10 @@ export function GameConfigForm() {
   const [filters, setFilters] = useState<LibraryFiltersState>(defaultFilters)
   const [filteredCount, setFilteredCount] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
+    null
+  )
+  const [showPlaylistManager, setShowPlaylistManager] = useState(false)
 
   // Load saved config on mount (client-side only)
   // This is a legitimate use case for setState in useEffect - hydrating state from localStorage
@@ -175,13 +184,35 @@ export function GameConfigForm() {
     }
     const savedFilters = loadSavedFilters()
     setFilters(savedFilters)
+
+    // Load saved playlist selection
+    const savedPlaylistId = localStorage.getItem(PLAYLIST_SELECTION_KEY)
+    if (savedPlaylistId) {
+      setSelectedPlaylistId(savedPlaylistId)
+    }
+
     setHasMounted(true)
   }, [])
 
-  // Fetch song counts based on filters
+  // Fetch song counts based on filters or playlist
   useEffect(() => {
     const fetchCounts = async () => {
       try {
+        // If a playlist is selected, use the playlist song count
+        if (selectedPlaylistId) {
+          const playlist = getPlaylist(selectedPlaylistId)
+          if (playlist) {
+            setFilteredCount(playlist.songIds.length)
+            // Fetch total count from library
+            const res = await fetch('/api/songs')
+            if (res.ok) {
+              const data = await res.json()
+              setTotalCount(data.total || 0)
+            }
+            return
+          }
+        }
+
         // Build filter query params
         const params = new URLSearchParams()
         if (filters.selectedArtists.length > 0) {
@@ -205,7 +236,7 @@ export function GameConfigForm() {
       }
     }
     fetchCounts()
-  }, [filters])
+  }, [filters, selectedPlaylistId, getPlaylist])
 
   // Save config to localStorage whenever it changes (after mount)
   const saveConfig = useCallback((config: SavedConfig) => {
@@ -291,7 +322,42 @@ export function GameConfigForm() {
     [hasMounted]
   )
 
+  // Handler for playlist selection changes - saves immediately
+  const handlePlaylistSelect = useCallback(
+    (playlistId: string | null) => {
+      setSelectedPlaylistId(playlistId)
+      if (hasMounted) {
+        if (playlistId) {
+          localStorage.setItem(PLAYLIST_SELECTION_KEY, playlistId)
+        } else {
+          localStorage.removeItem(PLAYLIST_SELECTION_KEY)
+        }
+      }
+    },
+    [hasMounted]
+  )
+
   const validateForm = async (): Promise<boolean> => {
+    // If a playlist is selected, validate it has songs
+    if (selectedPlaylistId) {
+      const playlist = getPlaylist(selectedPlaylistId)
+      if (!playlist) {
+        setValidationError("La playlist sélectionnée n'existe plus.")
+        return false
+      }
+      if (playlist.songIds.length === 0) {
+        setValidationError('La playlist sélectionnée est vide.')
+        return false
+      }
+      // Validate parameters
+      if (clipDuration < 5 || clipDuration > 60) {
+        setValidationError('La durée doit être entre 5 et 60 secondes.')
+        return false
+      }
+      setValidationError(null)
+      return true
+    }
+
     // Check that there are songs available (with filters applied)
     try {
       const params = new URLSearchParams()
@@ -352,15 +418,21 @@ export function GameConfigForm() {
       startPosition: startPosition,
     })
 
-    // Add filter params if active
-    if (filters.selectedArtists.length > 0) {
-      params.set('artists', filters.selectedArtists.join(','))
-    }
-    if (filters.yearMin !== null) {
-      params.set('yearMin', filters.yearMin.toString())
-    }
-    if (filters.yearMax !== null) {
-      params.set('yearMax', filters.yearMax.toString())
+    // Add playlist or filter params
+    if (selectedPlaylistId) {
+      // When playlist is selected, pass the playlist ID
+      params.set('playlist', selectedPlaylistId)
+    } else {
+      // Add filter params if active (only when no playlist selected)
+      if (filters.selectedArtists.length > 0) {
+        params.set('artists', filters.selectedArtists.join(','))
+      }
+      if (filters.yearMin !== null) {
+        params.set('yearMin', filters.yearMin.toString())
+      }
+      if (filters.yearMax !== null) {
+        params.set('yearMax', filters.yearMax.toString())
+      }
     }
 
     router.push(`/game?${params.toString()}`)
@@ -413,15 +485,59 @@ export function GameConfigForm() {
         </div>
       </Card>
 
-      {/* Filtres bibliothèque */}
+      {/* Playlists */}
       <Card className="p-6">
-        <LibraryFilters
-          filters={filters}
-          onChange={handleFiltersChange}
-          filteredCount={filteredCount}
-          totalCount={totalCount}
-        />
+        <button
+          type="button"
+          onClick={() => setShowPlaylistManager(!showPlaylistManager)}
+          className="flex w-full items-center justify-between"
+        >
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
+            <QueueListIcon className="h-5 w-5 text-purple-400" />
+            Playlists
+          </h2>
+          <div className="flex items-center gap-2">
+            {selectedPlaylistId ? (
+              <span className="text-sm text-purple-300">
+                {getPlaylist(selectedPlaylistId)?.name ||
+                  'Playlist sélectionnée'}
+              </span>
+            ) : (
+              <span className="text-sm text-purple-300">
+                Toute la bibliothèque
+              </span>
+            )}
+            <ChevronRightIcon
+              className={`h-4 w-4 transform text-purple-300 transition-transform duration-200 ${showPlaylistManager ? 'rotate-90' : ''}`}
+            />
+          </div>
+        </button>
+
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            showPlaylistManager
+              ? 'mt-4 max-h-[500px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}
+        >
+          <PlaylistManager
+            selectedPlaylistId={selectedPlaylistId}
+            onSelect={handlePlaylistSelect}
+          />
+        </div>
       </Card>
+
+      {/* Filtres bibliothèque - Hidden when playlist is selected */}
+      {!selectedPlaylistId && (
+        <Card className="p-6">
+          <LibraryFilters
+            filters={filters}
+            onChange={handleFiltersChange}
+            filteredCount={filteredCount}
+            totalCount={totalCount}
+          />
+        </Card>
+      )}
 
       {/* Durée des extraits */}
       <Card className="p-6">

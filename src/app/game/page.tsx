@@ -174,20 +174,50 @@ function GameContent() {
     }
   }, [searchParams])
 
+  // Parse playlist ID from URL and load playlist songIds from localStorage
+  const playlistSongIds = useMemo(() => {
+    const playlistId = searchParams.get('playlist')
+    if (!playlistId) return null
+
+    // Load playlist from localStorage
+    if (typeof window === 'undefined') return null
+
+    try {
+      const saved = localStorage.getItem('blindtest_playlists')
+      if (!saved) return null
+
+      const playlists = JSON.parse(saved) as Array<{
+        id: string
+        songIds: string[]
+      }>
+      const playlist = playlists.find((p) => p.id === playlistId)
+      return playlist?.songIds || null
+    } catch {
+      return null
+    }
+  }, [searchParams])
+
   // Build filter query string for API calls
   const filterQueryString = useMemo(() => {
     const params = new URLSearchParams()
-    if (libraryFilters.artists.length > 0) {
-      params.set('artists', libraryFilters.artists.join(','))
-    }
-    if (libraryFilters.yearMin !== null) {
-      params.set('yearMin', libraryFilters.yearMin.toString())
-    }
-    if (libraryFilters.yearMax !== null) {
-      params.set('yearMax', libraryFilters.yearMax.toString())
+
+    // If playlist is selected, use include param for song IDs
+    if (playlistSongIds && playlistSongIds.length > 0) {
+      params.set('include', playlistSongIds.join(','))
+    } else {
+      // Otherwise, use library filters
+      if (libraryFilters.artists.length > 0) {
+        params.set('artists', libraryFilters.artists.join(','))
+      }
+      if (libraryFilters.yearMin !== null) {
+        params.set('yearMin', libraryFilters.yearMin.toString())
+      }
+      if (libraryFilters.yearMax !== null) {
+        params.set('yearMax', libraryFilters.yearMax.toString())
+      }
     }
     return params.toString()
-  }, [libraryFilters])
+  }, [libraryFilters, playlistSongIds])
 
   const game = useGameState(config)
 

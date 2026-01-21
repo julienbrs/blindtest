@@ -161,3 +161,21 @@ export type GameAction =
   | { type: 'RESET' }
   | { type: 'CLIP_ENDED' }
   | { type: 'REPLAY' }
+
+// ============================================
+// Types pour les playlists personnalisées
+// ============================================
+
+/**
+ * Playlist - A custom collection of songs for themed games
+ *
+ * Playlists allow users to create curated subsets of their music library
+ * for specific game sessions (e.g., "80s Hits", "Party Mix", "Rock Classics")
+ */
+export interface Playlist {
+  id: string // Unique identifier (generated UUID)
+  name: string // Display name of the playlist
+  songIds: string[] // Array of song IDs included in this playlist
+  createdAt: number // Unix timestamp when created
+  updatedAt?: number // Unix timestamp when last modified
+}
