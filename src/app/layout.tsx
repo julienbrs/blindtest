@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Poppins, Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { ToastProvider } from '@/contexts/ToastContext'
 import { ThemedLayout } from '@/components/layout/ThemedLayout'
 
 const poppins = Poppins({
@@ -31,7 +32,9 @@ export default function RootLayout({
     <html lang="fr" className={`${poppins.variable} ${inter.variable}`}>
       <body className="min-h-screen text-white font-sans antialiased">
         <ThemeProvider>
-          <ThemedLayout>{children}</ThemedLayout>
+          <ToastProvider>
+            <ThemedLayout>{children}</ThemedLayout>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

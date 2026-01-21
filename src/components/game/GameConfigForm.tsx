@@ -8,22 +8,63 @@ import {
   ClockIcon,
   Cog6ToothIcon,
   MoonIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/solid'
-import type { GuessMode } from '@/lib/types'
+import type { GuessMode, StartPosition } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useTheme } from '@/contexts/ThemeContext'
+import {
+  LibraryFilters,
+  defaultFilters,
+  type LibraryFiltersState,
+} from './LibraryFilters'
+import { PlaylistManager } from './PlaylistManager'
+import { usePlaylists } from '@/hooks/usePlaylists'
 
 const STORAGE_KEY = 'blindtest_config'
+const FILTERS_STORAGE_KEY = 'blindtest_filters'
+const PLAYLIST_SELECTION_KEY = 'blindtest_selected_playlist'
 
 const validGuessModes: GuessMode[] = ['title', 'artist', 'both']
+const validStartPositions: StartPosition[] = [
+  'beginning',
+  'random',
+  'skip_intro',
+]
 
 interface SavedConfig {
   guessMode: GuessMode
   clipDuration: number
   timerDuration: number
   noTimer: boolean
-  randomStartPoint: boolean
+  startPosition: StartPosition
+}
+
+function loadSavedFilters(): LibraryFiltersState {
+  if (typeof window === 'undefined') return defaultFilters
+
+  const saved = localStorage.getItem(FILTERS_STORAGE_KEY)
+  if (!saved) return defaultFilters
+
+  try {
+    const config = JSON.parse(saved)
+    return {
+      selectedArtists: Array.isArray(config.selectedArtists)
+        ? config.selectedArtists
+        : [],
+      yearMin:
+        typeof config.yearMin === 'number' && config.yearMin > 0
+          ? config.yearMin
+          : null,
+      yearMax:
+        typeof config.yearMax === 'number' && config.yearMax > 0
+          ? config.yearMax
+          : null,
+    }
+  } catch {
+    return defaultFilters
+  }
 }
 
 function loadSavedConfig(): SavedConfig | null {
@@ -39,7 +80,7 @@ function loadSavedConfig(): SavedConfig | null {
       clipDuration: 20,
       timerDuration: 5,
       noTimer: false,
-      randomStartPoint: false,
+      startPosition: 'beginning',
     }
 
     // Validate guessMode
@@ -60,11 +101,11 @@ function loadSavedConfig(): SavedConfig | null {
       result.clipDuration = config.clipDuration
     }
 
-    // Validate timerDuration (must be between 3-30)
+    // Validate timerDuration (must be one of 3, 5, 10, 15)
+    const validTimerDurations = [3, 5, 10, 15]
     if (
       typeof config.timerDuration === 'number' &&
-      config.timerDuration >= 3 &&
-      config.timerDuration <= 30
+      validTimerDurations.includes(config.timerDuration)
     ) {
       result.timerDuration = config.timerDuration
     }
@@ -74,9 +115,12 @@ function loadSavedConfig(): SavedConfig | null {
       result.noTimer = config.noTimer
     }
 
-    // Validate randomStartPoint (must be boolean)
-    if (typeof config.randomStartPoint === 'boolean') {
-      result.randomStartPoint = config.randomStartPoint
+    // Validate startPosition (must be one of valid values)
+    if (
+      config.startPosition &&
+      validStartPositions.includes(config.startPosition as StartPosition)
+    ) {
+      result.startPosition = config.startPosition as StartPosition
     }
 
     return result
@@ -107,15 +151,23 @@ const modes: { value: GuessMode; label: string; description: string }[] = [
 export function GameConfigForm() {
   const router = useRouter()
   const { isDark, toggle: toggleTheme } = useTheme()
+  const { getPlaylist } = usePlaylists()
   const [guessMode, setGuessMode] = useState<GuessMode>('both')
   const [clipDuration, setClipDuration] = useState(20)
   const [timerDuration, setTimerDuration] = useState(5)
   const [noTimer, setNoTimer] = useState(false)
-  const [randomStartPoint, setRandomStartPoint] = useState(false)
+  const [startPosition, setStartPosition] = useState<StartPosition>('beginning')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [hasMounted, setHasMounted] = useState(false)
+  const [filters, setFilters] = useState<LibraryFiltersState>(defaultFilters)
+  const [filteredCount, setFilteredCount] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
+    null
+  )
+  const [showPlaylistManager, setShowPlaylistManager] = useState(false)
 
   // Load saved config on mount (client-side only)
   // This is a legitimate use case for setState in useEffect - hydrating state from localStorage
@@ -127,25 +179,69 @@ export function GameConfigForm() {
       setClipDuration(savedConfig.clipDuration)
       setTimerDuration(savedConfig.timerDuration)
       setNoTimer(savedConfig.noTimer)
-      setRandomStartPoint(savedConfig.randomStartPoint)
+      setStartPosition(savedConfig.startPosition)
       /* eslint-enable react-hooks/set-state-in-effect */
     }
+    const savedFilters = loadSavedFilters()
+    setFilters(savedFilters)
+
+    // Load saved playlist selection
+    const savedPlaylistId = localStorage.getItem(PLAYLIST_SELECTION_KEY)
+    if (savedPlaylistId) {
+      setSelectedPlaylistId(savedPlaylistId)
+    }
+
     setHasMounted(true)
   }, [])
 
+  // Fetch song counts based on filters or playlist
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        // If a playlist is selected, use the playlist song count
+        if (selectedPlaylistId) {
+          const playlist = getPlaylist(selectedPlaylistId)
+          if (playlist) {
+            setFilteredCount(playlist.songIds.length)
+            // Fetch total count from library
+            const res = await fetch('/api/songs')
+            if (res.ok) {
+              const data = await res.json()
+              setTotalCount(data.total || 0)
+            }
+            return
+          }
+        }
+
+        // Build filter query params
+        const params = new URLSearchParams()
+        if (filters.selectedArtists.length > 0) {
+          params.set('artists', filters.selectedArtists.join(','))
+        }
+        if (filters.yearMin !== null) {
+          params.set('yearMin', filters.yearMin.toString())
+        }
+        if (filters.yearMax !== null) {
+          params.set('yearMax', filters.yearMax.toString())
+        }
+
+        const res = await fetch(`/api/songs?${params.toString()}`)
+        if (res.ok) {
+          const data = await res.json()
+          setFilteredCount(data.total || 0)
+          setTotalCount(data.totalInLibrary || data.total || 0)
+        }
+      } catch {
+        // Silently fail - counts are not critical
+      }
+    }
+    fetchCounts()
+  }, [filters, selectedPlaylistId, getPlaylist])
+
   // Save config to localStorage whenever it changes (after mount)
-  const saveConfig = useCallback(
-    (config: {
-      guessMode: GuessMode
-      clipDuration: number
-      timerDuration: number
-      noTimer: boolean
-      randomStartPoint: boolean
-    }) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
-    },
-    []
-  )
+  const saveConfig = useCallback((config: SavedConfig) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+  }, [])
 
   // Helper to get current config for saving
   const getCurrentConfig = useCallback(
@@ -154,10 +250,10 @@ export function GameConfigForm() {
       clipDuration,
       timerDuration,
       noTimer,
-      randomStartPoint,
+      startPosition,
       ...overrides,
     }),
-    [guessMode, clipDuration, timerDuration, noTimer, randomStartPoint]
+    [guessMode, clipDuration, timerDuration, noTimer, startPosition]
   )
 
   // Handler for guess mode changes - saves immediately
@@ -204,25 +300,88 @@ export function GameConfigForm() {
     [hasMounted, saveConfig, getCurrentConfig]
   )
 
-  // Handler for random start point toggle - saves immediately
-  const handleRandomStartPointChange = useCallback(
-    (newValue: boolean) => {
-      setRandomStartPoint(newValue)
+  // Handler for start position changes - saves immediately
+  const handleStartPositionChange = useCallback(
+    (newValue: StartPosition) => {
+      setStartPosition(newValue)
       if (hasMounted) {
-        saveConfig(getCurrentConfig({ randomStartPoint: newValue }))
+        saveConfig(getCurrentConfig({ startPosition: newValue }))
       }
     },
     [hasMounted, saveConfig, getCurrentConfig]
   )
 
+  // Handler for filter changes - saves immediately
+  const handleFiltersChange = useCallback(
+    (newFilters: LibraryFiltersState) => {
+      setFilters(newFilters)
+      if (hasMounted) {
+        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(newFilters))
+      }
+    },
+    [hasMounted]
+  )
+
+  // Handler for playlist selection changes - saves immediately
+  const handlePlaylistSelect = useCallback(
+    (playlistId: string | null) => {
+      setSelectedPlaylistId(playlistId)
+      if (hasMounted) {
+        if (playlistId) {
+          localStorage.setItem(PLAYLIST_SELECTION_KEY, playlistId)
+        } else {
+          localStorage.removeItem(PLAYLIST_SELECTION_KEY)
+        }
+      }
+    },
+    [hasMounted]
+  )
+
   const validateForm = async (): Promise<boolean> => {
-    // Check that there are songs available
+    // If a playlist is selected, validate it has songs
+    if (selectedPlaylistId) {
+      const playlist = getPlaylist(selectedPlaylistId)
+      if (!playlist) {
+        setValidationError("La playlist sélectionnée n'existe plus.")
+        return false
+      }
+      if (playlist.songIds.length === 0) {
+        setValidationError('La playlist sélectionnée est vide.')
+        return false
+      }
+      // Validate parameters
+      if (clipDuration < 5 || clipDuration > 60) {
+        setValidationError('La durée doit être entre 5 et 60 secondes.')
+        return false
+      }
+      setValidationError(null)
+      return true
+    }
+
+    // Check that there are songs available (with filters applied)
     try {
-      const res = await fetch('/api/songs')
+      const params = new URLSearchParams()
+      if (filters.selectedArtists.length > 0) {
+        params.set('artists', filters.selectedArtists.join(','))
+      }
+      if (filters.yearMin !== null) {
+        params.set('yearMin', filters.yearMin.toString())
+      }
+      if (filters.yearMax !== null) {
+        params.set('yearMax', filters.yearMax.toString())
+      }
+
+      const res = await fetch(`/api/songs?${params.toString()}`)
       const data = await res.json()
       if (data.total === 0) {
+        const hasFilters =
+          filters.selectedArtists.length > 0 ||
+          filters.yearMin !== null ||
+          filters.yearMax !== null
         setValidationError(
-          'Aucune chanson disponible. Vérifiez votre dossier audio.'
+          hasFilters
+            ? 'Aucune chanson ne correspond aux filtres sélectionnés.'
+            : 'Aucune chanson disponible. Vérifiez votre dossier audio.'
         )
         return false
       }
@@ -256,8 +415,25 @@ export function GameConfigForm() {
       mode: guessMode,
       duration: clipDuration.toString(),
       timer: noTimer ? '0' : timerDuration.toString(),
-      randomStart: randomStartPoint ? '1' : '0',
+      startPosition: startPosition,
     })
+
+    // Add playlist or filter params
+    if (selectedPlaylistId) {
+      // When playlist is selected, pass the playlist ID
+      params.set('playlist', selectedPlaylistId)
+    } else {
+      // Add filter params if active (only when no playlist selected)
+      if (filters.selectedArtists.length > 0) {
+        params.set('artists', filters.selectedArtists.join(','))
+      }
+      if (filters.yearMin !== null) {
+        params.set('yearMin', filters.yearMin.toString())
+      }
+      if (filters.yearMax !== null) {
+        params.set('yearMax', filters.yearMax.toString())
+      }
+    }
 
     router.push(`/game?${params.toString()}`)
   }
@@ -308,6 +484,60 @@ export function GameConfigForm() {
           ))}
         </div>
       </Card>
+
+      {/* Playlists */}
+      <Card className="p-6">
+        <button
+          type="button"
+          onClick={() => setShowPlaylistManager(!showPlaylistManager)}
+          className="flex w-full items-center justify-between"
+        >
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
+            <QueueListIcon className="h-5 w-5 text-purple-400" />
+            Playlists
+          </h2>
+          <div className="flex items-center gap-2">
+            {selectedPlaylistId ? (
+              <span className="text-sm text-purple-300">
+                {getPlaylist(selectedPlaylistId)?.name ||
+                  'Playlist sélectionnée'}
+              </span>
+            ) : (
+              <span className="text-sm text-purple-300">
+                Toute la bibliothèque
+              </span>
+            )}
+            <ChevronRightIcon
+              className={`h-4 w-4 transform text-purple-300 transition-transform duration-200 ${showPlaylistManager ? 'rotate-90' : ''}`}
+            />
+          </div>
+        </button>
+
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            showPlaylistManager
+              ? 'mt-4 max-h-[500px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}
+        >
+          <PlaylistManager
+            selectedPlaylistId={selectedPlaylistId}
+            onSelect={handlePlaylistSelect}
+          />
+        </div>
+      </Card>
+
+      {/* Filtres bibliothèque - Hidden when playlist is selected */}
+      {!selectedPlaylistId && (
+        <Card className="p-6">
+          <LibraryFilters
+            filters={filters}
+            onChange={handleFiltersChange}
+            filteredCount={filteredCount}
+            totalCount={totalCount}
+          />
+        </Card>
+      )}
 
       {/* Durée des extraits */}
       <Card className="p-6">
@@ -361,30 +591,24 @@ export function GameConfigForm() {
           <Card className="space-y-4 p-6">
             {/* Timer duration */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-purple-200">Temps pour répondre</span>
-                <span className="font-bold">
-                  {noTimer ? 'Illimité' : `${timerDuration}s`}
-                </span>
-              </div>
+              <div className="text-purple-200">Temps pour répondre</div>
 
-              <input
-                type="range"
-                min={3}
-                max={30}
-                step={1}
-                value={timerDuration}
-                onChange={(e) =>
-                  handleTimerDurationChange(Number(e.target.value))
-                }
-                disabled={noTimer}
-                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/20 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-400 [&::-webkit-slider-thumb]:shadow-lg"
-              />
-
-              <div className="flex justify-between text-xs text-purple-300">
-                <span>3s</span>
-                <span>15s</span>
-                <span>30s</span>
+              <div className="flex gap-2">
+                {[3, 5, 10, 15].map((seconds) => (
+                  <button
+                    key={seconds}
+                    type="button"
+                    onClick={() => handleTimerDurationChange(seconds)}
+                    disabled={noTimer}
+                    className={`flex-1 rounded-lg px-4 py-2 font-medium transition-all ${
+                      timerDuration === seconds
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-white/10 text-purple-200 hover:bg-white/20'
+                    } disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    {seconds}s
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -413,32 +637,70 @@ export function GameConfigForm() {
               </div>
             </label>
 
-            {/* Random start point toggle */}
-            <label className="flex min-h-[48px] cursor-pointer items-center justify-between rounded-lg bg-white/5 p-4 transition-colors hover:bg-white/10">
-              <div>
-                <div className="font-medium">Départ aléatoire</div>
-                <div className="text-sm text-purple-200">
-                  Commencer à un point aléatoire de la chanson
-                </div>
+            {/* Start position selector */}
+            <div className="space-y-3">
+              <div className="text-purple-200">Point de départ</div>
+              <div className="space-y-2">
+                {(
+                  [
+                    {
+                      value: 'beginning',
+                      label: 'Début',
+                      description: 'Commencer au début de la chanson',
+                    },
+                    {
+                      value: 'random',
+                      label: 'Aléatoire',
+                      description: 'Point entre 10% et 50% de la durée',
+                    },
+                    {
+                      value: 'skip_intro',
+                      label: 'Sans intro',
+                      description: 'Passer les 30 premières secondes',
+                    },
+                  ] as const
+                ).map((option) => (
+                  <label
+                    key={option.value}
+                    className={`flex min-h-[48px] cursor-pointer items-center rounded-lg p-3 transition-all ${
+                      startPosition === option.value
+                        ? 'border-2 border-purple-400 bg-purple-500/30'
+                        : 'border-2 border-transparent bg-white/5 hover:bg-white/10'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="startPosition"
+                      value={option.value}
+                      checked={startPosition === option.value}
+                      onChange={(e) =>
+                        handleStartPositionChange(
+                          e.target.value as StartPosition
+                        )
+                      }
+                      className="sr-only"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{option.label}</div>
+                      <div className="text-xs text-purple-200">
+                        {option.description}
+                      </div>
+                    </div>
+                    <div
+                      className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                        startPosition === option.value
+                          ? 'border-purple-400 bg-purple-400'
+                          : 'border-white/50'
+                      }`}
+                    >
+                      {startPosition === option.value && (
+                        <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
+                  </label>
+                ))}
               </div>
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={randomStartPoint}
-                  onChange={(e) =>
-                    handleRandomStartPointChange(e.target.checked)
-                  }
-                  className="sr-only"
-                />
-                <div
-                  className={`h-6 w-11 rounded-full transition-colors ${randomStartPoint ? 'bg-purple-500' : 'bg-white/20'}`}
-                >
-                  <div
-                    className={`h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${randomStartPoint ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`}
-                  />
-                </div>
-              </div>
-            </label>
+            </div>
 
             {/* Dark theme toggle */}
             <label className="flex min-h-[48px] cursor-pointer items-center justify-between rounded-lg bg-white/5 p-4 transition-colors hover:bg-white/10">

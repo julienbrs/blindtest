@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createReadStream, statSync, Stats } from 'fs'
 import { Readable } from 'stream'
 import { getSongsCache } from '@/lib/audioScanner'
+import { logError } from '@/lib/logger'
 import type { AudioFormat, Song } from '@/lib/types'
 
 /**
@@ -62,15 +63,11 @@ export async function GET(
         error instanceof Error && 'code' in error
           ? (error as NodeJS.ErrnoException).code
           : 'UNKNOWN'
-      console.error(
-        JSON.stringify({
-          timestamp: new Date().toISOString(),
-          context: `GET /api/audio/${id}`,
-          error: 'FILE_NOT_FOUND',
-          message: `Audio file not found at path: ${filePath}`,
-          code: errorCode,
-        })
-      )
+      logError(`GET /api/audio/${id}`, error, {
+        errorType: 'FILE_NOT_FOUND',
+        filePath,
+        code: errorCode,
+      })
 
       return NextResponse.json(
         { error: 'FILE_NOT_FOUND', message: 'Fichier audio introuvable' },
@@ -140,7 +137,7 @@ export async function GET(
     })
   } catch (error) {
     const { id } = await params
-    console.error(`Erreur GET /api/audio/${id}:`, error)
+    logError(`GET /api/audio/${id}`, error)
     return NextResponse.json({ error: 'Erreur streaming' }, { status: 500 })
   }
 }
@@ -195,15 +192,11 @@ async function validateSongAndFile(id: string): Promise<ValidationResult> {
       error instanceof Error && 'code' in error
         ? (error as NodeJS.ErrnoException).code
         : 'UNKNOWN'
-    console.error(
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        context: `HEAD /api/audio/${id}`,
-        error: 'FILE_NOT_FOUND',
-        message: `Audio file not found at path: ${filePath}`,
-        code: errorCode,
-      })
-    )
+    logError(`HEAD /api/audio/${id}`, error, {
+      errorType: 'FILE_NOT_FOUND',
+      filePath,
+      code: errorCode,
+    })
 
     return {
       success: false,
@@ -248,7 +241,7 @@ export async function HEAD(
     })
   } catch (error) {
     const { id } = await params
-    console.error(`Erreur HEAD /api/audio/${id}:`, error)
+    logError(`HEAD /api/audio/${id}`, error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

@@ -1,4 +1,4 @@
-# Epic 14: Multiplayer
+# Epic 13: Multiplayer
 
 Ajouter le mode multijoueur au blindtest avec Supabase Realtime.
 
@@ -9,7 +9,7 @@ Ajouter le mode multijoueur au blindtest avec Supabase Realtime.
 
 ---
 
-## 14.1 Installer et configurer Supabase
+## 13.1 Installer et configurer Supabase
 
 **Description**: Installer le client Supabase et configurer les variables d'environnement.
 
@@ -30,7 +30,7 @@ Ajouter le mode multijoueur au blindtest avec Supabase Realtime.
 
 ---
 
-## 14.2 Créer le schéma de base de données
+## 13.2 Créer le schéma de base de données
 
 **Description**: Créer les tables rooms, players, et buzzes dans Supabase.
 
@@ -108,7 +108,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.3 Créer les types TypeScript pour le multiplayer
+## 13.3 Créer les types TypeScript pour le multiplayer
 
 **Description**: Ajouter les interfaces Room, Player, RoomState à types.ts.
 
@@ -127,7 +127,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.4 Créer la page de sélection de mode (/play)
+## 13.4 Créer la page de sélection de mode (/play)
 
 **Description**: Page permettant de choisir entre mode solo et multijoueur.
 
@@ -147,7 +147,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.5 Créer le formulaire de création de room
+## 13.5 Créer le formulaire de création de room
 
 **Description**: Formulaire pour créer une nouvelle room avec un pseudo.
 
@@ -168,7 +168,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.6 Créer le formulaire pour rejoindre une room
+## 13.6 Créer le formulaire pour rejoindre une room
 
 **Description**: Formulaire pour rejoindre une room existante avec un code.
 
@@ -191,7 +191,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.7 Implémenter le hook useRoom
+## 13.7 Implémenter le hook useRoom
 
 **Description**: Hook pour gérer les opérations CRUD sur les rooms.
 
@@ -213,7 +213,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.8 Créer le composant Lobby
+## 13.8 Créer le composant Lobby
 
 **Description**: Écran d'attente avant le début de la partie.
 
@@ -235,7 +235,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.9 Implémenter la présence des joueurs
+## 13.9 Implémenter la présence des joueurs
 
 **Description**: Tracker qui est en ligne via Supabase Presence.
 
@@ -255,7 +255,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.10 Créer le hook useMultiplayerGame
+## 13.10 Créer le hook useMultiplayerGame
 
 **Description**: Hook principal pour la logique de jeu multijoueur.
 
@@ -275,7 +275,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.11 Implémenter la synchronisation audio
+## 13.11 Implémenter la synchronisation audio
 
 **Description**: Tous les joueurs entendent le même extrait au même moment.
 
@@ -296,7 +296,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.12 Implémenter la résolution du buzz
+## 13.12 Implémenter la résolution du buzz
 
 **Description**: Le premier joueur à buzzer obtient le droit de répondre.
 
@@ -316,7 +316,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.13 Créer les contrôles host
+## 13.13 Créer les contrôles host
 
 **Description**: Interface host pour valider les réponses et gérer le jeu.
 
@@ -336,7 +336,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.14 Afficher les scores de tous les joueurs
+## 13.14 Afficher les scores de tous les joueurs
 
 **Description**: Classement en temps réel de tous les joueurs.
 
@@ -356,7 +356,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.15 Gérer la migration de host
+## 13.15 Gérer la migration de host
 
 **Description**: Si le host quitte, un autre joueur devient host.
 
@@ -376,7 +376,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.16 Gérer la reconnexion des joueurs
+## 13.16 Gérer la reconnexion des joueurs
 
 **Description**: Un joueur déconnecté peut revenir dans la partie.
 
@@ -396,7 +396,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.17 Créer le récap multijoueur
+## 13.17 Créer le récap multijoueur
 
 **Description**: Écran de fin de partie avec classement final.
 
@@ -417,7 +417,7 @@ CREATE INDEX idx_buzzes_room_song ON buzzes(room_id, song_id);
 
 ---
 
-## 14.18 Nettoyer les rooms expirées
+## 13.18 Nettoyer les rooms expirées
 
 **Description**: Supprimer automatiquement les rooms inactives.
 

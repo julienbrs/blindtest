@@ -161,7 +161,7 @@ describe('GET /api/audio/[id]', () => {
     expect(consoleSpy).toHaveBeenCalled()
     const logCall = consoleSpy.mock.calls[0][0]
     const logData = JSON.parse(logCall as string)
-    expect(logData.error).toBe('FILE_NOT_FOUND')
+    expect(logData.metadata?.errorType).toBe('FILE_NOT_FOUND')
     expect(logData.context).toContain('/api/audio/')
 
     consoleSpy.mockRestore()

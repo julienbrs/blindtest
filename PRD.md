@@ -153,60 +153,58 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 10.3 Gérer l'erreur réseau
 - [x] 10.4 Gérer le navigateur sans support audio
 - [x] 10.5 Ajouter un état de chargement global
-- [ ] 10.6 Gérer la perte de focus de la page
-- [ ] 10.7 Ajouter des messages d'erreur user-friendly
-- [ ] 10.8 Logger les erreurs côté serveur
+- [x] 10.6 Gérer la perte de focus de la page
+- [x] 10.7 Ajouter des messages d'erreur user-friendly
+- [x] 10.8 Logger les erreurs côté serveur
 
 ### Epic 11: Configuration (docs/epics/11-configuration.md)
 
-- [ ] 11.1 Permettre de configurer le chemin audio
-- [ ] 11.2 Permettre de changer le timer (pas que 5s)
-- [ ] 11.3 Ajouter un mode "sans timer"
-- [ ] 11.4 Permettre de définir un point de départ dans la chanson
-- [ ] 11.5 Ajouter des filtres sur la bibliothèque
-- [ ] 11.6 Créer des playlists personnalisées
+- [x] 11.1 Permettre de configurer le chemin audio
+- [x] 11.2 Permettre de changer le timer (pas que 5s)
+- [x] 11.3 Ajouter un mode "sans timer"
+- [x] 11.4 Permettre de définir un point de départ dans la chanson
+- [x] 11.5 Ajouter des filtres sur la bibliothèque
+- [x] 11.6 Créer des playlists personnalisées
 
 ### Epic 12: Testing (docs/epics/12-testing.md)
 
-- [ ] 12.1 Tester le scan de fichiers audio
-- [ ] 12.2 Tester les API routes
-- [ ] 12.3 Tester la machine d'état du jeu
-- [ ] 12.4 Tester sur plusieurs navigateurs
-- [ ] 12.5 Tester avec une grande bibliothèque
-- [ ] 12.6 Ajouter des tests unitaires
-- [ ] 12.7 Ajouter des tests E2E
+- [x] 12.1 Tester le scan de fichiers audio
+- [x] 12.2 Tester les API routes
+- [x] 12.3 Tester la machine d'état du jeu
+- [x] 12.6 Ajouter des tests unitaires
+- [x] 12.7 Ajouter des tests E2E
 
-### Epic 13: Deployment (docs/epics/13-deployment.md)
+### Epic 13: Multiplayer (docs/epics/13-multiplayer.md)
 
-- [ ] 13.1 Créer le script de build
-- [ ] 13.2 Configurer le démarrage en production
-- [ ] 13.3 Documenter l'installation sur NAS
-- [ ] 13.4 Configurer le reverse proxy si nécessaire
-- [ ] 13.5 Ajouter un healthcheck endpoint
-- [ ] 13.6 Créer un Dockerfile
-
-### Epic 14: Multiplayer (docs/epics/14-multiplayer.md)
-
-- [ ] 14.1 Installer et configurer Supabase
-- [ ] 14.2 Créer le schéma de base de données
-- [ ] 14.3 Créer les types TypeScript pour le multiplayer
-- [ ] 14.4 Créer la page de sélection de mode (/play)
-- [ ] 14.5 Créer le formulaire de création de room
-- [ ] 14.6 Créer le formulaire pour rejoindre une room
-- [ ] 14.7 Implémenter le hook useRoom
-- [ ] 14.8 Créer le composant Lobby
-- [ ] 14.9 Implémenter la présence des joueurs
-- [ ] 14.10 Créer le hook useMultiplayerGame
-- [ ] 14.11 Implémenter la synchronisation audio
-- [ ] 14.12 Implémenter la résolution du buzz
-- [ ] 14.13 Créer les contrôles host
-- [ ] 14.14 Afficher les scores de tous les joueurs
-- [ ] 14.15 Gérer la migration de host
-- [ ] 14.16 Gérer la reconnexion des joueurs
-- [ ] 14.17 Créer le récap multijoueur
-- [ ] 14.18 Nettoyer les rooms expirées
+- [x] 13.1 Installer et configurer Supabase
+- [x] 13.2 Créer le schéma de base de données
+- [x] 13.3 Créer les types TypeScript pour le multiplayer
+- [x] 13.4 Créer la page de sélection de mode (/play)
+- [x] 13.5 Créer le formulaire de création de room
+- [x] 13.6 Créer le formulaire pour rejoindre une room
+- [x] 13.7 Implémenter le hook useRoom
+- [x] 13.8 Créer le composant Lobby
+- [x] 13.9 Implémenter la présence des joueurs
+- [x] 13.10 Créer le hook useMultiplayerGame
+- [x] 13.11 Implémenter la synchronisation audio
+- [x] 13.12 Implémenter la résolution du buzz
+- [x] 13.13 Créer les contrôles host
+- [x] 13.14 Afficher les scores de tous les joueurs
+- [x] 13.15 Gérer la migration de host
+- [x] 13.16 Gérer la reconnexion des joueurs
+- [x] 13.17 Créer le récap multijoueur
+- [x] 13.18 Nettoyer les rooms expirées
 
 ---
+
+### Epic 14: Deployment (docs/epics/14-deployment.md)
+
+- [x] 14.1 Créer le script de build
+- [x] 14.2 Configurer le démarrage en production
+- [x] 14.3 Documenter l'installation sur NAS
+- [x] 14.4 Configurer le reverse proxy si nécessaire
+- [x] 14.5 Ajouter un healthcheck endpoint
+- [x] 14.6 Créer un Dockerfile
 
 ## Completion
 

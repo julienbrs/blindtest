@@ -26,7 +26,8 @@ import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAudioUnlock } from '@/hooks/useAudioUnlock'
 import { useAudioSupport } from '@/hooks/useAudioSupport'
-import { fetchWithRetry, NetworkError } from '@/lib/utils'
+import { usePageVisibility } from '@/hooks/usePageVisibility'
+import { fetchWithRetry, NetworkError, getStartPosition } from '@/lib/utils'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { Timer } from '@/components/game/Timer'
@@ -38,8 +39,9 @@ import { CorrectAnswerFlash } from '@/components/game/CorrectAnswerFlash'
 import { IncorrectAnswerFlash } from '@/components/game/IncorrectAnswerFlash'
 import { NetworkErrorToast } from '@/components/game/NetworkErrorToast'
 import { BrowserUnsupportedError } from '@/components/game/BrowserUnsupportedError'
+import { PausedOverlay } from '@/components/game/PausedOverlay'
 import { Button } from '@/components/ui/Button'
-import type { GameConfig, GuessMode, Song } from '@/lib/types'
+import type { GameConfig, GuessMode, Song, StartPosition } from '@/lib/types'
 
 // Animation variants for game state transitions
 const fadeSlideUp = {
@@ -99,6 +101,10 @@ function GameContent() {
   }>({ show: false })
   // Store retry callback for when user clicks retry
   const retryCallbackRef = useRef<(() => void) | null>(null)
+  // Track if game was paused due to page visibility change (tab switch)
+  const [wasPausedByVisibility, setWasPausedByVisibility] = useState(false)
+  // Calculated start position in seconds for current song
+  const [audioStartPosition, setAudioStartPosition] = useState(0)
 
   // Fullscreen mode
   const {
@@ -110,6 +116,9 @@ function GameContent() {
   // Audio unlock for iOS Safari compatibility
   // Unlocks audio playback on first user interaction
   const { unlockAudio } = useAudioUnlock()
+
+  // Page visibility detection for auto-pause when tab is inactive
+  const { onVisibilityChange } = usePageVisibility()
 
   // Sound effects hook - must be before effects that use it
   const sfx = useSoundEffects()
@@ -131,17 +140,84 @@ function GameContent() {
   const isPrefetchingRef = useRef(false)
 
   // Parse config from URL parameters - memoized to prevent unnecessary re-renders
-  const config: GameConfig = useMemo(
-    () => ({
+  // Timer value of '0' from GameConfigForm means no timer mode
+  const config: GameConfig = useMemo(() => {
+    const timerParam = searchParams.get('timer')
+    const noTimer = timerParam === '0'
+    return {
       guessMode: (searchParams.get('mode') as GuessMode) || 'both',
       clipDuration: Number(searchParams.get('duration')) || 20,
-      timerDuration:
-        searchParams.get('noTimer') === 'true'
-          ? 0
-          : Number(searchParams.get('timerDuration')) || 5,
-    }),
-    [searchParams]
-  )
+      timerDuration: noTimer ? 0 : Number(timerParam) || 5,
+      noTimer,
+    }
+  }, [searchParams])
+
+  // Parse start position mode from URL (separate from GameConfig as it's not part of game state)
+  const startPositionMode: StartPosition = useMemo(() => {
+    const param = searchParams.get('startPosition')
+    if (param === 'random' || param === 'skip_intro') {
+      return param
+    }
+    return 'beginning'
+  }, [searchParams])
+
+  // Parse library filters from URL
+  const libraryFilters = useMemo(() => {
+    const artists = searchParams.get('artists')
+    const yearMin = searchParams.get('yearMin')
+    const yearMax = searchParams.get('yearMax')
+
+    return {
+      artists: artists ? artists.split(',').map((a) => a.trim()) : [],
+      yearMin: yearMin ? parseInt(yearMin, 10) : null,
+      yearMax: yearMax ? parseInt(yearMax, 10) : null,
+    }
+  }, [searchParams])
+
+  // Parse playlist ID from URL and load playlist songIds from localStorage
+  const playlistSongIds = useMemo(() => {
+    const playlistId = searchParams.get('playlist')
+    if (!playlistId) return null
+
+    // Load playlist from localStorage
+    if (typeof window === 'undefined') return null
+
+    try {
+      const saved = localStorage.getItem('blindtest_playlists')
+      if (!saved) return null
+
+      const playlists = JSON.parse(saved) as Array<{
+        id: string
+        songIds: string[]
+      }>
+      const playlist = playlists.find((p) => p.id === playlistId)
+      return playlist?.songIds || null
+    } catch {
+      return null
+    }
+  }, [searchParams])
+
+  // Build filter query string for API calls
+  const filterQueryString = useMemo(() => {
+    const params = new URLSearchParams()
+
+    // If playlist is selected, use include param for song IDs
+    if (playlistSongIds && playlistSongIds.length > 0) {
+      params.set('include', playlistSongIds.join(','))
+    } else {
+      // Otherwise, use library filters
+      if (libraryFilters.artists.length > 0) {
+        params.set('artists', libraryFilters.artists.join(','))
+      }
+      if (libraryFilters.yearMin !== null) {
+        params.set('yearMin', libraryFilters.yearMin.toString())
+      }
+      if (libraryFilters.yearMax !== null) {
+        params.set('yearMax', libraryFilters.yearMax.toString())
+      }
+    }
+    return params.toString()
+  }, [libraryFilters, playlistSongIds])
 
   const game = useGameState(config)
 
@@ -169,6 +245,39 @@ function GameContent() {
     }
   }, [])
 
+  // Handle page visibility changes - pause when tab becomes inactive
+  useEffect(() => {
+    const unsubscribe = onVisibilityChange((hidden) => {
+      if (hidden) {
+        // Page became hidden - user switched tabs
+        // Pause if we're currently playing, timer, or buzzed state
+        if (game.state.status === 'playing') {
+          game.actions.pause('playing')
+          setWasPausedByVisibility(true)
+        } else if (game.state.status === 'timer') {
+          // Timer state - pause the timer countdown as well
+          game.actions.pause('timer')
+          setWasPausedByVisibility(true)
+        } else if (game.state.status === 'buzzed') {
+          // Buzzed state (no timer mode) - pause for manual validation
+          game.actions.pause('buzzed')
+          setWasPausedByVisibility(true)
+        }
+      }
+      // Note: We don't auto-resume when page becomes visible
+      // User must manually click "Resume" button
+    })
+
+    return unsubscribe
+  }, [onVisibilityChange, game.state.status, game.actions])
+
+  // Handle resume from visibility pause
+  const handleVisibilityResume = useCallback(() => {
+    setWasPausedByVisibility(false)
+    // Resume the game to the previous state
+    game.actions.resume()
+  }, [game.actions])
+
   // Handle SFX mute toggle with localStorage persistence
   const handleToggleSfxMute = useCallback(() => {
     const newMuted = !sfx.isMuted
@@ -187,41 +296,53 @@ function GameContent() {
   )
 
   // Prefetch the next song during REVEAL state
-  const prefetchNextSong = useCallback(async (excludeIds: string[]) => {
-    if (isPrefetchingRef.current) return
-    isPrefetchingRef.current = true
+  const prefetchNextSong = useCallback(
+    async (excludeIds: string[]) => {
+      if (isPrefetchingRef.current) return
+      isPrefetchingRef.current = true
 
-    const exclude = excludeIds.join(',')
-    const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
-
-    try {
-      // Use fetchWithRetry with 2 retries for prefetch (non-critical)
-      const res = await fetchWithRetry(url, {}, 2, 10000)
-
-      if (!res.ok) {
-        // No more songs available - will be handled when transitioning to next song
-        isPrefetchingRef.current = false
-        return
+      // Build URL with exclude and filter params
+      const params = new URLSearchParams()
+      if (excludeIds.length > 0) {
+        params.set('exclude', excludeIds.join(','))
       }
+      if (filterQueryString) {
+        // Append filter params
+        const filterParams = new URLSearchParams(filterQueryString)
+        filterParams.forEach((value, key) => params.set(key, value))
+      }
+      const url = `/api/songs/random?${params.toString()}`
 
-      const data = (await res.json()) as { song: Song }
-      if (data.song) {
-        setNextSong(data.song)
-        // Preload the audio
-        if (preloadedAudioRef.current) {
-          preloadedAudioRef.current.pause()
-          preloadedAudioRef.current.src = ''
+      try {
+        // Use fetchWithRetry with 2 retries for prefetch (non-critical)
+        const res = await fetchWithRetry(url, {}, 2, 10000)
+
+        if (!res.ok) {
+          // No more songs available - will be handled when transitioning to next song
+          isPrefetchingRef.current = false
+          return
         }
-        const audio = new Audio(`/api/audio/${data.song.id}`)
-        audio.preload = 'auto'
-        preloadedAudioRef.current = audio
+
+        const data = (await res.json()) as { song: Song }
+        if (data.song) {
+          setNextSong(data.song)
+          // Preload the audio
+          if (preloadedAudioRef.current) {
+            preloadedAudioRef.current.pause()
+            preloadedAudioRef.current.src = ''
+          }
+          const audio = new Audio(`/api/audio/${data.song.id}`)
+          audio.preload = 'auto'
+          preloadedAudioRef.current = audio
+        }
+      } catch {
+        // Silently fail - will load normally when needed
+      } finally {
+        isPrefetchingRef.current = false
       }
-    } catch {
-      // Silently fail - will load normally when needed
-    } finally {
-      isPrefetchingRef.current = false
-    }
-  }, [])
+    },
+    [filterQueryString]
+  )
 
   // Check if an audio file is accessible via HEAD request
   const checkAudioFileAccessible = useCallback(
@@ -289,8 +410,17 @@ function GameContent() {
         setNextSong(null)
       }
 
-      const exclude = excludeIds.join(',')
-      const url = `/api/songs/random${exclude ? `?exclude=${exclude}` : ''}`
+      // Build URL with exclude and filter params
+      const params = new URLSearchParams()
+      if (excludeIds.length > 0) {
+        params.set('exclude', excludeIds.join(','))
+      }
+      if (filterQueryString) {
+        // Append filter params
+        const filterParams = new URLSearchParams(filterQueryString)
+        filterParams.forEach((value, key) => params.set(key, value))
+      }
+      const url = `/api/songs/random?${params.toString()}`
 
       try {
         // Use fetchWithRetry with 10s timeout and 3 retries
@@ -362,7 +492,7 @@ function GameContent() {
         setNetworkError({ show: true, message })
       }
     },
-    [game.actions, checkAudioFileAccessible]
+    [game.actions, checkAudioFileAccessible, filterQueryString]
   )
 
   // Handle network error retry
@@ -469,6 +599,21 @@ function GameContent() {
     }
   }, [cleanupCelebration, cleanupShake])
 
+  // Calculate start position when a new song is loaded
+  // This ensures the start position is calculated once per song
+  useEffect(() => {
+    if (game.state.currentSong) {
+      const newStartPosition = getStartPosition(
+        game.state.currentSong,
+        startPositionMode,
+        config.clipDuration
+      )
+      setAudioStartPosition(newStartPosition)
+    } else {
+      setAudioStartPosition(0)
+    }
+  }, [game.state.currentSong, startPositionMode, config.clipDuration])
+
   // LOADING → PLAYING transition: Start playback when audio is ready
   // We check that the audio ready signal matches the current song to avoid race conditions
   useEffect(() => {
@@ -510,6 +655,11 @@ function GameContent() {
     await unlockAudio()
     game.actions.play()
   }, [unlockAudio, game.actions])
+
+  // Handle pause from UI (play/pause button) - always pauses from 'playing' state
+  const handlePause = useCallback(() => {
+    game.actions.pause('playing')
+  }, [game.actions])
 
   // Handle reveal action with audio unlock for iOS Safari
   const handleReveal = useCallback(async () => {
@@ -778,6 +928,7 @@ function GameContent() {
               shouldReplay={shouldReplay}
               onReplayComplete={handleReplayComplete}
               volume={musicVolume}
+              startPosition={audioStartPosition}
             />
           </div>
         </div>
@@ -838,7 +989,7 @@ function GameContent() {
               onReveal={handleReveal}
               onNext={handleNextSong}
               onPlay={handlePlay}
-              onPause={game.actions.pause}
+              onPause={handlePause}
               onReplay={handleReplay}
             />
           </div>
@@ -857,6 +1008,12 @@ function GameContent() {
         message={networkError.message}
         onRetry={handleNetworkRetry}
         onDismiss={handleNetworkDismiss}
+      />
+
+      {/* Paused overlay when user switches tabs */}
+      <PausedOverlay
+        show={wasPausedByVisibility}
+        onResume={handleVisibilityResume}
       />
     </motion.main>
   )

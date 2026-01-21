@@ -1,4 +1,4 @@
-# Epic 13 : Déploiement
+# Epic 14 : Déploiement
 
 ## Objectif
 
@@ -13,7 +13,7 @@ Préparer et déployer l'application sur un serveur maison (NAS, Raspberry Pi, e
 
 ## Issues
 
-### 13.1 Créer le script de build
+### 14.1 Créer le script de build
 
 **Priorité** : P0 (Critique)
 
@@ -80,7 +80,7 @@ PORT=3000 node .next/standalone/server.js
 
 ---
 
-### 13.2 Configurer le démarrage en production
+### 14.2 Configurer le démarrage en production
 
 **Priorité** : P1 (Important)
 
@@ -166,7 +166,7 @@ sudo systemctl status blindtest
 
 ---
 
-### 13.3 Documenter l'installation sur NAS
+### 14.3 Documenter l'installation sur NAS
 
 **Priorité** : P1 (Important)
 
@@ -251,7 +251,7 @@ Ouvrir : http://IP_DU_NAS:3000
 
 ---
 
-### 13.4 Configurer le reverse proxy si nécessaire
+### 14.4 Configurer le reverse proxy si nécessaire
 **Priorité** : P2 (Nice-to-have)
 
 **Description**
@@ -296,7 +296,7 @@ server {
 
 ---
 
-### 13.5 Ajouter un healthcheck endpoint
+### 14.5 Ajouter un healthcheck endpoint
 
 **Priorité** : P2 (Nice-to-have)
 
@@ -381,7 +381,7 @@ export async function GET() {
 
 ---
 
-### 13.6 Créer un Dockerfile
+### 14.6 Créer un Dockerfile
 
 **Priorité** : P3 (Futur)
 
@@ -497,12 +497,12 @@ docker-compose up -d
 
 ## Checklist de l'Epic
 
-- [ ] 13.1 Build de production
-- [ ] 13.2 Script de démarrage (PM2/systemd)
-- [ ] 13.3 Documentation NAS
-- [ ] 13.4 Reverse proxy
-- [ ] 13.5 Healthcheck endpoint
-- [ ] 13.6 Dockerfile
+- [ ] 14.1 Build de production
+- [ ] 14.2 Script de démarrage (PM2/systemd)
+- [ ] 14.3 Documentation NAS
+- [ ] 14.4 Reverse proxy
+- [ ] 14.5 Healthcheck endpoint
+- [ ] 14.6 Dockerfile
 
 ## Estimation
 

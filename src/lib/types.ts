@@ -24,9 +24,19 @@ export interface GameConfig {
   guessMode: GuessMode // Ce qu'il faut deviner
   clipDuration: number // Durée de l'extrait en secondes
   timerDuration: number // Temps pour répondre après buzz
+  noTimer: boolean // Si true, pas de timer - validation manuelle uniquement
 }
 
 export type GuessMode = 'title' | 'artist' | 'both'
+
+/**
+ * StartPosition - Options for where to start playback in a song
+ *
+ * - `beginning`: Start from the beginning of the song (0 seconds)
+ * - `random`: Start at a random point between 10% and 50% of the song duration
+ * - `skip_intro`: Skip the intro - start after the first 30 seconds (or 20% of song if shorter)
+ */
+export type StartPosition = 'beginning' | 'random' | 'skip_intro'
 
 // ============================================
 // Types pour l'état du jeu
@@ -40,6 +50,7 @@ export interface GameState {
   playedSongIds: string[] // IDs des chansons déjà jouées
   timerRemaining: number // Secondes restantes sur le timer
   isRevealed: boolean // Si la réponse est révélée
+  previousStatus: 'playing' | 'timer' | 'buzzed' | null // État avant pause (pour resume)
 }
 
 /**
@@ -107,6 +118,7 @@ export type GameStatus =
   | 'playing' // Musique en lecture
   | 'buzzed' // Quelqu'un a buzzé (transitoire)
   | 'timer' // Timer en cours
+  | 'paused' // Jeu en pause (perte de focus)
   | 'reveal' // Réponse révélée
   | 'ended' // Partie terminée
 
@@ -123,6 +135,7 @@ export interface ApiResponse<T> {
 export interface SongsListResponse {
   songs: Song[]
   total: number
+  totalInLibrary?: number // Total songs in library before filtering
 }
 
 export interface RandomSongResponse {
@@ -137,7 +150,9 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'LOAD_SONG'; song: Song }
   | { type: 'PLAY' }
-  | { type: 'BUZZ'; timerDuration: number }
+  | { type: 'PAUSE'; previousStatus: 'playing' | 'timer' | 'buzzed' }
+  | { type: 'RESUME' }
+  | { type: 'BUZZ'; timerDuration: number; noTimer: boolean }
   | { type: 'TICK_TIMER' }
   | { type: 'VALIDATE'; correct: boolean }
   | { type: 'REVEAL' }
@@ -146,3 +161,94 @@ export type GameAction =
   | { type: 'RESET' }
   | { type: 'CLIP_ENDED' }
   | { type: 'REPLAY' }
+
+// ============================================
+// Types pour les playlists personnalisées
+// ============================================
+
+/**
+ * Playlist - A custom collection of songs for themed games
+ *
+ * Playlists allow users to create curated subsets of their music library
+ * for specific game sessions (e.g., "80s Hits", "Party Mix", "Rock Classics")
+ */
+export interface Playlist {
+  id: string // Unique identifier (generated UUID)
+  name: string // Display name of the playlist
+  songIds: string[] // Array of song IDs included in this playlist
+  createdAt: number // Unix timestamp when created
+  updatedAt?: number // Unix timestamp when last modified
+}
+
+// ============================================
+// Types pour le mode multijoueur
+// ============================================
+
+/**
+ * RoomStatus - Possible states of a multiplayer room
+ *
+ * - `waiting`: Room is in lobby, waiting for players to join and host to start
+ * - `playing`: Game is in progress
+ * - `ended`: Game has ended, showing final scores
+ */
+export type RoomStatus = 'waiting' | 'playing' | 'ended'
+
+/**
+ * Room - A multiplayer game room
+ *
+ * Represents a game session that players can join via a 6-character code.
+ * The host controls game settings and validates answers.
+ */
+export interface Room {
+  id: string // UUID from Supabase
+  code: string // 6-character room code (e.g., "ABC123")
+  hostId: string // UUID of the host player
+  status: RoomStatus // Current room status
+  settings: GameConfig // Game configuration (guessMode, clipDuration, timerDuration, noTimer)
+  currentSongId: string | null // ID of the song currently being played
+  currentSongStartedAt: Date | null // Timestamp when current song started (for sync)
+  createdAt: Date // When the room was created
+}
+
+/**
+ * Player - A participant in a multiplayer game
+ *
+ * Each player has a unique ID stored in localStorage for reconnection.
+ * The host player has special permissions (start game, validate answers).
+ */
+export interface Player {
+  id: string // UUID from Supabase
+  roomId: string // UUID of the room this player belongs to
+  nickname: string // Display name (max 20 characters)
+  score: number // Current score in this game
+  isHost: boolean // Whether this player is the room host
+  isOnline: boolean // Whether this player is currently connected (via presence)
+  joinedAt: Date // When the player joined the room
+}
+
+/**
+ * Buzz - A player's buzz attempt during a round
+ *
+ * Records when a player buzzed to answer. The first buzz (by timestamp)
+ * wins the right to answer.
+ */
+export interface Buzz {
+  id: string // UUID from Supabase
+  roomId: string // UUID of the room
+  playerId: string // UUID of the player who buzzed
+  songId: string // ID of the song being played
+  buzzedAt: Date // Server timestamp of the buzz
+  isWinner: boolean // Whether this buzz was first (wins the round)
+}
+
+/**
+ * RoomState - Combined state for multiplayer UI
+ *
+ * Aggregates room data, player list, and current player info
+ * for easy consumption by React components.
+ */
+export interface RoomState {
+  room: Room | null // The current room (null if not loaded/joined)
+  players: Player[] // All players in the room
+  myPlayerId: string | null // The current user's player ID (from localStorage)
+}

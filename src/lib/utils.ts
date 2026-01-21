@@ -1,7 +1,70 @@
 import { clsx, type ClassValue } from 'clsx'
+import type { Song, StartPosition } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
+}
+
+/**
+ * Calculate the start position in seconds for a song based on the selected mode
+ *
+ * @param song - The song to calculate start position for
+ * @param mode - The start position mode (beginning, random, skip_intro)
+ * @param clipDuration - The duration of the clip to play (needed to ensure we don't start too late)
+ * @returns The start position in seconds
+ *
+ * Modes:
+ * - 'beginning': Start at 0 seconds
+ * - 'random': Start at a random point between 10% and 50% of the song duration
+ * - 'skip_intro': Skip the intro - start after 30 seconds (or 20% of song if shorter)
+ *
+ * For short songs where the calculated start + clipDuration would exceed the song length,
+ * the function falls back to starting at the beginning.
+ */
+export function getStartPosition(
+  song: Song,
+  mode: StartPosition,
+  clipDuration: number
+): number {
+  const { duration } = song
+
+  // Safety check: if song is too short for the clip, start at beginning
+  if (duration <= clipDuration) {
+    return 0
+  }
+
+  switch (mode) {
+    case 'beginning':
+      return 0
+
+    case 'random': {
+      // Random point between 10% and 50% of the song duration
+      const minStart = duration * 0.1
+      const maxStart = duration * 0.5
+      // Ensure we don't start so late that the clip would exceed the song length
+      const safeMaxStart = Math.min(maxStart, duration - clipDuration)
+      // If safeMaxStart is less than minStart, fall back to beginning
+      if (safeMaxStart < minStart) {
+        return 0
+      }
+      return minStart + Math.random() * (safeMaxStart - minStart)
+    }
+
+    case 'skip_intro': {
+      // Skip first 30 seconds, or 20% of song if the song is shorter
+      const skipAmount = Math.min(30, duration * 0.2)
+      // Ensure we don't start so late that the clip would exceed the song length
+      const safeStart = Math.min(skipAmount, duration - clipDuration)
+      // If this would result in a negative or very small start, fall back to beginning
+      if (safeStart <= 0) {
+        return 0
+      }
+      return safeStart
+    }
+
+    default:
+      return 0
+  }
 }
 
 /**

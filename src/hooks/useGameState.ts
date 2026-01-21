@@ -11,6 +11,7 @@ const initialState: GameState = {
   playedSongIds: [],
   timerRemaining: 5,
   isRevealed: false,
+  previousStatus: null,
 }
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -27,12 +28,39 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
     case 'PLAY':
-      return { ...state, status: 'playing' }
+      return { ...state, status: 'playing', previousStatus: null }
+
+    case 'PAUSE':
+      // Only pause from playing, timer, or buzzed states
+      if (
+        state.status !== 'playing' &&
+        state.status !== 'timer' &&
+        state.status !== 'buzzed'
+      )
+        return state
+      return {
+        ...state,
+        status: 'paused',
+        previousStatus: action.previousStatus,
+      }
+
+    case 'RESUME':
+      // Only resume from paused state
+      if (state.status !== 'paused' || !state.previousStatus) return state
+      return {
+        ...state,
+        status: state.previousStatus,
+        previousStatus: null,
+      }
 
     case 'BUZZ':
       // Only allow buzz when playing - audio will be paused by the component
       // since isPlaying is derived from status === 'playing'
       if (state.status !== 'playing') return state
+      // If noTimer is true, go to buzzed state for manual validation only
+      if (action.noTimer) {
+        return { ...state, status: 'buzzed' }
+      }
       return { ...state, status: 'timer', timerRemaining: action.timerDuration }
 
     case 'TICK_TIMER':
@@ -128,7 +156,8 @@ interface UseGameStateReturn {
     startGame: () => void
     loadSong: (song: Song) => void
     play: () => void
-    pause: () => void
+    pause: (previousStatus: 'playing' | 'timer' | 'buzzed') => void
+    resume: () => void
     buzz: () => void
     validate: (correct: boolean) => void
     reveal: () => void
@@ -168,11 +197,22 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
 
   const play = useCallback(() => dispatch({ type: 'PLAY' }), [])
 
-  const pause = useCallback(() => dispatch({ type: 'PLAY' }), []) // Toggle behavior
+  const pause = useCallback(
+    (previousStatus: 'playing' | 'timer' | 'buzzed') =>
+      dispatch({ type: 'PAUSE', previousStatus }),
+    []
+  )
+
+  const resume = useCallback(() => dispatch({ type: 'RESUME' }), [])
 
   const buzz = useCallback(
-    () => dispatch({ type: 'BUZZ', timerDuration: config.timerDuration }),
-    [config.timerDuration]
+    () =>
+      dispatch({
+        type: 'BUZZ',
+        timerDuration: config.timerDuration,
+        noTimer: config.noTimer,
+      }),
+    [config.timerDuration, config.noTimer]
   )
 
   const validate = useCallback(
@@ -211,6 +251,7 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
       loadSong,
       play,
       pause,
+      resume,
       buzz,
       validate,
       reveal,
@@ -225,6 +266,7 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
       loadSong,
       play,
       pause,
+      resume,
       buzz,
       validate,
       reveal,

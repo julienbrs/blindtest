@@ -2,6 +2,30 @@
 
 You are implementing a music blindtest web application, one issue at a time.
 
+## Skills
+
+When starting a session, read the master skill file:
+
+- `~/.claude/skills/blindtest/SKILL.md`
+
+Then load relevant sub-skills based on the current task:
+
+| Working on...               | Read these skills                                                               |
+| --------------------------- | ------------------------------------------------------------------------------- |
+| WebSockets, real-time sync  | `~/.claude/skills/blindtest/realtime-engineer/skill.yaml` + `sharp-edges.yaml`  |
+| Game logic, rounds, scoring | `~/.claude/skills/blindtest/game-design-core/skill.yaml`                        |
+| Lobby system, matchmaking   | `~/.claude/skills/blindtest/game-networking/skill.yaml`                         |
+| API routes                  | `~/.claude/skills/blindtest/api-designer/skill.yaml`                            |
+| Database schema             | `~/.claude/skills/blindtest/postgres-wizard/skill.yaml`                         |
+| Auth                        | `~/.claude/skills/blindtest/auth-specialist/skill.yaml`                         |
+| UI components               | `~/.claude/skills/blindtest/ui-design/skill.yaml` + `game-ui-design/skill.yaml` |
+| Animations                  | `~/.claude/skills/blindtest/motion-design/skill.yaml`                           |
+| State management            | `~/.claude/skills/blindtest/state-management/skill.yaml`                        |
+| Supabase                    | `~/.claude/skills/blindtest/supabase-backend/skill.yaml`                        |
+| Deployment                  | `~/.claude/skills/blindtest/vercel-deployment/skill.yaml`                       |
+
+Always check `sharp-edges.yaml` for gotchas before implementing a feature.
+
 ## Your Workflow
 
 For each iteration:

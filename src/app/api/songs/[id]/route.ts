@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongsCache } from '@/lib/audioScanner'
+import { logError } from '@/lib/logger'
 
 /**
  * GET /api/songs/[id]
@@ -33,7 +34,7 @@ export async function GET(
     return NextResponse.json({ song })
   } catch (error) {
     const { id } = await params
-    console.error(`Erreur GET /api/songs/${id}:`, error)
+    logError(`GET /api/songs/${id}`, error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

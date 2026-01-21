@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongsCache, extractCover } from '@/lib/audioScanner'
+import { logError } from '@/lib/logger'
 
 // Placeholder image in SVG (simple music icon)
 const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
@@ -97,7 +98,7 @@ export async function GET(
     })
   } catch (error) {
     const { id } = await params
-    console.error(`Erreur GET /api/cover/${id}:`, error)
+    logError(`GET /api/cover/${id}`, error)
     return NextResponse.json(
       { error: 'Erreur récupération pochette' },
       { status: 500 }

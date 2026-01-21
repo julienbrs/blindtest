@@ -19,6 +19,7 @@ const mockConfig: GameConfig = {
   guessMode: 'both',
   clipDuration: 20,
   timerDuration: 5,
+  noTimer: false,
 }
 
 describe('useGameState', () => {
@@ -133,6 +134,203 @@ describe('useGameState', () => {
         result.current.actions.play()
       })
       expect(result.current.state.status).toBe('playing')
+    })
+
+    it('clears previousStatus when transitioning to playing', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+      })
+      expect(result.current.state.previousStatus).toBeNull()
+    })
+  })
+
+  describe('PAUSE action', () => {
+    it('transitions from playing to paused', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.pause('playing')
+      })
+      expect(result.current.state.status).toBe('paused')
+    })
+
+    it('transitions from timer to paused', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.pause('timer')
+      })
+      expect(result.current.state.status).toBe('paused')
+    })
+
+    it('stores previousStatus when pausing from playing', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.pause('playing')
+      })
+      expect(result.current.state.previousStatus).toBe('playing')
+    })
+
+    it('stores previousStatus when pausing from timer', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.pause('timer')
+      })
+      expect(result.current.state.previousStatus).toBe('timer')
+    })
+
+    it('ignores pause from idle state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.pause('playing')
+      })
+      expect(result.current.state.status).toBe('idle')
+    })
+
+    it('ignores pause from loading state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.startGame()
+        result.current.actions.pause('playing')
+      })
+      expect(result.current.state.status).toBe('loading')
+    })
+
+    it('ignores pause from reveal state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.reveal()
+        result.current.actions.pause('playing')
+      })
+      expect(result.current.state.status).toBe('reveal')
+    })
+
+    it('preserves timer remaining when pausing from timer state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      const timerBeforePause = result.current.state.timerRemaining
+      act(() => {
+        result.current.actions.pause('timer')
+      })
+      expect(result.current.state.timerRemaining).toBe(timerBeforePause)
+    })
+
+    it('stops timer countdown when paused', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.pause('timer')
+      })
+      const timerAtPause = result.current.state.timerRemaining
+      act(() => {
+        vi.advanceTimersByTime(2000) // Advance 2 seconds
+      })
+      // Timer should not have changed because we're paused
+      expect(result.current.state.timerRemaining).toBe(timerAtPause)
+    })
+  })
+
+  describe('RESUME action', () => {
+    it('transitions from paused back to playing', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.pause('playing')
+        result.current.actions.resume()
+      })
+      expect(result.current.state.status).toBe('playing')
+    })
+
+    it('transitions from paused back to timer', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.pause('timer')
+        result.current.actions.resume()
+      })
+      expect(result.current.state.status).toBe('timer')
+    })
+
+    it('clears previousStatus after resume', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.pause('playing')
+        result.current.actions.resume()
+      })
+      expect(result.current.state.previousStatus).toBeNull()
+    })
+
+    it('ignores resume if not paused', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.resume()
+      })
+      expect(result.current.state.status).toBe('playing')
+    })
+
+    it('resumes timer countdown after unpausing from timer state', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.pause('timer')
+      })
+      const timerAtPause = result.current.state.timerRemaining
+      act(() => {
+        vi.advanceTimersByTime(2000) // Timer should not tick while paused
+      })
+      expect(result.current.state.timerRemaining).toBe(timerAtPause)
+      act(() => {
+        result.current.actions.resume()
+      })
+      act(() => {
+        vi.advanceTimersByTime(1000) // Now it should tick
+      })
+      expect(result.current.state.timerRemaining).toBe(timerAtPause - 1)
+    })
+
+    it('preserves all other state after pause/resume cycle', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+      })
+      const songBefore = result.current.state.currentSong
+      const scoreBefore = result.current.state.score
+      const songsPlayedBefore = result.current.state.songsPlayed
+      act(() => {
+        result.current.actions.pause('playing')
+        result.current.actions.resume()
+      })
+      expect(result.current.state.currentSong).toBe(songBefore)
+      expect(result.current.state.score).toBe(scoreBefore)
+      expect(result.current.state.songsPlayed).toBe(songsPlayedBefore)
     })
   })
 
@@ -998,6 +1196,165 @@ describe('useGameState', () => {
       // The exclude parameter would be constructed as:
       const excludeParam = result.current.state.playedSongIds.join(',')
       expect(excludeParam).toBe('song1id12345,song2id67890')
+    })
+  })
+
+  describe('noTimer mode (manual validation only)', () => {
+    const noTimerConfig: GameConfig = {
+      guessMode: 'both',
+      clipDuration: 20,
+      timerDuration: 5,
+      noTimer: true,
+    }
+
+    it('transitions from playing to buzzed (not timer) when noTimer is true', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      expect(result.current.state.status).toBe('buzzed')
+    })
+
+    it('does not start timer countdown in buzzed state', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      expect(result.current.state.status).toBe('buzzed')
+
+      // Advance time - should not change state
+      act(() => {
+        vi.advanceTimersByTime(10000)
+      })
+      // Should still be in buzzed state - no auto-reveal
+      expect(result.current.state.status).toBe('buzzed')
+    })
+
+    it('allows manual validation from buzzed state (correct)', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.status).toBe('reveal')
+      expect(result.current.state.score).toBe(1)
+      expect(result.current.state.isRevealed).toBe(true)
+    })
+
+    it('allows manual validation from buzzed state (incorrect)', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(false)
+      })
+      expect(result.current.state.status).toBe('reveal')
+      expect(result.current.state.score).toBe(0)
+      expect(result.current.state.isRevealed).toBe(true)
+    })
+
+    it('allows reveal from buzzed state', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.reveal()
+      })
+      expect(result.current.state.status).toBe('reveal')
+      expect(result.current.state.isRevealed).toBe(true)
+    })
+
+    it('allows pause from buzzed state', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.pause('buzzed')
+      })
+      expect(result.current.state.status).toBe('paused')
+      expect(result.current.state.previousStatus).toBe('buzzed')
+    })
+
+    it('resumes to buzzed state after pause', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.pause('buzzed')
+        result.current.actions.resume()
+      })
+      expect(result.current.state.status).toBe('buzzed')
+    })
+
+    it('player has unlimited time to answer in noTimer mode', () => {
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      // Wait a very long time
+      act(() => {
+        vi.advanceTimersByTime(60000) // 1 minute
+      })
+      // Still in buzzed state - no timeout
+      expect(result.current.state.status).toBe('buzzed')
+      expect(result.current.state.score).toBe(0) // No auto-failure
+
+      // Can still validate after long wait
+      act(() => {
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.status).toBe('reveal')
+      expect(result.current.state.score).toBe(1)
+    })
+
+    it('tracks songsPlayed and playedSongIds correctly in noTimer mode', () => {
+      const song2: Song = { ...mockSong, id: 'song2test123' }
+      const { result } = renderHook(() => useGameState(noTimerConfig))
+
+      // First song
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(true)
+      })
+      expect(result.current.state.songsPlayed).toBe(1)
+      expect(result.current.state.playedSongIds).toContain(mockSong.id)
+
+      // Second song
+      act(() => {
+        result.current.actions.nextSong()
+        result.current.actions.loadSong(song2)
+        result.current.actions.play()
+        result.current.actions.buzz()
+        result.current.actions.validate(false)
+      })
+      expect(result.current.state.songsPlayed).toBe(2)
+      expect(result.current.state.playedSongIds).toContain(mockSong.id)
+      expect(result.current.state.playedSongIds).toContain(song2.id)
+    })
+
+    it('transitions to timer when noTimer is false', () => {
+      const { result } = renderHook(() => useGameState(mockConfig))
+      act(() => {
+        result.current.actions.loadSong(mockSong)
+        result.current.actions.play()
+        result.current.actions.buzz()
+      })
+      // With noTimer: false (default), should go to timer state
+      expect(result.current.state.status).toBe('timer')
     })
   })
 })
