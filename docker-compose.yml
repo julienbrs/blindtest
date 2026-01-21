@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  blindtest:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - AUDIO_FOLDER_PATH=/music
+    volumes:
+      - /path/to/your/music:/music:ro
+    restart: unless-stopped
+    healthcheck:
+      test:
+        ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
