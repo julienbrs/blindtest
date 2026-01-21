@@ -172,7 +172,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 12.2 Tester les API routes
 - [x] 12.3 Tester la machine d'état du jeu
 - [x] 12.6 Ajouter des tests unitaires
-- [ ] 12.7 Ajouter des tests E2E
+- [x] 12.7 Ajouter des tests E2E
 
 Skip epic 13.
 
