@@ -177,7 +177,7 @@ After this task, all subsequent issues run with full feedback loops.
 ### Epic 13: Multiplayer (docs/epics/13-multiplayer.md)
 
 - [x] 13.1 Installer et configurer Supabase
-- [ ] 13.2 Créer le schéma de base de données
+- [x] 13.2 Créer le schéma de base de données
 - [ ] 13.3 Créer les types TypeScript pour le multiplayer
 - [ ] 13.4 Créer la page de sélection de mode (/play)
 - [ ] 13.5 Créer le formulaire de création de room

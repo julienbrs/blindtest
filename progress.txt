@@ -831,7 +831,14 @@ Files: playwright.config.ts, e2e/game-flow.spec.ts, package.json, vitest.config.
 === Issue 13.1: Installer et configurer Supabase ===
 Timestamp: 2026-01-21T16:52:00Z
 Status: COMPLETED
-Commit: pending
+Commit: 6ff547d
 Notes: Installed and configured Supabase client for multiplayer mode. Package @supabase/supabase-js v2.91.0 already present in dependencies. Created src/lib/supabase.ts with singleton pattern for client reuse across the application. Implemented isSupabaseConfigured() to detect valid credentials vs placeholder values, getSupabaseClient() that throws SupabaseConfigError when misconfigured, getSupabaseClientSafe() for graceful fallback, testSupabaseConnection() for connection verification, and resetSupabaseClient() for testing. Updated .env.example and .env.local with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY variables with documentation. Created comprehensive test suite with 20 tests covering all functions, error handling, singleton behavior, and edge cases. All 1412 tests pass.
 Files: src/lib/supabase.ts, src/lib/supabase.test.ts, .env.example, .env.local
 
+
+=== Issue 13.2: Créer le schéma de base de données ===
+Timestamp: 2026-01-21T16:58:00Z
+Status: COMPLETED
+Commit: 264a63a
+Notes: Created SQL migration for Supabase multiplayer database schema. Migration file at supabase/migrations/20260121_create_multiplayer_tables.sql creates three tables: rooms (id, code, host_id, status, settings, current_song_id, current_song_started_at, created_at), players (id, room_id, nickname, score, is_host, joined_at, last_seen_at), and buzzes (id, room_id, player_id, song_id, buzzed_at, is_winner). Enabled Row Level Security (RLS) on all tables with permissive policies for MVP (anyone can read/write). Added realtime publication for all three tables. Created performance indexes: idx_rooms_code, idx_players_room_id, idx_buzzes_room_song. Added comprehensive documentation in docs/SUPABASE_SETUP.md with migration instructions for Dashboard, CLI, and psql methods, schema documentation, and troubleshooting guide.
+Files: supabase/migrations/20260121_create_multiplayer_tables.sql, docs/SUPABASE_SETUP.md
