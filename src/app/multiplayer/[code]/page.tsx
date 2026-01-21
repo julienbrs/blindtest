@@ -17,6 +17,7 @@ import { SyncedAudioPlayer } from '@/components/multiplayer/SyncedAudioPlayer'
 import { Leaderboard } from '@/components/multiplayer/Leaderboard'
 import { HostMigrationNotification } from '@/components/multiplayer/HostMigrationNotification'
 import { ReconnectionNotification } from '@/components/multiplayer/ReconnectionNotification'
+import { MultiplayerRecap } from '@/components/multiplayer/MultiplayerRecap'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { SongReveal } from '@/components/game/SongReveal'
 import { Timer } from '@/components/game/Timer'
@@ -59,6 +60,7 @@ export default function MultiplayerRoomPage() {
     updateSettings,
     startGame,
     kickPlayer,
+    restartGame,
   } = useRoom({ roomCode })
 
   // Multiplayer game state
@@ -558,31 +560,18 @@ export default function MultiplayerRoomPage() {
       )
     }
 
-    // Game ended
+    // Game ended - Show multiplayer recap
     if (room.status === 'ended') {
-      // TODO: Issue 13.17 - Implement multiplayer recap screen
       return (
-        <main className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4">
-          <motion.div
-            className="w-full max-w-md"
-            initial="hidden"
-            animate="visible"
-            variants={fadeUpVariants}
-          >
-            <Card variant="elevated" className="p-6 text-center">
-              <h2 className="mb-4 text-2xl font-bold text-white">
-                Partie terminee
-              </h2>
-              <p className="mb-6 text-purple-200">
-                Le recapitulatif multijoueur sera disponible dans une prochaine
-                mise a jour.
-              </p>
-              <Button variant="secondary" onClick={handleLeaveRoom} fullWidth>
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Retour au menu
-              </Button>
-            </Card>
-          </motion.div>
+        <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden">
+          <MultiplayerRecap
+            room={room}
+            players={players}
+            myPlayerId={myPlayer?.id ?? null}
+            isHost={isHost}
+            onNewGame={restartGame}
+            onLeave={handleLeaveRoom}
+          />
         </main>
       )
     }

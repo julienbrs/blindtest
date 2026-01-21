@@ -103,6 +103,8 @@ export interface UseRoomResult {
   kickPlayer: (playerId: string) => Promise<boolean>
   /** Reconnect to a room using stored player ID */
   reconnectToRoom: (roomCode: string) => Promise<boolean>
+  /** Restart the game (host only) - resets scores and room status to waiting */
+  restartGame: () => Promise<boolean>
 }
 
 /**
@@ -728,6 +730,62 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
     [isConfigured]
   )
 
+  /**
+   * Restart the game (host only)
+   *
+   * Resets all player scores to 0 and sets room status back to 'waiting'
+   * so a new game can be started from the lobby.
+   */
+  const restartGame = useCallback(async (): Promise<boolean> => {
+    if (!room || !isHost || !isConfigured) {
+      setError('Action non autorisée')
+      return false
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const supabase = getSupabaseClient()
+
+      // Reset all player scores to 0
+      const { error: playersError } = await supabase
+        .from('players')
+        .update({ score: 0 })
+        .eq('room_id', room.id)
+
+      if (playersError) {
+        throw new Error(playersError.message)
+      }
+
+      // Reset room status to waiting
+      const { error: roomError } = await supabase
+        .from('rooms')
+        .update({
+          status: 'waiting',
+          current_song_id: null,
+          current_song_started_at: null,
+        })
+        .eq('id', room.id)
+
+      if (roomError) {
+        throw new Error(roomError.message)
+      }
+
+      // Delete all buzzes for this room to clean up
+      await supabase.from('buzzes').delete().eq('room_id', room.id)
+
+      return true
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Erreur lors du redémarrage'
+      setError(message)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [room, isHost, isConfigured])
+
   return {
     room,
     players,
@@ -743,5 +801,6 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
     startGame,
     kickPlayer,
     reconnectToRoom,
+    restartGame,
   }
 }
