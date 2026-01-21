@@ -978,3 +978,10 @@ Status: COMPLETED
 Commit: 07a03a1
 Notes: Created reverse proxy configuration documentation and example files. nginx.conf.example provides: full HTTP configuration with proxy_pass to localhost:3000; WebSocket support headers (Upgrade, Connection) for multiplayer functionality; proper client IP forwarding (X-Real-IP, X-Forwarded-For, X-Forwarded-Proto); extended timeouts for audio streaming (600s for /api/audio/ endpoints); large file support (client_max_body_size 100M); commented HTTPS/SSL template with Let's Encrypt certificate paths and modern TLS configuration. Updated docs/INSTALL-NAS.md with comprehensive "Reverse Proxy" section covering: Nginx installation and configuration on Linux; Synology DSM 7 built-in reverse proxy setup with WebSocket headers and timeout configuration; QNAP reverse proxy alternative; Traefik Docker labels example; Let's Encrypt HTTPS setup via both Certbot (Nginx) and Synology's built-in certificate manager. All acceptance criteria met: proxy configured (nginx.conf.example), HTTPS optional (SSL template and Let's Encrypt docs), timeouts appropriate for audio (600s).
 Files: nginx.conf.example, docs/INSTALL-NAS.md
+
+=== Issue 14.5: Ajouter un healthcheck endpoint ===
+Timestamp: 2026-01-21T21:39:00Z
+Status: COMPLETED
+Commit: 7871c0f
+Notes: Created GET /api/health endpoint for monitoring app health. Returns status, uptime, library info (songs count, last scan time), and memory usage. Returns 500 with error details if something fails.
+Files: src/app/api/health/route.ts
