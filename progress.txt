@@ -958,3 +958,23 @@ Status: COMPLETED
 Commit: a855341
 Notes: Configured production build for Next.js application. Updated next.config.ts with: output:'standalone' for deployment without node_modules (creates self-contained .next/standalone folder with server.js); images.unoptimized:true for self-hosted deployment without image optimization service. Build successfully generates 101MB standalone output with server.js. Also updated eslint.config.mjs to ignore auto-generated coverage/** and playwright-report/** folders. Verified: npm run build completes without errors; standalone server starts correctly (node .next/standalone/server.js); all 1510 tests pass; lint passes (0 errors). Note: With standalone output, use "node .next/standalone/server.js" instead of "npm run start".
 Files: next.config.ts, eslint.config.mjs
+
+=== Issue 14.2: Configurer le démarrage en production ===
+Timestamp: 2026-01-21T21:30:00Z
+Status: COMPLETED
+Commit: 276810d
+Notes: Created production startup configuration with two options for different deployment scenarios. Option 1: PM2 (ecosystem.config.js) - Node.js process manager with autorestart, memory limits (500MB), log rotation, and startup persistence. Run with 'pm2 start ecosystem.config.js && pm2 save && pm2 startup'. Option 2: Systemd (blindtest.service) - Linux service file with security hardening (NoNewPrivileges, PrivateTmp, ProtectSystem), automatic restart on failure (RestartSec=10), and journal logging. Install by copying to /etc/systemd/system/ and running 'systemctl enable blindtest'. Both configurations include environment variable setup for NODE_ENV, PORT, and AUDIO_FOLDER_PATH. PM2 is recommended for most deployments; Systemd is better for Linux servers with existing systemd infrastructure.
+Files: ecosystem.config.js, blindtest.service
+
+=== Issue 14.3: Documenter l'installation sur NAS ===
+Timestamp: 2026-01-21T21:33:00Z
+Status: COMPLETED
+Commit: 382fb64
+Notes: Created comprehensive NAS installation documentation (docs/INSTALL-NAS.md). Guide includes step-by-step instructions for: Synology (DSM 7) with Package Center Node.js and manual installation options; QNAP (QTS) with App Center and Entware alternatives; generic Linux/Raspberry Pi setup. Covers: SSH activation, Node.js 18+ installation, cloning/downloading the app, npm install and build process, environment configuration (.env.local with AUDIO_FOLDER_PATH and Supabase credentials), PM2 configuration with ecosystem.config.js, Systemd service file alternative, network access instructions. Detailed troubleshooting section covers: startup failures, dependency errors, audio path issues, mobile playback, memory problems, empty library detection, and multiplayer connectivity. Table of supported audio formats (MP3, FLAC, WAV, OGG, M4A, AAC) and recommended folder structure included.
+Files: docs/INSTALL-NAS.md
+=== Issue 14.4: Configurer le reverse proxy si nécessaire ===
+Timestamp: 2026-01-21T21:37:00Z
+Status: COMPLETED
+Commit: 07a03a1
+Notes: Created reverse proxy configuration documentation and example files. nginx.conf.example provides: full HTTP configuration with proxy_pass to localhost:3000; WebSocket support headers (Upgrade, Connection) for multiplayer functionality; proper client IP forwarding (X-Real-IP, X-Forwarded-For, X-Forwarded-Proto); extended timeouts for audio streaming (600s for /api/audio/ endpoints); large file support (client_max_body_size 100M); commented HTTPS/SSL template with Let's Encrypt certificate paths and modern TLS configuration. Updated docs/INSTALL-NAS.md with comprehensive "Reverse Proxy" section covering: Nginx installation and configuration on Linux; Synology DSM 7 built-in reverse proxy setup with WebSocket headers and timeout configuration; QNAP reverse proxy alternative; Traefik Docker labels example; Let's Encrypt HTTPS setup via both Certbot (Nginx) and Synology's built-in certificate manager. All acceptance criteria met: proxy configured (nginx.conf.example), HTTPS optional (SSL template and Let's Encrypt docs), timeouts appropriate for audio (600s).
+Files: nginx.conf.example, docs/INSTALL-NAS.md

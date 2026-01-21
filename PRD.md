@@ -201,8 +201,8 @@ After this task, all subsequent issues run with full feedback loops.
 
 - [x] 14.1 Créer le script de build
 - [x] 14.2 Configurer le démarrage en production
-- [ ] 14.3 Documenter l'installation sur NAS
-- [ ] 14.4 Configurer le reverse proxy si nécessaire
+- [x] 14.3 Documenter l'installation sur NAS
+- [x] 14.4 Configurer le reverse proxy si nécessaire
 - [ ] 14.5 Ajouter un healthcheck endpoint
 - [ ] 14.6 Créer un Dockerfile
 
