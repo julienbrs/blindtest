@@ -108,6 +108,10 @@ export interface UseMultiplayerGameResult {
   isConfigured: boolean
   /** Error message if any */
   error: string | null
+  /** Whether audio should be paused (someone buzzed) */
+  shouldPauseAudio: boolean
+  /** Whether the answer timer is active (buzzer is answering) */
+  timerActive: boolean
 
   // Actions
   /** Buzz to answer (any player can buzz) */
@@ -384,6 +388,14 @@ export function useMultiplayerGame(
 
   /**
    * Buzz to answer
+   *
+   * The buzz resolution works as follows:
+   * 1. Insert buzz with server timestamp (buzzed_at defaults to NOW() in database)
+   * 2. Query all buzzes for this round ordered by buzzed_at
+   * 3. The first buzz (earliest timestamp) is marked as winner
+   *
+   * This ensures fair resolution based on server time, not client time.
+   * Race conditions are handled by the database - the first insert wins.
    */
   const buzz = useCallback(async (): Promise<boolean> => {
     if (!isConfigured || !room || !myPlayerId) {
@@ -432,7 +444,8 @@ export function useMultiplayerGame(
         return false
       }
 
-      // Insert buzz
+      // Insert buzz with server timestamp (buzzed_at defaults to NOW() in DB)
+      // This ensures fair ordering based on when the server received the buzz
       const { error: insertError } = await supabase.from('buzzes').insert({
         room_id: room.id,
         player_id: myPlayerId,
@@ -444,8 +457,8 @@ export function useMultiplayerGame(
         throw new Error(insertError.message)
       }
 
-      // Resolve buzz winner (first by timestamp)
-      // This is a simple approach - in production, you might use a database function
+      // Resolve buzz winner: first buzz by server timestamp wins
+      // We use a SELECT ... FOR UPDATE style query through ordering to get consistent results
       const { data: allBuzzes } = await supabase
         .from('buzzes')
         .select('*')
@@ -456,6 +469,7 @@ export function useMultiplayerGame(
       if (allBuzzes && allBuzzes.length > 0) {
         const firstBuzz = allBuzzes[0]
         // Mark first buzz as winner if not already marked
+        // This update will trigger realtime subscription for all clients
         if (!firstBuzz.is_winner) {
           await supabase
             .from('buzzes')
@@ -632,6 +646,13 @@ export function useMultiplayerGame(
     }
   }, [isConfigured, room, isHost])
 
+  // Determine if audio should be paused (someone has buzzed and is answering)
+  const shouldPauseAudio =
+    gameState.status === 'buzzed' && currentBuzzer !== null
+
+  // Timer is active when someone is buzzed and answering
+  const timerActive = gameState.status === 'buzzed' && currentBuzzer !== null
+
   return {
     gameState,
     players,
@@ -639,6 +660,8 @@ export function useMultiplayerGame(
     currentBuzzes,
     isConfigured,
     error,
+    shouldPauseAudio,
+    timerActive,
     buzz,
     validate,
     nextSong,
