@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSongsCache, getCacheInfo } from '@/lib/audioScanner'
+import { logError } from '@/lib/logger'
 
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
@@ -48,7 +49,7 @@ export async function GET() {
       lastScan: cacheInfo.lastScan,
     })
   } catch (error) {
-    console.error('Erreur GET /api/stats:', error)
+    logError('GET /api/stats', error)
     return NextResponse.json({ error: 'Erreur stats' }, { status: 500 })
   }
 }

@@ -828,3 +828,10 @@ Commit: pending
 Notes: Installed Playwright (@playwright/test) and configured E2E test infrastructure. Created playwright.config.ts with Desktop Chrome, Mobile Chrome (Pixel 5), and Mobile Safari (iPhone 12) projects. Created comprehensive E2E test suite at e2e/game-flow.spec.ts with 11 tests covering: homepage display, mode configuration, duration configuration, complete game flow, reveal answer without buzzer, incorrect answer validation, replay functionality, advanced settings, mobile responsive layout, touch target sizes, and tablet layout. Fixed test fixtures (valid 5-second silent MP3 files via ffmpeg). Fixed unit test isolation issues (vitest forks isolation). 9 tests pass consistently, 2 marked as test.fixme due to audio loading timing variability. Added npm scripts: test:e2e, test:e2e:ui.
 Files: playwright.config.ts, e2e/game-flow.spec.ts, package.json, vitest.config.ts, src/test/setup.ts, test-fixtures/music/*.mp3
 
+=== Issue 13.1: Installer et configurer Supabase ===
+Timestamp: 2026-01-21T16:52:00Z
+Status: COMPLETED
+Commit: pending
+Notes: Installed and configured Supabase client for multiplayer mode. Package @supabase/supabase-js v2.91.0 already present in dependencies. Created src/lib/supabase.ts with singleton pattern for client reuse across the application. Implemented isSupabaseConfigured() to detect valid credentials vs placeholder values, getSupabaseClient() that throws SupabaseConfigError when misconfigured, getSupabaseClientSafe() for graceful fallback, testSupabaseConnection() for connection verification, and resetSupabaseClient() for testing. Updated .env.example and .env.local with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY variables with documentation. Created comprehensive test suite with 20 tests covering all functions, error handling, singleton behavior, and edge cases. All 1412 tests pass.
+Files: src/lib/supabase.ts, src/lib/supabase.test.ts, .env.example, .env.local
+

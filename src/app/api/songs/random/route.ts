@@ -24,19 +24,32 @@ export async function GET(request: NextRequest) {
     const yearMin = searchParams.get('yearMin')
     const yearMax = searchParams.get('yearMax')
 
-    // Apply artist filter (comma-separated list)
-    if (artistsFilter) {
-      const artistsList = artistsFilter.split(',').map((a) => a.trim())
-      songs = songs.filter((s) => artistsList.includes(s.artist))
-    }
+    // Parse include parameter for playlist filtering
+    // When provided, only songs with these IDs are considered
+    const includeParam = searchParams.get('include')
+    const includeIds = includeParam
+      ? includeParam.split(',').map((id) => id.trim())
+      : null
 
-    // Apply year range filter
-    if (yearMin || yearMax) {
-      const minYear = yearMin ? parseInt(yearMin, 10) : 0
-      const maxYear = yearMax ? parseInt(yearMax, 10) : 9999
-      songs = songs.filter(
-        (s) => s.year !== undefined && s.year >= minYear && s.year <= maxYear
-      )
+    // Apply include filter first (playlist songs)
+    // This takes priority over other filters when a playlist is selected
+    if (includeIds && includeIds.length > 0) {
+      songs = songs.filter((s) => includeIds.includes(s.id))
+    } else {
+      // Apply artist filter (comma-separated list) - only when no playlist
+      if (artistsFilter) {
+        const artistsList = artistsFilter.split(',').map((a) => a.trim())
+        songs = songs.filter((s) => artistsList.includes(s.artist))
+      }
+
+      // Apply year range filter - only when no playlist
+      if (yearMin || yearMax) {
+        const minYear = yearMin ? parseInt(yearMin, 10) : 0
+        const maxYear = yearMax ? parseInt(yearMax, 10) : 9999
+        songs = songs.filter(
+          (s) => s.year !== undefined && s.year >= minYear && s.year <= maxYear
+        )
+      }
     }
 
     // Filtrer les chansons déjà jouées

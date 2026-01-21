@@ -21,6 +21,9 @@ import {
   getReadErrorMessage,
   safeExtractMetadata,
   batchExtractMetadata,
+  AudioPathError,
+  validateAudioPath,
+  getAudioFolderPath,
 } from './audioScanner'
 import { mkdir, writeFile, rm } from 'fs/promises'
 import { join } from 'path'
@@ -643,11 +646,12 @@ describe('Metadata Cache', () => {
   })
 
   describe('refreshCache', () => {
-    it('should throw error when AUDIO_FOLDER_PATH is not defined', async () => {
+    it('should throw AudioPathError when AUDIO_FOLDER_PATH is not defined', async () => {
       delete process.env.AUDIO_FOLDER_PATH
 
+      await expect(refreshCache()).rejects.toThrow(AudioPathError)
       await expect(refreshCache()).rejects.toThrow(
-        'AUDIO_FOLDER_PATH non défini'
+        "Variable d'environnement AUDIO_FOLDER_PATH non définie"
       )
     })
 
@@ -997,5 +1001,137 @@ describe('Error Handling', () => {
       expect(result.songs).toHaveLength(0)
       expect(result.errors).toHaveLength(3)
     })
+  })
+})
+
+describe('AudioPathError', () => {
+  it('should create error with message and code', () => {
+    const error = new AudioPathError('Test message', 'NOT_CONFIGURED')
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(AudioPathError)
+    expect(error.message).toBe('Test message')
+    expect(error.code).toBe('NOT_CONFIGURED')
+    expect(error.name).toBe('AudioPathError')
+  })
+
+  it('should include optional path property', () => {
+    const error = new AudioPathError(
+      'Test message',
+      'PATH_NOT_FOUND',
+      '/some/path'
+    )
+
+    expect(error.path).toBe('/some/path')
+  })
+
+  it('should support all error codes', () => {
+    const codes = [
+      'NOT_CONFIGURED',
+      'PATH_NOT_FOUND',
+      'NOT_A_DIRECTORY',
+      'PERMISSION_DENIED',
+      'UNKNOWN_ERROR',
+    ] as const
+
+    codes.forEach((code) => {
+      const error = new AudioPathError('Test', code)
+      expect(error.code).toBe(code)
+    })
+  })
+})
+
+describe('validateAudioPath', () => {
+  let testDir: string
+
+  beforeEach(async () => {
+    testDir = join(tmpdir(), `validate-path-test-${Date.now()}`)
+    await mkdir(testDir, { recursive: true })
+  })
+
+  afterEach(async () => {
+    try {
+      await rm(testDir, { recursive: true, force: true })
+    } catch {
+      // Ignore cleanup errors
+    }
+  })
+
+  it('should return valid: true for existing directory', async () => {
+    const result = await validateAudioPath(testDir)
+
+    expect(result.valid).toBe(true)
+    expect(result.error).toBeUndefined()
+    expect(result.errorCode).toBeUndefined()
+  })
+
+  it('should count audio files in directory', async () => {
+    await writeFile(join(testDir, 'song1.mp3'), '')
+    await writeFile(join(testDir, 'song2.wav'), '')
+    await writeFile(join(testDir, 'document.pdf'), '')
+
+    const result = await validateAudioPath(testDir)
+
+    expect(result.valid).toBe(true)
+    expect(result.audioFilesCount).toBe(2)
+  })
+
+  it('should return valid: false for non-existent path', async () => {
+    const result = await validateAudioPath('/non/existent/path')
+
+    expect(result.valid).toBe(false)
+    expect(result.errorCode).toBe('PATH_NOT_FOUND')
+    expect(result.error).toContain('introuvable')
+  })
+
+  it('should return valid: false for file instead of directory', async () => {
+    const filePath = join(testDir, 'file.txt')
+    await writeFile(filePath, '')
+
+    const result = await validateAudioPath(filePath)
+
+    expect(result.valid).toBe(false)
+    expect(result.errorCode).toBe('NOT_A_DIRECTORY')
+    expect(result.error).toContain("n'est pas un dossier")
+  })
+
+  it('should return 0 audioFilesCount for directory with no audio files', async () => {
+    await writeFile(join(testDir, 'document.pdf'), '')
+    await writeFile(join(testDir, 'image.jpg'), '')
+
+    const result = await validateAudioPath(testDir)
+
+    expect(result.valid).toBe(true)
+    expect(result.audioFilesCount).toBe(0)
+  })
+})
+
+describe('getAudioFolderPath', () => {
+  const originalEnv = process.env
+
+  beforeEach(() => {
+    process.env = { ...originalEnv }
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
+  })
+
+  it('should return the configured AUDIO_FOLDER_PATH', () => {
+    process.env.AUDIO_FOLDER_PATH = '/test/audio/path'
+
+    expect(getAudioFolderPath()).toBe('/test/audio/path')
+  })
+
+  it('should return null if AUDIO_FOLDER_PATH is not set', () => {
+    delete process.env.AUDIO_FOLDER_PATH
+
+    expect(getAudioFolderPath()).toBeNull()
+  })
+
+  it('should return null for empty string', () => {
+    process.env.AUDIO_FOLDER_PATH = ''
+
+    expect(getAudioFolderPath()).toBeNull()
   })
 })

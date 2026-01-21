@@ -174,39 +174,37 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 12.6 Ajouter des tests unitaires
 - [x] 12.7 Ajouter des tests E2E
 
-Skip epic 13.
+### Epic 13: Multiplayer (docs/epics/13-multiplayer.md)
 
-<!-- ### Epic 13: Deployment (docs/epics/13-deployment.md)
-
-- [ ] 13.1 Créer le script de build
-- [ ] 13.2 Configurer le démarrage en production
-- [ ] 13.3 Documenter l'installation sur NAS
-- [ ] 13.4 Configurer le reverse proxy si nécessaire
-- [ ] 13.5 Ajouter un healthcheck endpoint
-- [ ] 13.6 Créer un Dockerfile -->
-
-### Epic 14: Multiplayer (docs/epics/14-multiplayer.md)
-
-- [ ] 14.1 Installer et configurer Supabase
-- [ ] 14.2 Créer le schéma de base de données
-- [ ] 14.3 Créer les types TypeScript pour le multiplayer
-- [ ] 14.4 Créer la page de sélection de mode (/play)
-- [ ] 14.5 Créer le formulaire de création de room
-- [ ] 14.6 Créer le formulaire pour rejoindre une room
-- [ ] 14.7 Implémenter le hook useRoom
-- [ ] 14.8 Créer le composant Lobby
-- [ ] 14.9 Implémenter la présence des joueurs
-- [ ] 14.10 Créer le hook useMultiplayerGame
-- [ ] 14.11 Implémenter la synchronisation audio
-- [ ] 14.12 Implémenter la résolution du buzz
-- [ ] 14.13 Créer les contrôles host
-- [ ] 14.14 Afficher les scores de tous les joueurs
-- [ ] 14.15 Gérer la migration de host
-- [ ] 14.16 Gérer la reconnexion des joueurs
-- [ ] 14.17 Créer le récap multijoueur
-- [ ] 14.18 Nettoyer les rooms expirées
+- [x] 13.1 Installer et configurer Supabase
+- [ ] 13.2 Créer le schéma de base de données
+- [ ] 13.3 Créer les types TypeScript pour le multiplayer
+- [ ] 13.4 Créer la page de sélection de mode (/play)
+- [ ] 13.5 Créer le formulaire de création de room
+- [ ] 13.6 Créer le formulaire pour rejoindre une room
+- [ ] 13.7 Implémenter le hook useRoom
+- [ ] 13.8 Créer le composant Lobby
+- [ ] 13.9 Implémenter la présence des joueurs
+- [ ] 13.10 Créer le hook useMultiplayerGame
+- [ ] 13.11 Implémenter la synchronisation audio
+- [ ] 13.12 Implémenter la résolution du buzz
+- [ ] 13.13 Créer les contrôles host
+- [ ] 13.14 Afficher les scores de tous les joueurs
+- [ ] 13.15 Gérer la migration de host
+- [ ] 13.16 Gérer la reconnexion des joueurs
+- [ ] 13.17 Créer le récap multijoueur
+- [ ] 13.18 Nettoyer les rooms expirées
 
 ---
+
+### Epic 14: Deployment (docs/epics/14-deployment.md)
+
+- [ ] 14.1 Créer le script de build
+- [ ] 14.2 Configurer le démarrage en production
+- [ ] 14.3 Documenter l'installation sur NAS
+- [ ] 14.4 Configurer le reverse proxy si nécessaire
+- [ ] 14.5 Ajouter un healthcheck endpoint
+- [ ] 14.6 Créer un Dockerfile
 
 ## Completion
 

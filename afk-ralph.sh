@@ -11,6 +11,17 @@ MAX_ITERATIONS=${1:-50}
 
 cd "$(dirname "$0")"
 
+# Cleanup function to kill orphaned processes on exit
+cleanup() {
+  echo ""
+  echo "=== Cleaning up... ==="
+  # Kill any vitest/node processes from this directory
+  pkill -f "vitest.*doha" 2>/dev/null || true
+  pkill -f "node.*doha.*vitest" 2>/dev/null || true
+  exit 0
+}
+trap cleanup SIGINT SIGTERM
+
 echo "=== AFK Ralph - Autonomous Mode ==="
 echo "Max iterations: $MAX_ITERATIONS"
 echo ""
@@ -33,7 +44,7 @@ for ((i=1; i<=$MAX_ITERATIONS; i++)); do
   echo ""
 
   # Run Claude in print mode with auto-accept permissions
-  result=$(claude -p --permission-mode acceptEdits \
+  result=$(claude -p --permission-mode bypassPermissions \
     "@CLAUDE.md @PRD.md @progress.txt \
 Execute the next incomplete task from PRD.md NOW. Do not ask for confirmation. \
 1. The next task is: $next_task \

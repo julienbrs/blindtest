@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { refreshCache, getCacheInfo } from '@/lib/audioScanner'
+import { logError } from '@/lib/logger'
 
 export interface RescanResponse {
   success: boolean
@@ -29,7 +30,7 @@ export async function POST(): Promise<
       message: `Scan terminé: ${info.count} chansons trouvées en ${duration}ms`,
     })
   } catch (error) {
-    console.error('Erreur POST /api/songs/rescan:', error)
+    logError('POST /api/songs/rescan', error)
     return NextResponse.json(
       { error: 'Erreur lors du rescan' },
       { status: 500 }

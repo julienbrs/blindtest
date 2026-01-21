@@ -512,13 +512,111 @@ export async function getSongsCache(): Promise<Song[]> {
 }
 
 /**
+ * Error thrown when the audio folder path is invalid or inaccessible
+ */
+export class AudioPathError extends Error {
+  constructor(
+    message: string,
+    public code:
+      | 'NOT_CONFIGURED'
+      | 'PATH_NOT_FOUND'
+      | 'NOT_A_DIRECTORY'
+      | 'PERMISSION_DENIED'
+      | 'UNKNOWN_ERROR',
+    public path?: string
+  ) {
+    super(message)
+    this.name = 'AudioPathError'
+  }
+}
+
+/**
+ * Validates the audio folder path and returns information about it
+ * @param audioPath - The path to validate
+ * @returns Object with validation result and audio file count
+ */
+export async function validateAudioPath(audioPath: string): Promise<{
+  valid: boolean
+  error?: string
+  errorCode?: AudioPathError['code']
+  audioFilesCount?: number
+}> {
+  try {
+    const pathStats = await stat(audioPath)
+
+    if (!pathStats.isDirectory()) {
+      return {
+        valid: false,
+        error: `Le chemin n'est pas un dossier: ${audioPath}`,
+        errorCode: 'NOT_A_DIRECTORY',
+      }
+    }
+
+    // Count audio files in the directory (non-recursive, just for validation)
+    const entries = await readdir(audioPath, { withFileTypes: true })
+    const audioFilesCount = entries.filter(
+      (entry) =>
+        entry.isFile() &&
+        SUPPORTED_EXTENSIONS.includes(extname(entry.name).toLowerCase())
+    ).length
+
+    return { valid: true, audioFilesCount }
+  } catch (error) {
+    const nodeError = error as NodeJS.ErrnoException
+
+    if (nodeError.code === 'ENOENT') {
+      return {
+        valid: false,
+        error: `Dossier audio introuvable: ${audioPath}`,
+        errorCode: 'PATH_NOT_FOUND',
+      }
+    }
+
+    if (nodeError.code === 'EACCES') {
+      return {
+        valid: false,
+        error: `Permission refusée pour le dossier: ${audioPath}`,
+        errorCode: 'PERMISSION_DENIED',
+      }
+    }
+
+    return {
+      valid: false,
+      error: `Erreur lors de la validation du chemin: ${audioPath}`,
+      errorCode: 'UNKNOWN_ERROR',
+    }
+  }
+}
+
+/**
+ * Gets the current audio folder path from environment
+ * @returns The configured path or null if not set
+ */
+export function getAudioFolderPath(): string | null {
+  return process.env.AUDIO_FOLDER_PATH || null
+}
+
+/**
  * Refreshes the metadata cache by scanning the audio folder
- * @throws Error if AUDIO_FOLDER_PATH is not defined
+ * @throws AudioPathError if AUDIO_FOLDER_PATH is not defined or invalid
  */
 export async function refreshCache(): Promise<void> {
   const audioPath = process.env.AUDIO_FOLDER_PATH
   if (!audioPath) {
-    throw new Error('AUDIO_FOLDER_PATH non défini')
+    throw new AudioPathError(
+      "Variable d'environnement AUDIO_FOLDER_PATH non définie. Veuillez la configurer dans .env.local",
+      'NOT_CONFIGURED'
+    )
+  }
+
+  // Validate the path before scanning
+  const validation = await validateAudioPath(audioPath)
+  if (!validation.valid) {
+    throw new AudioPathError(
+      validation.error || 'Chemin audio invalide',
+      validation.errorCode || 'UNKNOWN_ERROR',
+      audioPath
+    )
   }
 
   const files = await scanAudioFolder(audioPath)
