@@ -911,3 +911,10 @@ Status: COMPLETED
 Commit: 0593f9e
 Notes: Implemented buzz resolution for multiplayer games. Enhanced useMultiplayerGame hook with: improved buzz resolution using server timestamps (buzzed_at defaults to NOW() in database for fair ordering); first buzz by server time wins the right to answer; added shouldPauseAudio boolean flag for when someone buzzes; added timerActive boolean flag when the winner is answering. Created BuzzIndicator component to display: the buzz winner prominently with pulsing animation and glow effect; different styling for current player ("VOUS", green) vs other player (red); message "C'est à vous !" when player is the buzzer with instruction to answer; "Répond actuellement" label for other players; list of other players who also buzzed after the winner with their position numbers; waiting state message "Appuyez sur BUZZ! pour répondre en premier" when no buzzes. Component uses framer-motion for smooth animations and AnimatePresence for enter/exit transitions. Created comprehensive test suite with 6 tests covering: waiting state, current buzzer display, "VOUS" display for current player, other buzzers section, handling unknown players.
 Files: src/hooks/useMultiplayerGame.ts, src/components/multiplayer/BuzzIndicator.tsx, src/components/multiplayer/BuzzIndicator.test.tsx
+
+=== Issue 13.13: Créer les contrôles host ===
+Timestamp: 2026-01-21T20:52:00Z
+Status: COMPLETED
+Commit: 079a56f
+Notes: Created HostControls component for multiplayer game management. Added Correct/Incorrect validation buttons (visible when someone buzzed), Next Song button (after reveal), Reveal Answer button (during playing/buzzed states), and End Game button. Integrated controls into multiplayer room page with timer countdown logic. All actions update room/players in Supabase with real-time sync for other players.
+Files: src/components/multiplayer/HostControls.tsx, src/app/multiplayer/[code]/page.tsx

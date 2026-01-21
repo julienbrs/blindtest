@@ -188,7 +188,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 13.10 Créer le hook useMultiplayerGame
 - [x] 13.11 Implémenter la synchronisation audio
 - [x] 13.12 Implémenter la résolution du buzz
-- [ ] 13.13 Créer les contrôles host
+- [x] 13.13 Créer les contrôles host
 - [ ] 13.14 Afficher les scores de tous les joueurs
 - [ ] 13.15 Gérer la migration de host
 - [ ] 13.16 Gérer la reconnexion des joueurs
