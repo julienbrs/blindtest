@@ -183,7 +183,7 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 13.5 Créer le formulaire de création de room
 - [x] 13.6 Créer le formulaire pour rejoindre une room
 - [x] 13.7 Implémenter le hook useRoom
-- [ ] 13.8 Créer le composant Lobby
+- [x] 13.8 Créer le composant Lobby
 - [ ] 13.9 Implémenter la présence des joueurs
 - [ ] 13.10 Créer le hook useMultiplayerGame
 - [ ] 13.11 Implémenter la synchronisation audio
