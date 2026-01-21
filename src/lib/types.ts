@@ -179,3 +179,76 @@ export interface Playlist {
   createdAt: number // Unix timestamp when created
   updatedAt?: number // Unix timestamp when last modified
 }
+
+// ============================================
+// Types pour le mode multijoueur
+// ============================================
+
+/**
+ * RoomStatus - Possible states of a multiplayer room
+ *
+ * - `waiting`: Room is in lobby, waiting for players to join and host to start
+ * - `playing`: Game is in progress
+ * - `ended`: Game has ended, showing final scores
+ */
+export type RoomStatus = 'waiting' | 'playing' | 'ended'
+
+/**
+ * Room - A multiplayer game room
+ *
+ * Represents a game session that players can join via a 6-character code.
+ * The host controls game settings and validates answers.
+ */
+export interface Room {
+  id: string // UUID from Supabase
+  code: string // 6-character room code (e.g., "ABC123")
+  hostId: string // UUID of the host player
+  status: RoomStatus // Current room status
+  settings: GameConfig // Game configuration (guessMode, clipDuration, timerDuration, noTimer)
+  currentSongId: string | null // ID of the song currently being played
+  currentSongStartedAt: Date | null // Timestamp when current song started (for sync)
+  createdAt: Date // When the room was created
+}
+
+/**
+ * Player - A participant in a multiplayer game
+ *
+ * Each player has a unique ID stored in localStorage for reconnection.
+ * The host player has special permissions (start game, validate answers).
+ */
+export interface Player {
+  id: string // UUID from Supabase
+  roomId: string // UUID of the room this player belongs to
+  nickname: string // Display name (max 20 characters)
+  score: number // Current score in this game
+  isHost: boolean // Whether this player is the room host
+  isOnline: boolean // Whether this player is currently connected (via presence)
+  joinedAt: Date // When the player joined the room
+}
+
+/**
+ * Buzz - A player's buzz attempt during a round
+ *
+ * Records when a player buzzed to answer. The first buzz (by timestamp)
+ * wins the right to answer.
+ */
+export interface Buzz {
+  id: string // UUID from Supabase
+  roomId: string // UUID of the room
+  playerId: string // UUID of the player who buzzed
+  songId: string // ID of the song being played
+  buzzedAt: Date // Server timestamp of the buzz
+  isWinner: boolean // Whether this buzz was first (wins the round)
+}
+
+/**
+ * RoomState - Combined state for multiplayer UI
+ *
+ * Aggregates room data, player list, and current player info
+ * for easy consumption by React components.
+ */
+export interface RoomState {
+  room: Room | null // The current room (null if not loaded/joined)
+  players: Player[] // All players in the room
+  myPlayerId: string | null // The current user's player ID (from localStorage)
+}
