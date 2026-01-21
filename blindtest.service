@@ -1,0 +1,47 @@
+# Systemd Service File for Blindtest Application
+#
+# Installation (Linux):
+#   1. Copy this file to /etc/systemd/system/blindtest.service
+#   2. Edit WorkingDirectory and Environment paths as needed
+#   3. Run: sudo systemctl daemon-reload
+#   4. Run: sudo systemctl enable blindtest
+#   5. Run: sudo systemctl start blindtest
+#
+# Commands:
+#   sudo systemctl status blindtest   # Check status
+#   sudo journalctl -u blindtest -f   # View logs (follow)
+#   sudo systemctl restart blindtest  # Restart
+#   sudo systemctl stop blindtest     # Stop
+
+[Unit]
+Description=Blindtest Music Quiz Application
+Documentation=https://github.com/user/blindtest
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/blindtest
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# Configure your audio folder path:
+Environment=AUDIO_FOLDER_PATH=/path/to/your/music
+# If using Supabase multiplayer:
+# Environment=NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+# Environment=NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+ExecStart=/usr/bin/node .next/standalone/server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=blindtest
+
+# Security hardening (optional)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/blindtest/logs
+
+[Install]
+WantedBy=multi-user.target
