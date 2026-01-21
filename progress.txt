@@ -856,3 +856,23 @@ Status: COMPLETED
 Commit: fb4fe8a
 Notes: Created mode selection page at /play with two cards: "Jouer seul" (redirects to /solo for game configuration) and "Multijoueur" (redirects to /multiplayer for future multiplayer lobby). Page features consistent animations with the rest of the app using framer-motion, reduced motion support, and responsive design. Created /solo page that contains the game configuration form (moved from homepage), with back button to return to mode selection. Updated homepage (/) to redirect to /play, maintaining the existing game flow. All acceptance criteria met: Route /play created, two mode cards with descriptions and icons, solo mode leads to game config (same behavior as before), multiplayer redirects to /multiplayer, consistent entry animations, homepage redirects to /play.
 Files: src/app/play/page.tsx, src/app/solo/page.tsx, src/app/page.tsx
+
+=== Issue 13.5: Créer le formulaire de création de room ===
+Timestamp: 2026-01-21T17:07:00Z
+Status: COMPLETED
+Commit: 78b1476
+Notes: Created room creation form for multiplayer mode. Created CreateRoomForm component with nickname input (max 20 characters, character counter), "Créer une partie" submit button, loading state with spinner, and error display. Form generates unique 6-character room codes (uppercase letters + digits, excluding ambiguous characters 0/O/I/L/1). Creates room in Supabase with default game settings (guessMode: both, clipDuration: 15s, timerDuration: 5s, noTimer: false). Creates host player with is_host=true. Stores playerId in localStorage under 'blindtest_player_id' for reconnection. Redirects to /multiplayer/[code] after successful creation. Created /multiplayer page with CreateRoomForm integration, back button to /play, and placeholder for JoinRoomForm (issue 13.6). Handles Supabase not configured gracefully with user-friendly error message.
+Files: src/components/multiplayer/CreateRoomForm.tsx, src/app/multiplayer/page.tsx
+
+=== Issue 13.6: Créer le formulaire pour rejoindre une room ===
+Timestamp: 2026-01-21T17:12:00Z
+Status: COMPLETED
+Commit: cc70e04
+Notes: Created JoinRoomForm component for joining existing multiplayer rooms. Form features: room code input (6 characters, auto-uppercase, filters invalid characters, monospace styling with wide tracking), nickname input (max 20 characters with counter). Validates room exists in Supabase and has status='waiting'. Checks room is not full (max 10 players). Creates player with is_host=false. Stores playerId in localStorage under 'blindtest_player_id' for reconnection. Redirects to /multiplayer/[code] on success. Error messages for: room not found, room full, game already started, game ended. Integrated into /multiplayer page replacing placeholder, with UserGroupIcon header and "Rejoindre une partie" section. All acceptance criteria met.
+Files: src/components/multiplayer/JoinRoomForm.tsx, src/app/multiplayer/page.tsx
+=== Issue 13.7: Implémenter le hook useRoom ===
+Timestamp: 2026-01-21T17:20:00Z
+Status: COMPLETED
+Commit: 7b6410b
+Notes: Created comprehensive useRoom hook for multiplayer room management with Supabase. Hook provides: createRoom(nickname) to create a new room with 6-char code and become host; joinRoom(code, nickname) to join existing room with validations (room exists, status='waiting', not full); leaveRoom() to leave current room and cleanup; updateSettings(settings) for host-only game settings updates; startGame() for host-only game start (requires >= 2 players); kickPlayer(playerId) for host-only player removal; reconnectToRoom(code) for player reconnection using stored localStorage ID. Implemented real-time subscriptions using Supabase Realtime channels: subscribes to postgres_changes for both rooms and players tables, handles INSERT/UPDATE/DELETE events, and properly unsubscribes on cleanup. Hook returns: room, players, myPlayer, isHost, isLoading, error, isConfigured, and all action functions. Created comprehensive test suite with 19 tests covering initialization, all CRUD operations, validation errors, and computed values. All tests pass.
+Files: src/hooks/useRoom.ts, src/hooks/useRoom.test.ts
