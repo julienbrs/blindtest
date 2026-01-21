@@ -178,8 +178,8 @@ After this task, all subsequent issues run with full feedback loops.
 
 - [x] 13.1 Installer et configurer Supabase
 - [x] 13.2 Créer le schéma de base de données
-- [ ] 13.3 Créer les types TypeScript pour le multiplayer
-- [ ] 13.4 Créer la page de sélection de mode (/play)
+- [x] 13.3 Créer les types TypeScript pour le multiplayer
+- [x] 13.4 Créer la page de sélection de mode (/play)
 - [ ] 13.5 Créer le formulaire de création de room
 - [ ] 13.6 Créer le formulaire pour rejoindre une room
 - [ ] 13.7 Implémenter le hook useRoom

@@ -733,42 +733,42 @@ Files: src/components/ui/LoadingScreen.tsx, src/components/ui/LoadingScreen.test
 === Issue 10.6: Gérer la perte de focus de la page ===
 Timestamp: 2026-01-21T12:00:00Z
 Status: COMPLETED
-Commit: pending
+Commit: fb4fe8a
 Notes: Implemented automatic pause when user switches tabs using Page Visibility API. Created usePageVisibility hook for detecting visibility changes with callback registration pattern. Created PausedOverlay component showing "Partie en pause" message with resume button. Added 'paused' status to GameStatus type and PAUSE/RESUME actions to game reducer. Timer countdown stops when paused and resumes when user clicks "Reprendre" button. Game does NOT auto-resume when page becomes visible - manual resume required. All state (score, timerRemaining, currentSong) preserved during pause. Created 10 tests for usePageVisibility hook and 10 tests for PausedOverlay component. Updated useGameState tests with 18 new pause/resume tests covering all scenarios.
 Files: src/hooks/usePageVisibility.ts, src/hooks/usePageVisibility.test.ts, src/components/game/PausedOverlay.tsx, src/components/game/PausedOverlay.test.tsx, src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/lib/types.ts, src/app/game/page.tsx
 
 === Issue 10.7: Ajouter des messages d'erreur user-friendly ===
 Timestamp: 2026-01-21T12:30:00Z
 Status: COMPLETED
-Commit: pending
+Commit: fb4fe8a
 Notes: Implemented toast notification system for user-friendly error messages. Created ToastContext with ToastProvider managing toast state with addToast and removeToast functions. Created ToastContainer component with Framer Motion animations (slide in/out from right). Toasts support 4 types (error, success, warning, info) with distinct colors and icons from Heroicons. Auto-dismiss after 5 seconds by default (configurable duration, or duration=0 for persistent toasts). Toasts are stackable and dismissible via close button. Proper accessibility with role="alert", aria-live="polite", and aria-label on close button. Integrated ToastProvider in app layout. Created 18 comprehensive tests for toast functionality.
 Files: src/contexts/ToastContext.tsx, src/contexts/ToastContext.test.tsx, src/app/layout.tsx
 
 === Issue 10.8: Logger les erreurs côté serveur ===
 Timestamp: 2026-01-21T13:00:00Z
 Status: COMPLETED
-Commit: pending
+Commit: fb4fe8a
 Notes: Verified server-side error logging already fully implemented. Logger utility (src/lib/logger.ts) provides logError, logWarning, and logInfo functions with structured JSON output including timestamp, context, message, stack trace (for errors), and optional metadata. All API routes (/api/songs, /api/songs/random, /api/songs/[id], /api/songs/rescan, /api/audio/[id], /api/cover/[id], /api/stats) already import and use logError from @/lib/logger in their catch blocks. Comprehensive test suite (src/lib/logger.test.ts) with 29 tests covering all functions, edge cases, and JSON format compliance.
 Files: src/lib/logger.ts, src/lib/logger.test.ts, src/app/api/songs/route.ts, src/app/api/songs/random/route.ts, src/app/api/songs/[id]/route.ts, src/app/api/songs/rescan/route.ts, src/app/api/audio/[id]/route.ts, src/app/api/cover/[id]/route.ts, src/app/api/stats/route.ts
 
 === Issue 11.1: Permettre de configurer le chemin audio ===
 Timestamp: 2026-01-21T14:00:00Z
 Status: COMPLETED
-Commit: pending
+Commit: fb4fe8a
 Notes: Verified audio path configuration already fully implemented. AUDIO_FOLDER_PATH environment variable is functional and used by refreshCache() in audioScanner.ts. Path validation is implemented via validateAudioPath() function which checks if path exists, is a directory, and counts audio files. AudioPathError class provides structured error handling with codes (NOT_CONFIGURED, PATH_NOT_FOUND, NOT_A_DIRECTORY, PERMISSION_DENIED, UNKNOWN_ERROR). French error messages are returned for invalid paths. Created POST /api/admin/test-path endpoint to test custom paths (validates path, returns filesFound count). Created GET /api/admin/test-path endpoint to check current configuration status. Environment documented in .env.example with AUDIO_FOLDER_PATH variable. Comprehensive test suite with 23 tests covering all validation scenarios.
 Files: src/lib/audioScanner.ts, src/app/api/admin/test-path/route.ts, src/app/api/admin/test-path/route.test.ts, .env.example
 
 === Issue 11.2: Permettre de changer le timer (pas que 5s) ===
 Timestamp: 2026-01-21T14:30:00Z
 Status: COMPLETED
-Commit: pending
+Commit: fb4fe8a
 Notes: Replaced timer duration slider with button-style options (3s, 5s, 10s, 15s) as specified in epic 11.2. Updated GameConfigForm component to display 4 distinct buttons for timer selection instead of a slider. Updated localStorage validation to accept only valid timer values [3, 5, 10, 15]. Default value remains 5 seconds. Timer configuration is persisted with other game settings in localStorage. Timer buttons are disabled when "Mode sans timer" (noTimer) is enabled. Visual styling matches app theme with purple highlight for selected option.
 Files: src/components/game/GameConfigForm.tsx
 
 === Issue 11.3: Ajouter un mode "sans timer" ===
 Timestamp: 2026-01-21T15:00:00Z
 Status: COMPLETED
-Commit: pending
+Commit: fb4fe8a
 Notes: Verified "no timer" mode already fully implemented. Toggle on/off: GameConfigForm has "Mode sans timer" checkbox in advanced settings that toggles noTimer state and persists to localStorage. Timer hidden when disabled: When noTimer is true, BUZZ action in useGameState reducer transitions to 'buzzed' state instead of 'timer' state, so Timer component is not rendered. Manual validation only: GameControls component shows Correct/Incorrect buttons when status === 'buzzed' (same as timer state), allowing manual validation with unlimited time. Comprehensive test suite with 18 tests in useGameState.test.ts covering noTimer mode behavior: transitions to buzzed state, no automatic timeout, manual validation from buzzed state, pause/resume from buzzed state, and correct state tracking.
 Files: src/hooks/useGameState.ts, src/hooks/useGameState.test.ts, src/lib/types.ts, src/components/game/GameConfigForm.tsx, src/components/game/GameControls.tsx, src/app/game/page.tsx
 
@@ -824,7 +824,7 @@ Files: src/lib/__tests__/utils.test.ts
 === Issue 12.7: Ajouter des tests E2E ===
 Timestamp: 2026-01-21T19:00:00Z
 Status: COMPLETED
-Commit: pending
+Commit: fb4fe8a
 Notes: Installed Playwright (@playwright/test) and configured E2E test infrastructure. Created playwright.config.ts with Desktop Chrome, Mobile Chrome (Pixel 5), and Mobile Safari (iPhone 12) projects. Created comprehensive E2E test suite at e2e/game-flow.spec.ts with 11 tests covering: homepage display, mode configuration, duration configuration, complete game flow, reveal answer without buzzer, incorrect answer validation, replay functionality, advanced settings, mobile responsive layout, touch target sizes, and tablet layout. Fixed test fixtures (valid 5-second silent MP3 files via ffmpeg). Fixed unit test isolation issues (vitest forks isolation). 9 tests pass consistently, 2 marked as test.fixme due to audio loading timing variability. Added npm scripts: test:e2e, test:e2e:ui.
 Files: playwright.config.ts, e2e/game-flow.spec.ts, package.json, vitest.config.ts, src/test/setup.ts, test-fixtures/music/*.mp3
 
@@ -842,3 +842,17 @@ Status: COMPLETED
 Commit: 264a63a
 Notes: Created SQL migration for Supabase multiplayer database schema. Migration file at supabase/migrations/20260121_create_multiplayer_tables.sql creates three tables: rooms (id, code, host_id, status, settings, current_song_id, current_song_started_at, created_at), players (id, room_id, nickname, score, is_host, joined_at, last_seen_at), and buzzes (id, room_id, player_id, song_id, buzzed_at, is_winner). Enabled Row Level Security (RLS) on all tables with permissive policies for MVP (anyone can read/write). Added realtime publication for all three tables. Created performance indexes: idx_rooms_code, idx_players_room_id, idx_buzzes_room_song. Added comprehensive documentation in docs/SUPABASE_SETUP.md with migration instructions for Dashboard, CLI, and psql methods, schema documentation, and troubleshooting guide.
 Files: supabase/migrations/20260121_create_multiplayer_tables.sql, docs/SUPABASE_SETUP.md
+
+=== Issue 13.3: Créer les types TypeScript pour le multiplayer ===
+Timestamp: 2026-01-21T17:00:00Z
+Status: COMPLETED
+Commit: 8c8078b
+Notes: Added TypeScript interfaces and types for multiplayer functionality. Updated src/lib/types.ts with Room interface (id, code, hostId, status, settings, currentSongId, currentSongStartedAt, createdAt), Player interface (id, roomId, nickname, score, isHost, isOnline, joinedAt), RoomState interface (room, players, myPlayerId), RoomStatus type ('waiting' | 'playing' | 'ended'), and Buzz interface for tracking player buzz attempts. Created src/lib/database.types.ts with Supabase-generated types matching the database schema (DbRoom, DbPlayer, DbBuzz with Row/Insert/Update variants). All 1412 tests pass, typecheck passes.
+Files: src/lib/types.ts, src/lib/database.types.ts
+
+=== Issue 13.4: Créer la page de sélection de mode (/play) ===
+Timestamp: 2026-01-21T17:05:00Z
+Status: COMPLETED
+Commit: fb4fe8a
+Notes: Created mode selection page at /play with two cards: "Jouer seul" (redirects to /solo for game configuration) and "Multijoueur" (redirects to /multiplayer for future multiplayer lobby). Page features consistent animations with the rest of the app using framer-motion, reduced motion support, and responsive design. Created /solo page that contains the game configuration form (moved from homepage), with back button to return to mode selection. Updated homepage (/) to redirect to /play, maintaining the existing game flow. All acceptance criteria met: Route /play created, two mode cards with descriptions and icons, solo mode leads to game config (same behavior as before), multiplayer redirects to /multiplayer, consistent entry animations, homepage redirects to /play.
+Files: src/app/play/page.tsx, src/app/solo/page.tsx, src/app/page.tsx
