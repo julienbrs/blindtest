@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon, UsersIcon, PlusIcon } from '@heroicons/react/24/solid'
 import { Button } from '@/components/ui/Button'
 import { CreateRoomForm } from '@/components/multiplayer/CreateRoomForm'
+import { JoinRoomForm } from '@/components/multiplayer/JoinRoomForm'
+import { UserGroupIcon } from '@heroicons/react/24/solid'
 
 export default function MultiplayerPage() {
   const router = useRouter()
@@ -100,15 +102,18 @@ export default function MultiplayerPage() {
           <div className="h-px flex-1 bg-white/20" />
         </motion.div>
 
-        {/* Join room placeholder - will be implemented in 13.6 */}
+        {/* Join room section */}
         <motion.div
           variants={fadeUpVariants}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-6 text-center"
         >
-          <p className="text-purple-300/70">
-            Rejoindre une partie (bientôt disponible)
-          </p>
+          <div className="mb-3 flex items-center gap-2">
+            <UserGroupIcon className="h-5 w-5 text-blue-400" />
+            <span className="text-sm font-medium text-purple-200">
+              Rejoindre une partie
+            </span>
+          </div>
+          <JoinRoomForm />
         </motion.div>
       </div>
     </motion.main>
