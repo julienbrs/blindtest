@@ -15,10 +15,13 @@ import { HostControls } from '@/components/multiplayer/HostControls'
 import { BuzzIndicator } from '@/components/multiplayer/BuzzIndicator'
 import { SyncedAudioPlayer } from '@/components/multiplayer/SyncedAudioPlayer'
 import { Leaderboard } from '@/components/multiplayer/Leaderboard'
+import { HostMigrationNotification } from '@/components/multiplayer/HostMigrationNotification'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { SongReveal } from '@/components/game/SongReveal'
 import { Timer } from '@/components/game/Timer'
 import { useRoom } from '@/hooks/useRoom'
+import { usePresence } from '@/hooks/usePresence'
+import { useHostMigration } from '@/hooks/useHostMigration'
 import { useMultiplayerGame } from '@/hooks/useMultiplayerGame'
 import type { Song } from '@/lib/types'
 
@@ -74,6 +77,23 @@ export default function MultiplayerRoomPage() {
     players,
     myPlayerId: myPlayer?.id ?? null,
     isHost,
+  })
+
+  // Presence tracking for online/offline status
+  const { onlineStatus, isOnline } = usePresence({
+    roomId: room?.id ?? null,
+    playerId: myPlayer?.id ?? null,
+    nickname: myPlayer?.nickname,
+  })
+
+  // Host migration when host goes offline
+  const { newHostNickname, clearNotification } = useHostMigration({
+    room,
+    players,
+    myPlayerId: myPlayer?.id ?? null,
+    isHost,
+    onlineStatus,
+    isOnline,
   })
 
   const [isReconnecting, setIsReconnecting] = useState(true)
@@ -317,6 +337,12 @@ export default function MultiplayerRoomPage() {
     if (room.status === 'waiting') {
       return (
         <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
+          {/* Host migration notification */}
+          <HostMigrationNotification
+            newHostNickname={newHostNickname}
+            onDismiss={clearNotification}
+          />
+
           {/* Header */}
           <motion.div
             className="mb-8 text-center"
@@ -354,6 +380,12 @@ export default function MultiplayerRoomPage() {
 
       return (
         <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
+          {/* Host migration notification */}
+          <HostMigrationNotification
+            newHostNickname={newHostNickname}
+            onDismiss={clearNotification}
+          />
+
           {/* Header */}
           <motion.div
             className="mb-6 text-center"
