@@ -11,6 +11,7 @@ Guide pas à pas pour installer l'application Blindtest sur un NAS Synology, QNA
 - [Configuration](#configuration)
 - [Démarrage avec PM2](#démarrage-avec-pm2)
 - [Démarrage avec Systemd](#démarrage-avec-systemd)
+- [Reverse Proxy](#reverse-proxy)
 - [Accès à l'application](#accès-à-lapplication)
 - [Mise à jour](#mise-à-jour)
 - [Troubleshooting](#troubleshooting)
@@ -366,6 +367,166 @@ sudo systemctl status blindtest
 # Voir les logs
 journalctl -u blindtest -f
 ```
+
+---
+
+## Reverse Proxy
+
+Un reverse proxy permet d'accéder à l'application via un nom de domaine personnalisé, d'ajouter HTTPS, et de gérer plusieurs applications sur le même serveur.
+
+### Option 1 : Nginx (recommandé pour Linux)
+
+#### Installation de Nginx
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install nginx
+
+# Vérifier que Nginx est en marche
+sudo systemctl status nginx
+```
+
+#### Configuration
+
+Un fichier de configuration exemple est fourni dans le projet : `nginx.conf.example`
+
+```bash
+# Copier la configuration
+sudo cp /volume1/docker/blindtest/nginx.conf.example /etc/nginx/sites-available/blindtest
+
+# Éditer et personnaliser
+sudo nano /etc/nginx/sites-available/blindtest
+# Modifier server_name avec votre domaine ou IP
+
+# Activer le site
+sudo ln -s /etc/nginx/sites-available/blindtest /etc/nginx/sites-enabled/
+
+# Tester la configuration
+sudo nginx -t
+
+# Recharger Nginx
+sudo systemctl reload nginx
+```
+
+#### Configuration minimale
+
+```nginx
+server {
+    listen 80;
+    server_name blindtest.local;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Timeouts pour l'audio
+    client_max_body_size 100M;
+    proxy_read_timeout 300s;
+}
+```
+
+### Option 2 : Synology Reverse Proxy (DSM 7)
+
+Pour les utilisateurs Synology, le reverse proxy intégré est la solution la plus simple.
+
+#### Étapes de configuration
+
+1. Ouvrir **Panneau de configuration**
+2. Aller dans **Portail de connexion** > **Avancé** > **Proxy inversé**
+3. Cliquer **Créer**
+4. Configurer :
+   - **Nom** : `blindtest`
+   - **Source** :
+     - Protocole : `HTTP` (ou `HTTPS` si certificat disponible)
+     - Nom d'hôte : `blindtest.local` (ou votre domaine)
+     - Port : `80` (ou `443` pour HTTPS)
+   - **Destination** :
+     - Protocole : `HTTP`
+     - Nom d'hôte : `localhost`
+     - Port : `3000`
+5. Cliquer **Sauvegarder**
+
+#### Configuration des en-têtes personnalisés
+
+Pour le support WebSocket (requis pour le multijoueur) :
+
+1. Modifier le proxy créé
+2. Onglet **En-têtes personnalisés**
+3. Cliquer **Créer** > **WebSocket**
+4. Sauvegarder
+
+#### Configuration des timeouts
+
+Pour éviter les déconnexions lors du streaming audio :
+
+1. Dans les paramètres du proxy
+2. Onglet **Avancé**
+3. Timeout de connexion : `600` secondes
+
+### Option 3 : QNAP Reverse Proxy
+
+1. Ouvrir **Panneau de configuration**
+2. Aller dans **Applications** > **Serveur Web** > **Proxy inversé**
+3. Cliquer **Ajouter**
+4. Configurer source et destination comme pour Synology
+
+### Option 4 : Traefik (Docker)
+
+Si vous utilisez Docker et Traefik comme reverse proxy :
+
+```yaml
+# docker-compose.yml avec labels Traefik
+services:
+  blindtest:
+    build: .
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.blindtest.rule=Host(`blindtest.local`)'
+      - 'traefik.http.services.blindtest.loadbalancer.server.port=3000'
+```
+
+### HTTPS avec Let's Encrypt (optionnel)
+
+Pour ajouter HTTPS avec un certificat gratuit Let's Encrypt :
+
+#### Via Certbot (Nginx)
+
+```bash
+# Installer Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Obtenir un certificat
+sudo certbot --nginx -d blindtest.yourdomain.com
+
+# Le renouvellement automatique est configuré par défaut
+sudo certbot renew --dry-run
+```
+
+#### Via Synology
+
+1. **Panneau de configuration** > **Sécurité** > **Certificat**
+2. Cliquer **Ajouter**
+3. Choisir **Ajouter un nouveau certificat**
+4. Sélectionner **Obtenir un certificat auprès de Let's Encrypt**
+5. Remplir domaine et email
+6. Assigner le certificat au reverse proxy dans **Configurer**
+
+### Vérification
+
+Après configuration du reverse proxy :
+
+1. Accéder à `http://blindtest.local` (ou votre domaine)
+2. Vérifier que la page d'accueil s'affiche
+3. Tester le mode multijoueur (WebSocket)
+4. Tester la lecture audio
 
 ---
 
