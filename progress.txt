@@ -985,3 +985,9 @@ Status: COMPLETED
 Commit: 7871c0f
 Notes: Created GET /api/health endpoint for monitoring app health. Returns status, uptime, library info (songs count, last scan time), and memory usage. Returns 500 with error details if something fails.
 Files: src/app/api/health/route.ts
+=== Issue 14.6: Créer un Dockerfile ===
+Timestamp: 2026-01-21T21:43:00Z
+Status: COMPLETED
+Commit: 5aaee1b
+Notes: Created Docker configuration for containerized deployment. Multi-stage Dockerfile with: builder stage using node:18-alpine with pnpm for dependency install and build; runner stage using node:18-alpine with standalone Next.js output (small image size). Non-root user (nextjs:nodejs) for security. docker-compose.yml with: port mapping (3000), environment variables (NODE_ENV, AUDIO_FOLDER_PATH), volume mount for music folder (read-only), healthcheck using wget to /api/health endpoint (30s interval, 10s timeout, 3 retries), unless-stopped restart policy. Created .dockerignore to exclude node_modules, .next, test artifacts, IDE files, and sensitive env files from build context. Added npm scripts: docker:build (builds image tagged as 'blindtest'), docker:run (runs container with volume mount).
+Files: Dockerfile, docker-compose.yml, .dockerignore, package.json
