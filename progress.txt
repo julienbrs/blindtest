@@ -951,3 +951,10 @@ Status: COMPLETED
 Commit: d5be969
 Notes: Implemented automatic cleanup of expired multiplayer rooms. Created two cleanup solutions: (1) Supabase Edge Function (supabase/functions/cleanup-rooms/index.ts) - a Deno-based serverless function that can be deployed to Supabase and triggered via pg_cron. It uses the service role key to bypass RLS and delete rooms directly. (2) SQL migration with cleanup_expired_rooms() function that can be called directly by pg_cron without HTTP overhead - this is the recommended approach. (3) App-level API route alternative (src/app/api/rooms/cleanup/route.ts) for external cron services that only support HTTP calls. Cleanup rules: rooms with no players for 1+ hour are deleted; rooms with status='ended' for 24+ hours are deleted. All solutions log deleted rooms count. Updated tsconfig.json to exclude supabase/functions from TypeScript checking since it uses Deno runtime. Updated .env.example with service role key documentation. Created SQL migration with function definition and cron job setup instructions.
 Files: supabase/functions/cleanup-rooms/index.ts, supabase/migrations/20260121_cleanup_rooms_cron.sql, src/app/api/rooms/cleanup/route.ts, .env.example, tsconfig.json
+
+=== Issue 14.1: Créer le script de build ===
+Timestamp: 2026-01-21T21:26:00Z
+Status: COMPLETED
+Commit: a855341
+Notes: Configured production build for Next.js application. Updated next.config.ts with: output:'standalone' for deployment without node_modules (creates self-contained .next/standalone folder with server.js); images.unoptimized:true for self-hosted deployment without image optimization service. Build successfully generates 101MB standalone output with server.js. Also updated eslint.config.mjs to ignore auto-generated coverage/** and playwright-report/** folders. Verified: npm run build completes without errors; standalone server starts correctly (node .next/standalone/server.js); all 1510 tests pass; lint passes (0 errors). Note: With standalone output, use "node .next/standalone/server.js" instead of "npm run start".
+Files: next.config.ts, eslint.config.mjs

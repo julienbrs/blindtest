@@ -1,6 +1,14 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Enable standalone output for deployment without node_modules
+  output: 'standalone',
+
+  // Disable image optimization for self-hosted deployment
+  images: {
+    unoptimized: true,
+  },
+
   async headers() {
     return [
       {

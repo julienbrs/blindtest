@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Auto-generated folders
+    'coverage/**',
+    'playwright-report/**',
   ]),
   // Custom rules
   {
