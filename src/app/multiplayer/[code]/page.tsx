@@ -11,7 +11,15 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 import { Lobby } from '@/components/multiplayer/Lobby'
+import { HostControls } from '@/components/multiplayer/HostControls'
+import { BuzzIndicator } from '@/components/multiplayer/BuzzIndicator'
+import { SyncedAudioPlayer } from '@/components/multiplayer/SyncedAudioPlayer'
+import { BuzzerButton } from '@/components/game/BuzzerButton'
+import { SongReveal } from '@/components/game/SongReveal'
+import { Timer } from '@/components/game/Timer'
 import { useRoom } from '@/hooks/useRoom'
+import { useMultiplayerGame } from '@/hooks/useMultiplayerGame'
+import type { Song } from '@/lib/types'
 
 /**
  * MultiplayerRoomPage - The lobby/game page for a specific multiplayer room
@@ -22,7 +30,7 @@ import { useRoom } from '@/hooks/useRoom'
  * - Room loading and validation
  * - Player reconnection (via stored playerId in localStorage)
  * - Lobby display for waiting state
- * - Game display for playing state (TODO: 13.10+)
+ * - Game display for playing state
  * - End game recap for ended state (TODO: 13.17)
  */
 export default function MultiplayerRoomPage() {
@@ -48,15 +56,36 @@ export default function MultiplayerRoomPage() {
     kickPlayer,
   } = useRoom({ roomCode })
 
+  // Multiplayer game state
+  const {
+    gameState,
+    currentBuzzer,
+    currentBuzzes,
+    shouldPauseAudio,
+    timerActive,
+    buzz,
+    validate,
+    nextSong,
+    reveal,
+    endGame,
+  } = useMultiplayerGame({
+    room,
+    players,
+    myPlayerId: myPlayer?.id ?? null,
+    isHost,
+  })
+
   const [isReconnecting, setIsReconnecting] = useState(true)
   const [reconnectFailed, setReconnectFailed] = useState(false)
+  const [currentSong, setCurrentSong] = useState<Song | null>(null)
+  const [isRevealed, setIsRevealed] = useState(false)
+  const [isBuzzing, setIsBuzzing] = useState(false)
+  const [timerRemaining, setTimerRemaining] = useState(0)
 
   // Try to reconnect on mount
   useEffect(() => {
     if (!roomCode || !isConfigured) {
-      /* eslint-disable react-hooks/set-state-in-effect -- Early exit for missing config is a valid pattern */
       setIsReconnecting(false)
-      /* eslint-enable react-hooks/set-state-in-effect */
       return
     }
 
@@ -69,6 +98,60 @@ export default function MultiplayerRoomPage() {
 
     tryReconnect()
   }, [roomCode, isConfigured, reconnectToRoom])
+
+  // Fetch current song when gameState.currentSongId changes
+  useEffect(() => {
+    if (!gameState.currentSongId) {
+      setCurrentSong(null)
+      setIsRevealed(false)
+      return
+    }
+
+    const fetchSong = async () => {
+      try {
+        const response = await fetch(`/api/songs/${gameState.currentSongId}`)
+        if (response.ok) {
+          const data = await response.json()
+          setCurrentSong(data.song)
+        }
+      } catch {
+        // Ignore fetch errors
+      }
+    }
+
+    fetchSong()
+    // Reset revealed state when song changes
+    setIsRevealed(false)
+  }, [gameState.currentSongId])
+
+  // Reset revealed state when game state changes to playing
+  useEffect(() => {
+    if (gameState.status === 'playing') {
+      setIsRevealed(false)
+      setTimerRemaining(0)
+    } else if (gameState.status === 'reveal') {
+      setIsRevealed(true)
+    } else if (gameState.status === 'buzzed') {
+      // Start timer when someone buzzes
+      setTimerRemaining(room?.settings.timerDuration ?? 5)
+    }
+  }, [gameState.status, room?.settings.timerDuration])
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (!timerActive || timerRemaining <= 0) return
+
+    const timer = setInterval(() => {
+      setTimerRemaining((prev) => {
+        if (prev <= 1) {
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [timerActive, timerRemaining])
 
   const handleLeaveRoom = useCallback(async () => {
     await leaveRoom()
@@ -88,6 +171,69 @@ export default function MultiplayerRoomPage() {
     router.push('/multiplayer')
   }, [router])
 
+  const handleBuzz = useCallback(async () => {
+    if (isBuzzing) return
+    setIsBuzzing(true)
+    try {
+      await buzz()
+    } finally {
+      setIsBuzzing(false)
+    }
+  }, [buzz, isBuzzing])
+
+  const handleValidate = useCallback(
+    async (correct: boolean) => {
+      const success = await validate(correct)
+      if (success) {
+        setIsRevealed(true)
+      }
+      return success
+    },
+    [validate]
+  )
+
+  const handleNextSong = useCallback(async () => {
+    // Fetch a random song and start it
+    try {
+      const excludeIds = gameState.playedSongIds.join(',')
+      const url = excludeIds
+        ? `/api/songs/random?exclude=${excludeIds}`
+        : '/api/songs/random'
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.song) {
+          await nextSong(data.song.id)
+          setIsRevealed(false)
+        }
+      }
+    } catch {
+      // Ignore fetch errors
+    }
+  }, [nextSong, gameState.playedSongIds])
+
+  const handleReveal = useCallback(async () => {
+    const success = await reveal()
+    if (success) {
+      setIsRevealed(true)
+    }
+    return success
+  }, [reveal])
+
+  const handleEndGame = useCallback(async () => {
+    return await endGame()
+  }, [endGame])
+
+  const handleTimerEnd = useCallback(() => {
+    // Timer ended, reveal the answer
+    setIsRevealed(true)
+    handleReveal()
+  }, [handleReveal])
+
+  const handleAudioEnded = useCallback(() => {
+    // Audio clip ended - could auto-reveal or wait for manual reveal
+  }, [])
+
   const fadeUpVariants = shouldReduceMotion
     ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
     : {
@@ -97,7 +243,7 @@ export default function MultiplayerRoomPage() {
 
   // Loading state
   if (isReconnecting || isLoading) {
-    return <LoadingScreen message="Connexion à la room..." />
+    return <LoadingScreen message="Connexion a la room..." />
   }
 
   // Supabase not configured
@@ -113,10 +259,10 @@ export default function MultiplayerRoomPage() {
           <Card variant="elevated" className="p-6 text-center">
             <ExclamationTriangleIcon className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
             <h2 className="mb-2 text-xl font-bold text-white">
-              Supabase non configuré
+              Supabase non configure
             </h2>
             <p className="mb-6 text-purple-200">
-              Le mode multijoueur nécessite une configuration Supabase.
+              Le mode multijoueur necessite une configuration Supabase.
             </p>
             <Button variant="secondary" onClick={handleBack} fullWidth>
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
@@ -140,9 +286,9 @@ export default function MultiplayerRoomPage() {
         >
           <Card variant="elevated" className="p-6 text-center">
             <ExclamationTriangleIcon className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
-            <h2 className="mb-2 text-xl font-bold text-white">Accès refusé</h2>
+            <h2 className="mb-2 text-xl font-bold text-white">Acces refuse</h2>
             <p className="mb-6 text-purple-200">
-              Vous n&apos;êtes pas dans cette room ou elle n&apos;existe pas.
+              Vous n&apos;etes pas dans cette room ou elle n&apos;existe pas.
               Veuillez rejoindre la room avec le code.
             </p>
             <div className="flex flex-col gap-3">
@@ -155,7 +301,7 @@ export default function MultiplayerRoomPage() {
                 fullWidth
               >
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Retour à l&apos;accueil
+                Retour a l&apos;accueil
               </Button>
             </div>
           </Card>
@@ -202,29 +348,134 @@ export default function MultiplayerRoomPage() {
 
     // Game in progress
     if (room.status === 'playing') {
-      // TODO: Issue 13.10+ - Implement multiplayer game screen
+      const canBuzz =
+        gameState.status === 'playing' && !currentBuzzer && !isBuzzing
+
       return (
-        <main className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4">
+        <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
+          {/* Header */}
           <motion.div
-            className="w-full max-w-md"
+            className="mb-6 text-center"
             initial="hidden"
             animate="visible"
             variants={fadeUpVariants}
           >
-            <Card variant="glow" className="p-6 text-center">
-              <h2 className="mb-4 text-2xl font-bold text-white">
-                Partie en cours
-              </h2>
-              <p className="mb-6 text-purple-200">
-                Le mode de jeu multijoueur sera disponible dans une prochaine
-                mise à jour.
-              </p>
-              <Button variant="secondary" onClick={handleLeaveRoom} fullWidth>
+            <h1 className="bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent sm:text-3xl">
+              Partie en cours
+            </h1>
+            <p className="mt-1 text-sm text-purple-200">
+              Room: {room.code} | {players.length} joueur
+              {players.length > 1 ? 's' : ''}
+            </p>
+          </motion.div>
+
+          <div className="flex w-full max-w-lg flex-col items-center gap-6">
+            {/* Audio Player */}
+            {gameState.currentSongId && (
+              <motion.div
+                className="w-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <SyncedAudioPlayer
+                  songId={gameState.currentSongId}
+                  startedAt={gameState.currentSongStartedAt}
+                  isPlaying={
+                    gameState.status === 'playing' && !shouldPauseAudio
+                  }
+                  maxDuration={room.settings.clipDuration ?? 30}
+                  onEnded={handleAudioEnded}
+                />
+              </motion.div>
+            )}
+
+            {/* Song cover with blur (reveal when appropriate) */}
+            {currentSong && (
+              <motion.div
+                className="w-full"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <SongReveal
+                  song={currentSong}
+                  guessMode={room.settings.guessMode ?? 'both'}
+                  isRevealed={isRevealed}
+                />
+              </motion.div>
+            )}
+
+            {/* Buzz indicator (shows who buzzed) */}
+            {currentBuzzer && (
+              <BuzzIndicator
+                buzzes={currentBuzzes}
+                players={players}
+                currentBuzzer={currentBuzzer}
+                myPlayerId={myPlayer?.id ?? null}
+              />
+            )}
+
+            {/* Timer (when someone is answering) */}
+            {timerActive && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <Timer
+                  duration={room.settings.timerDuration ?? 5}
+                  remaining={timerRemaining}
+                  onTimeout={handleTimerEnd}
+                />
+              </motion.div>
+            )}
+
+            {/* Buzzer button (for non-host or host when playing) */}
+            {canBuzz && (
+              <motion.div
+                className="w-full"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <BuzzerButton
+                  disabled={!canBuzz || isBuzzing}
+                  onBuzz={handleBuzz}
+                />
+              </motion.div>
+            )}
+
+            {/* Host Controls */}
+            {isHost && (
+              <motion.div
+                className="w-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <Card variant="elevated" className="p-4">
+                  <HostControls
+                    gameStatus={gameState.status}
+                    isRevealed={isRevealed}
+                    hasBuzzer={currentBuzzer !== null}
+                    onValidate={handleValidate}
+                    onNextSong={handleNextSong}
+                    onReveal={handleReveal}
+                    onEndGame={handleEndGame}
+                    isLoading={isLoading}
+                  />
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Leave button for non-hosts */}
+            {!isHost && (
+              <Button
+                variant="secondary"
+                onClick={handleLeaveRoom}
+                className="mt-4"
+              >
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />
                 Quitter la partie
               </Button>
-            </Card>
-          </motion.div>
+            )}
+          </div>
         </main>
       )
     }
@@ -242,11 +493,11 @@ export default function MultiplayerRoomPage() {
           >
             <Card variant="elevated" className="p-6 text-center">
               <h2 className="mb-4 text-2xl font-bold text-white">
-                Partie terminée
+                Partie terminee
               </h2>
               <p className="mb-6 text-purple-200">
-                Le récapitulatif multijoueur sera disponible dans une prochaine
-                mise à jour.
+                Le recapitulatif multijoueur sera disponible dans une prochaine
+                mise a jour.
               </p>
               <Button variant="secondary" onClick={handleLeaveRoom} fullWidth>
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />
