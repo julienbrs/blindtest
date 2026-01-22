@@ -1155,3 +1155,10 @@ Status: COMPLETED
 Commit: 3179603
 Notes: Created comprehensive CLS performance tests using PerformanceObserver API. Tests verify CLS < 0.1 (good score) on all main pages including play selection, solo config, multiplayer hub, and game screen during loading, gameplay, and state transitions. Added responsive viewport CLS tests for mobile, tablet, and large desktop. Tests verify no visible layout jumps during font loading and image reveal.
 Files: e2e/performance-cls.spec.ts
+
+=== Issue 16.22: Test loading states and skeleton screens ===
+Timestamp: 2026-01-22T21:05:00Z
+Status: COMPLETED
+Commit: 45dd0c8
+Notes: Created comprehensive E2E tests for loading states and skeleton screens. Created e2e/loading-states.spec.ts with 20 tests organized into 7 test groups: (1) Solo Page Loading: tests for loading screen visibility while library loads, accessibility attributes (aria-live, aria-busy), and loading message display; (2) Game Screen Loading: tests for loading indicator during song loading, spinner styling (border-purple, rounded-full), and smooth transition from loading to game content; (3) Next Song Loading: tests for loading indicator during next song transition; (4) Suspense Fallback: tests for game page Suspense fallback rendering; (5) Library Stats Loading: tests for loading state visibility and spinner animation (animate-spin class); (6) Multiplayer Loading States: tests for create room and join room loading states; (7) Loading States - Mobile: tests for mobile spinner visibility, sizing (>=32px), and game loading indicator visibility. Tests use route interception to simulate slow network conditions.
+Files: e2e/loading-states.spec.ts
