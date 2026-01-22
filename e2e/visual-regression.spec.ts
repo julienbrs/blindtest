@@ -302,3 +302,300 @@ test.describe('Solo Config Visual', () => {
     })
   })
 })
+
+test.describe('Game Screen Visual', () => {
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('playing state - buzzer visible', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear (indicates PLAYING state)
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Wait for all UI elements to settle
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Verify game UI elements are visible
+    await expect(page.getByText('Score')).toBeVisible()
+
+    // Take screenshot of playing state with buzzer
+    await expect(page).toHaveScreenshot('game-playing.png', {
+      fullPage: true,
+    })
+  })
+
+  test('buzzed state - validation buttons visible', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Press the buzzer
+    await buzzerButton.click()
+
+    // Wait for validation buttons to appear (BUZZED/TIMER state)
+    const correctButton = page.getByRole('button', { name: 'Correct' })
+    await expect(correctButton).toBeVisible({ timeout: 10000 })
+
+    // Wait for UI to settle
+    await page.waitForTimeout(300)
+
+    // Take screenshot of buzzed state with validation buttons
+    await expect(page).toHaveScreenshot('game-buzzed.png', {
+      fullPage: true,
+    })
+  })
+
+  test('timer running state - countdown visible', async ({ page }) => {
+    // Navigate to solo config page with timer enabled
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Expand advanced settings to verify timer is enabled
+    await page.click('[data-testid="advanced-settings"]')
+    await page.waitForTimeout(300)
+
+    // Ensure timer is enabled (not in "Mode sans timer")
+    // The default should have timer enabled, so we just start the game
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Press the buzzer to start timer
+    await buzzerButton.click()
+
+    // Wait for timer to be visible - look for the timer display
+    // The timer shows remaining seconds in a circular countdown
+    await page.waitForTimeout(500)
+
+    // Verify validation buttons are visible (timer state shows these)
+    const correctButton = page.getByRole('button', { name: 'Correct' })
+    await expect(correctButton).toBeVisible({ timeout: 10000 })
+
+    // Take screenshot of timer state
+    await expect(page).toHaveScreenshot('game-timer.png', {
+      fullPage: true,
+    })
+  })
+
+  test('reveal state - song info visible', async ({ page }) => {
+    // Navigate to solo config page
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click reveal button to skip to reveal state
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    await revealButton.click()
+
+    // Wait for reveal state - "Chanson suivante" button appears
+    const nextButton = page.getByRole('button', { name: 'Chanson suivante' })
+    await expect(nextButton).toBeVisible({ timeout: 5000 })
+
+    // Wait for UI to settle (cover unblur animation, etc.)
+    await page.waitForTimeout(500)
+
+    // Take screenshot of reveal state
+    await expect(page).toHaveScreenshot('game-reveal.png', {
+      fullPage: true,
+    })
+  })
+
+  test('correct answer celebration - green flash', async ({ page }) => {
+    // Navigate to solo config page
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Press the buzzer
+    await buzzerButton.click()
+
+    // Wait for validation buttons
+    const correctButton = page.getByRole('button', { name: 'Correct' })
+    await expect(correctButton).toBeVisible({ timeout: 10000 })
+
+    // Click correct - this triggers the green flash celebration
+    await correctButton.click()
+
+    // Wait briefly for the flash animation to start
+    await page.waitForTimeout(100)
+
+    // Take screenshot during celebration (green flash)
+    // Note: The flash is brief (~500ms) so we capture quickly
+    await expect(page).toHaveScreenshot('game-correct.png', {
+      fullPage: true,
+    })
+  })
+
+  test('incorrect answer shake - red flash', async ({ page }) => {
+    // Navigate to solo config page
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Press the buzzer
+    await buzzerButton.click()
+
+    // Wait for validation buttons
+    const incorrectButton = page.getByRole('button', { name: 'Incorrect' })
+    await expect(incorrectButton).toBeVisible({ timeout: 10000 })
+
+    // Click incorrect - this triggers the red shake effect
+    await incorrectButton.click()
+
+    // Wait briefly for the flash animation to start
+    await page.waitForTimeout(100)
+
+    // Take screenshot during incorrect answer (red flash)
+    // Note: The shake animation is brief (~300ms) so we capture quickly
+    await expect(page).toHaveScreenshot('game-incorrect.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game screen header with score and controls', async ({ page }) => {
+    // Navigate to solo config page
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Verify header elements are visible
+    await expect(page.getByText('Score')).toBeVisible()
+    await expect(page.locator('[data-testid="sfx-mute-toggle"]')).toBeVisible()
+
+    // If fullscreen is supported, the toggle should be visible
+    // Note: Fullscreen may not be supported in all test environments
+
+    // Take screenshot focusing on header area
+    await expect(page).toHaveScreenshot('game-header.png', {
+      fullPage: true,
+    })
+  })
+
+  test('quit confirmation modal', async ({ page }) => {
+    // Navigate to solo config page
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click quit button to show confirmation modal
+    const quitButton = page.getByRole('button', { name: /quitter/i }).first()
+    await quitButton.click()
+
+    // Wait for modal animation
+    await page.waitForTimeout(300)
+
+    // Verify modal content is visible
+    await expect(page.getByText('Quitter la partie ?')).toBeVisible()
+    await expect(
+      page.getByText('Votre score ne sera pas sauvegardé.')
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Annuler' })).toBeVisible()
+
+    // Take screenshot of quit confirmation modal
+    await expect(page).toHaveScreenshot('game-quit-modal.png', {
+      fullPage: true,
+    })
+  })
+})
