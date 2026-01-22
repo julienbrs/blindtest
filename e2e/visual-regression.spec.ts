@@ -163,3 +163,142 @@ test.describe('Homepage Visual', () => {
     ).toBeVisible()
   })
 })
+
+test.describe('Solo Config Visual', () => {
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('config form renders correctly', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded (loading screen should disappear)
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+
+    // Additional wait for any remaining transitions
+    await page.waitForTimeout(500)
+
+    // Take screenshot of the solo configuration form
+    await expect(page).toHaveScreenshot('solo-config.png', {
+      fullPage: true,
+    })
+  })
+
+  test('slider interaction visual', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Get the slider element
+    const slider = page.locator('[data-testid="duration-slider"]')
+
+    // Click on the slider to interact with it (change value)
+    // Get slider bounding box and click at 75% position (should be around 45-50s)
+    const box = await slider.boundingBox()
+    if (box) {
+      await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2)
+    }
+
+    // Wait for UI to update
+    await page.waitForTimeout(300)
+
+    // Verify the value changed (should be different from default 20s)
+    const valueElement = page.locator('[data-testid="duration-value"]')
+    await expect(valueElement).toBeVisible()
+
+    // Take screenshot showing slider in active/changed state
+    await expect(page).toHaveScreenshot('slider-active.png', {
+      fullPage: true,
+    })
+  })
+
+  test('advanced settings expanded', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Click on advanced settings to expand
+    await page.click('[data-testid="advanced-settings"]')
+
+    // Wait for animation to complete
+    await page.waitForTimeout(400)
+
+    // Verify advanced settings content is visible
+    await expect(page.locator('text=Temps pour répondre')).toBeVisible()
+    await expect(page.locator('text=Mode sans timer')).toBeVisible()
+    await expect(page.locator('text=Point de départ')).toBeVisible()
+    await expect(page.locator('text=Thème sombre')).toBeVisible()
+
+    // Take screenshot with advanced settings expanded
+    await expect(page).toHaveScreenshot('advanced-settings.png', {
+      fullPage: true,
+    })
+  })
+
+  test('solo config has proper styling elements', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Check that main elements exist and are visible
+    await expect(page.locator('h1')).toBeVisible() // Title "Blindtest"
+    await expect(page.locator('text=Mode Solo')).toBeVisible() // Subtitle
+
+    // Check configuration sections
+    await expect(page.locator('text=Que deviner ?')).toBeVisible()
+    await expect(page.locator('text=Durée des extraits')).toBeVisible()
+    // Playlists section header (first element matching)
+    await expect(page.locator('h2:has-text("Playlists")').first()).toBeVisible()
+
+    // Check guess mode options
+    await expect(page.locator('text=Titre').first()).toBeVisible()
+    await expect(page.locator('text=Artiste').first()).toBeVisible()
+    await expect(page.locator('text=Les deux')).toBeVisible()
+
+    // Check start button
+    await expect(page.locator('text=Nouvelle Partie')).toBeVisible()
+
+    // Check back button
+    await expect(page.locator('text=Retour')).toBeVisible()
+  })
+
+  test('guess mode selection visual', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Click on "Titre" mode to change selection
+    await page.click('text=Titre')
+    await page.waitForTimeout(200)
+
+    // Take screenshot with Titre selected
+    await expect(page).toHaveScreenshot('guess-mode-title.png', {
+      fullPage: true,
+    })
+  })
+})

@@ -548,7 +548,9 @@ export function GameConfigForm() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-purple-200">Durée</span>
-            <span className="text-2xl font-bold">{clipDuration}s</span>
+            <span className="text-2xl font-bold" data-testid="duration-value">
+              {clipDuration}s
+            </span>
           </div>
 
           <input
@@ -558,6 +560,7 @@ export function GameConfigForm() {
             step={5}
             value={clipDuration}
             onChange={(e) => handleClipDurationChange(Number(e.target.value))}
+            data-testid="duration-slider"
             className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/20 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-pink-500 [&::-webkit-slider-thumb]:to-purple-500 [&::-webkit-slider-thumb]:shadow-lg"
           />
 
@@ -574,6 +577,7 @@ export function GameConfigForm() {
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
+          data-testid="advanced-settings"
           className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg p-3 text-purple-300 transition-colors hover:bg-white/5 hover:text-white"
         >
           <ChevronRightIcon
