@@ -1085,3 +1085,17 @@ Status: COMPLETED
 Commit: 30aaf5f
 Notes: Created comprehensive E2E tests for buzzer UX covering: click feedback timing, visual disabled state clarity, haptic feedback (vibration API), mobile touch interaction, keyboard accessibility (Enter/Space), and visual state transitions (glow effect, gradient styling).
 Files: e2e/ux-buzzer.spec.ts
+
+=== Issue 16.12: Test multiplayer room join UX ===
+Timestamp: 2026-01-22T19:47:00Z
+Status: COMPLETED
+Commit: dfa0cc0
+Notes: Created comprehensive E2E tests for multiplayer room join UX. Added data-testid attributes to JoinRoomForm component (room-code-input, error-message, join-button, loading-spinner). Created e2e/ux-room-join.spec.ts with 22 tests organized into 6 test groups: (1) Room Join UX - Code Input: tests for auto-uppercase conversion, invalid character filtering, 6-character limit, monospace font, centered text, and letter-spacing; (2) Room Join UX - Error Messages: tests for invalid room code error display, red styling visibility, error clearing on new input, short code validation, and empty nickname validation; (3) Room Join UX - Loading State: tests for loading spinner visibility, "Connexion en cours..." text, and disabled inputs during loading; (4) Room Join UX - Successful Join: tests for lobby redirect and host visibility after joining; (5) Room Join UX - Focus and Keyboard: tests for logical tab order, Enter key submission, and visible focus ring; (6) Room Join UX - Mobile: tests for mobile viewport usability and touch target sizes (minimum 44px).
+Files: e2e/ux-room-join.spec.ts, src/components/multiplayer/JoinRoomForm.tsx
+
+=== Issue 16.13: Test error recovery UX flows ===
+Timestamp: 2026-01-22T18:50:00Z
+Status: COMPLETED
+Commit: 4939e8f
+Notes: Created comprehensive E2E tests for error recovery UX flows. Created e2e/ux-error-recovery.spec.ts with 15 tests organized into 6 test groups: (1) Error Recovery UX - Network Errors: tests for network error toast display with retry option, retry button functionality, and toast dismissal; (2) Error Recovery UX - Empty Library: tests for helpful error message with audio path display, retry button page reload, and supported formats mention; (3) Error Recovery UX - Audio File Errors: tests for automatic skip to next song on audio file error and loading indicator during audio load; (4) Error Recovery UX - Browser Support: tests for unsupported browser error with browser suggestions; (5) Error Recovery UX - Graceful Degradation: tests for game functionality after error recovery and navigation during error states; (6) Error Recovery UX - Visual Feedback: tests for error toast styling/positioning/accessibility (role="alert", aria-live="assertive") and retry button touch target size on mobile (minimum 44px).
+Files: e2e/ux-error-recovery.spec.ts
