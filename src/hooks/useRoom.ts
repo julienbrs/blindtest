@@ -317,7 +317,7 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
             .from('rooms')
             .select('id')
             .eq('code', code)
-            .single()
+            .maybeSingle()
 
           if (!existingRoom) break
           code = generateRoomCode()
@@ -673,7 +673,7 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
           .from('rooms')
           .select('*')
           .eq('code', code.toUpperCase())
-          .single()
+          .maybeSingle()
 
         if (roomError || !roomData) {
           return false
@@ -690,7 +690,7 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
           .select('*')
           .eq('id', storedPlayerId)
           .eq('room_id', roomData.id)
-          .single()
+          .maybeSingle()
 
         if (playerError || !playerData) {
           return false
