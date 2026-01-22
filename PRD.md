@@ -219,9 +219,9 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 **Important:** Toujours tester en LOCAL (http://localhost:3000) pour pouvoir corriger le code et voir les changements immédiatement. Le serveur de dev se lance automatiquement avec Playwright.
 
 - [x] 15.1 Add E2E tests for multiplayer lobby flow
-- [ ] 15.2 Add E2E tests for multiplayer game flow
+- [x] 15.2 Add E2E tests for multiplayer game flow
 - [ ] 15.3 Add E2E tests for audio synchronization
-- [ ] 15.4 Add E2E tests for player reconnection
+- [x] 15.4 Add E2E tests for player reconnection
 - [ ] 15.5 Test with MCP browser tools on localhost
 
 ## Completion

@@ -212,7 +212,15 @@ export function SyncedAudioPlayer({
     // Note: isSyncing is intentionally NOT in dependencies to avoid re-running
     // the effect when syncing state changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, songId, startedAt, isPlaying, maxDuration, startPosition, handleEnded])
+  }, [
+    isLoaded,
+    songId,
+    startedAt,
+    isPlaying,
+    maxDuration,
+    startPosition,
+    handleEnded,
+  ])
 
   // Handle pause
   useEffect(() => {
@@ -292,7 +300,7 @@ export function SyncedAudioPlayer({
     : 'bg-gradient-to-r from-pink-500 to-purple-500'
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-md" data-testid="synced-audio-player">
       <audio
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
@@ -308,18 +316,20 @@ export function SyncedAudioPlayer({
             isPlaying && isLoaded && !isSyncing ? 'animate-pulse-subtle' : ''
           }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
+          data-testid="audio-progress-bar"
         />
       </div>
 
       {/* Time display */}
       <div className="mt-2 flex justify-between text-sm">
-        <span className="text-purple-300">
+        <span className="text-purple-300" data-testid="audio-elapsed-time">
           {isSyncing ? 'Sync...' : formatTime(clipElapsed)}
         </span>
         <span
           className={
             isNearEnd ? 'font-semibold text-red-400' : 'text-purple-300'
           }
+          data-testid="audio-total-time"
         >
           {formatTime(maxDuration)}
         </span>
