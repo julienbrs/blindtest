@@ -222,7 +222,53 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 - [x] 15.2 Add E2E tests for multiplayer game flow
 - [x] 15.3 Add E2E tests for audio synchronization
 - [x] 15.4 Add E2E tests for player reconnection
-- [ ] 15.5 Test with MCP browser tools on localhost
+- [x] 15.5 Test with MCP browser tools on localhost
+
+---
+
+### Epic 16: UI/UX Testing (docs/epics/16-ui-ux-testing.md)
+
+**Visual Regression Testing**
+
+- [x] 16.1 Setup Playwright visual regression testing infrastructure
+- [ ] 16.2 Add visual tests for homepage and play mode selection
+- [ ] 16.3 Add visual tests for solo game configuration page
+- [ ] 16.4 Add visual tests for game screen (all states)
+- [ ] 16.5 Add visual tests for multiplayer lobby and game
+
+**Responsive Visual Testing**
+
+- [ ] 16.6 Add visual tests for mobile portrait layouts
+- [ ] 16.7 Add visual tests for mobile landscape layouts
+- [ ] 16.8 Add visual tests for tablet layouts
+- [ ] 16.9 Add visual tests for desktop layouts
+
+**UX Flow Testing**
+
+- [ ] 16.10 Test game configuration UX flow
+- [ ] 16.11 Test buzzer interaction UX
+- [ ] 16.12 Test multiplayer room join UX
+- [ ] 16.13 Test error recovery UX flows
+
+**Animation & Motion Testing**
+
+- [ ] 16.14 Test buzzer button animations
+- [ ] 16.15 Test correct/incorrect answer flash animations
+- [ ] 16.16 Test song reveal transition animations
+- [ ] 16.17 Test reduced motion preference support
+
+**Accessibility Visual Testing**
+
+- [ ] 16.18 Test focus states and indicators
+- [ ] 16.19 Test dark mode contrast and readability
+- [ ] 16.20 Test touch target sizes
+
+**Performance Metrics**
+
+- [ ] 16.21 Test Cumulative Layout Shift (CLS)
+- [ ] 16.22 Test loading states and skeleton screens
+
+---
 
 ## Completion
 

@@ -1004,3 +1004,17 @@ Status: COMPLETED
 Commit: dcd8fec
 Notes: Added 4 E2E tests for audio synchronization in multiplayer mode. Tests verify sync tolerance of ±500ms. Added data-testid attributes to SyncedAudioPlayer for reliable selectors.
 Files: e2e/multiplayer-flow.spec.ts, src/components/multiplayer/SyncedAudioPlayer.tsx
+
+=== Issue 15.5: Test with MCP browser tools on localhost ===
+Timestamp: 2026-01-22T15:30:00Z
+Status: COMPLETED
+Commit: N/A (visual testing only)
+Notes: Performed comprehensive visual testing of the blindtest multiplayer application using Playwright browser automation (MCP browser tools). Test scenarios covered: (1) Homepage verification - confirmed Solo/Multiplayer buttons display correctly with proper styling; (2) Multiplayer page navigation - verified "Créer une partie" and "Rejoindre une partie" sections render properly; (3) Room creation - tested filling pseudo input, creating room via Supabase, verifying room code generation (e.g., HGUTAC); (4) Lobby display - confirmed host player visible in lobby, room code displayed, start button disabled until 2+ players join; (5) Join room form - tested code input (uppercase, 6 chars), nickname input, join validation; (6) Room joining - successfully joined created room as second player; (7) Solo mode navigation - verified solo mode redirects to /solo page. All 20 test assertions passed with 100% pass rate. Screenshots captured at each step for documentation. No bugs identified requiring fixes.
+Files: /tmp/playwright-test-blindtest-complete.js (test script), /tmp/blindtest-*.png (8 screenshots)
+=== Issue 16.1: Setup Playwright visual regression testing infrastructure ===
+Timestamp: 2026-01-22T17:00:00Z
+Status: COMPLETED
+Commit: b2856dc
+Notes: Configured Playwright for visual regression testing with screenshot comparison capabilities. Added snapshotDir (./e2e/__screenshots__), snapshotPathTemplate for organized screenshot storage, and expect.toHaveScreenshot configuration with tolerance settings (maxDiffPixels: 100, threshold: 0.2, animations: disabled). Created e2e/__screenshots__/ directory with .gitkeep. Updated .gitignore to ignore screenshots (except .gitkeep) and playwright-report artifacts. Created e2e/visual-regression.spec.ts with baseline setup tests for homepage and play mode selection page. Tests use reducedMotion: 'reduce' for consistent screenshots and wait for networkidle state.
+Files: playwright.config.ts, e2e/visual-regression.spec.ts, e2e/__screenshots__/.gitkeep, .gitignore
+

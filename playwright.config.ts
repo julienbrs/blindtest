@@ -8,6 +8,15 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   timeout: 60000, // 60 second timeout per test
+  snapshotDir: './e2e/__screenshots__',
+  snapshotPathTemplate: '{snapshotDir}/{testFilePath}/{projectName}/{arg}{ext}',
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: 100, // Tolerance for small differences
+      threshold: 0.2, // 20% pixel difference acceptable
+      animations: 'disabled', // Disable animations for consistent screenshots
+    },
+  },
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -26,6 +35,13 @@ export default defineConfig({
     {
       name: 'mobile-safari',
       use: { ...devices['iPhone 12'] },
+    },
+    {
+      name: 'production',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'https://blindtest.ainur.pro',
+      },
     },
   ],
 
