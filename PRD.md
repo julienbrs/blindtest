@@ -255,7 +255,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 - [x] 16.14 Test buzzer button animations
 - [x] 16.15 Test correct/incorrect answer flash animations
 - [x] 16.16 Test song reveal transition animations
-- [ ] 16.17 Test reduced motion preference support
+- [x] 16.17 Test reduced motion preference support
 
 **Accessibility Visual Testing**
 
