@@ -76,18 +76,15 @@ export function HostControls({
   // Show validation buttons when someone has buzzed
   const showValidationButtons = gameStatus === 'buzzed' && hasBuzzer
 
-  // Show next song button after reveal
-  const showNextButton = gameStatus === 'reveal'
+  // Show next song button after reveal OR when loading (to load first song)
+  const showNextButton = gameStatus === 'reveal' || gameStatus === 'loading'
 
   // Show reveal button during playing or buzzed states (if not already revealed)
   const showRevealButton =
     (gameStatus === 'playing' || gameStatus === 'buzzed') && !isRevealed
 
   // Show end game button when game is in progress (not in waiting or ended state)
-  const showEndButton =
-    gameStatus !== 'waiting' &&
-    gameStatus !== 'ended' &&
-    gameStatus !== 'loading'
+  const showEndButton = gameStatus !== 'waiting' && gameStatus !== 'ended'
 
   const handleValidate = useCallback(
     async (correct: boolean) => {
