@@ -240,8 +240,8 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 
 - [x] 16.6 Add visual tests for mobile portrait layouts
 - [x] 16.7 Add visual tests for mobile landscape layouts
-- [ ] 16.8 Add visual tests for tablet layouts
-- [ ] 16.9 Add visual tests for desktop layouts
+- [x] 16.8 Add visual tests for tablet layouts
+- [x] 16.9 Add visual tests for desktop layouts
 
 **UX Flow Testing**
 

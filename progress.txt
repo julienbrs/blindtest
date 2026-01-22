@@ -1054,6 +1054,20 @@ Files: e2e/visual-responsive.spec.ts
 === Issue 16.7: Add visual tests for mobile landscape layouts ===
 Timestamp: 2026-01-22T19:25:00Z
 Status: COMPLETED
-Commit: (pending)
+Commit: 6380331
 Notes: Added comprehensive visual regression tests for mobile landscape layouts. Tests cover iPhone SE landscape (667x375) and iPhone 12 landscape (844x390) viewports. Added 13 new tests including: play selection page in landscape, solo config page in landscape, game screen with all controls visible, control buttons accessibility verification, no horizontal scrolling verification, multiplayer hub in landscape, game reveal state in landscape, and touch target tests for landscape mode. All tests verify proper layout adaptation without horizontal scroll and that controls remain visible and accessible in landscape orientation.
 Files: e2e/visual-responsive.spec.ts
+
+=== Issue 16.8: Add visual tests for tablet layouts ===
+Timestamp: 2026-01-22T19:30:00Z
+Status: COMPLETED
+Commit: 9e69f2a
+Notes: Added comprehensive visual regression tests for tablet layouts. Tests cover iPad (768x1024) and iPad Pro (1024x1366) viewports. Added 16 new tests including: play selection page on iPad/iPad Pro, solo config page on both tablets, game screen with optimal space usage, multiplayer hub on both devices, game reveal state, advanced settings expanded, space utilization verification (no horizontal scroll, appropriately sized buttons), and touch target verification tests ensuring buttons meet minimum 44px requirements. All tests use reducedMotion: 'reduce' for consistent screenshots. Updated file header comment to reflect tablet test addition.
+Files: e2e/visual-responsive.spec.ts
+
+=== Issue 16.9: Add visual tests for desktop layouts ===
+Timestamp: 2026-01-22T19:35:00Z
+Status: COMPLETED
+Commit: 2f0de79
+Notes: Added comprehensive visual regression tests for desktop layouts. Tests cover Desktop HD (1280x720) and Desktop Full HD (1920x1080) viewports. Added 18 new tests including: play selection page on both resolutions, solo config page, game screen with centered content, multiplayer hub, game reveal state, advanced settings expanded, homepage on Full HD, content centering and readability verification, game screen content constraint tests, and multiplayer hub layout optimization tests. All tests verify that content is properly centered, readable on wide screens, and buttons are appropriately sized for desktop interaction. Generated 13 baseline screenshots for chromium project. Updated file header comment to reflect desktop test addition with exact viewport dimensions.
+Files: e2e/visual-responsive.spec.ts, e2e/__screenshots__/visual-responsive.spec.ts/chromium/desktop-*.png (13 screenshots)
