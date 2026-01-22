@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
  * - Mobile Portrait: iPhone SE (375x667), iPhone 12 (390x844)
  * - Mobile Landscape: iPhone SE (667x375), iPhone 12 (844x390)
  * - Tablet: iPad (768x1024), iPad Pro (1024x1366)
- * - Desktop: (to be added in 16.9)
+ * - Desktop: 1280x720 (HD), 1920x1080 (Full HD)
  *
  * Run with --update-snapshots to generate/update baseline screenshots:
  *   npx playwright test e2e/visual-responsive.spec.ts --update-snapshots
@@ -1295,5 +1295,492 @@ test.describe('Mobile Portrait - Touch Targets', () => {
     const backBox = await backButton.boundingBox()
     expect(backBox!.width).toBeGreaterThanOrEqual(44)
     expect(backBox!.height).toBeGreaterThanOrEqual(44)
+  })
+})
+
+test.describe('Desktop - HD (1280x720)', () => {
+  test.use({ viewport: { width: 1280, height: 720 } })
+
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('play selection page on desktop HD', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of play mode selection page on desktop HD
+    await expect(page).toHaveScreenshot('desktop-hd-play.png', {
+      fullPage: true,
+    })
+  })
+
+  test('solo config page on desktop HD', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of solo config page on desktop HD
+    await expect(page).toHaveScreenshot('desktop-hd-solo-config.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game screen on desktop HD - centered content', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Wait for all UI elements to settle
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of game screen on desktop HD
+    await expect(page).toHaveScreenshot('desktop-hd-game.png', {
+      fullPage: true,
+    })
+  })
+
+  test('multiplayer hub on desktop HD', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: 'Multijoueur' })
+    ).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of multiplayer hub on desktop HD
+    await expect(page).toHaveScreenshot('desktop-hd-multiplayer-hub.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game reveal state on desktop HD', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click reveal button to skip to reveal state
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    await revealButton.click()
+
+    // Wait for reveal state - "Chanson suivante" button appears
+    const nextButton = page.getByRole('button', { name: 'Chanson suivante' })
+    await expect(nextButton).toBeVisible({ timeout: 5000 })
+
+    // Wait for UI to settle (cover unblur animation, etc.)
+    await page.waitForTimeout(500)
+
+    // Take screenshot of reveal state on desktop HD
+    await expect(page).toHaveScreenshot('desktop-hd-game-reveal.png', {
+      fullPage: true,
+    })
+  })
+
+  test('advanced settings expanded on desktop HD', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Click on advanced settings to expand
+    await page.click('[data-testid="advanced-settings"]')
+
+    // Wait for animation to complete
+    await page.waitForTimeout(400)
+
+    // Verify advanced settings content is visible
+    await expect(page.locator('text=Temps pour répondre')).toBeVisible()
+    await expect(page.locator('text=Mode sans timer')).toBeVisible()
+
+    // Take screenshot with advanced settings expanded
+    await expect(page).toHaveScreenshot('desktop-hd-advanced-settings.png', {
+      fullPage: true,
+    })
+  })
+
+  test('verifies content is centered and readable on desktop HD', async ({
+    page,
+  }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Verify no horizontal scrolling
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      )
+    })
+    expect(hasHorizontalScroll).toBe(false)
+
+    // Verify buttons are appropriately sized for desktop
+    const soloButton = page.locator('[data-testid="solo-button"]')
+    const soloBox = await soloButton.boundingBox()
+    // Buttons should have reasonable minimum size for clickability
+    expect(soloBox!.width).toBeGreaterThanOrEqual(100)
+    expect(soloBox!.height).toBeGreaterThanOrEqual(44)
+
+    // Verify content is centered (button should not be at the edges)
+    const viewportWidth = 1280
+    const buttonCenterX = soloBox!.x + soloBox!.width / 2
+    const viewportCenterX = viewportWidth / 2
+    // Button center should be within 300px of viewport center (accommodating layout variations)
+    expect(Math.abs(buttonCenterX - viewportCenterX)).toBeLessThan(300)
+  })
+})
+
+test.describe('Desktop - Full HD (1920x1080)', () => {
+  test.use({ viewport: { width: 1920, height: 1080 } })
+
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('play selection page on desktop Full HD', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of play mode selection page on desktop Full HD
+    await expect(page).toHaveScreenshot('desktop-fullhd-play.png', {
+      fullPage: true,
+    })
+  })
+
+  test('solo config page on desktop Full HD', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of solo config page on desktop Full HD
+    await expect(page).toHaveScreenshot('desktop-fullhd-solo-config.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game screen on desktop Full HD - centered content', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Wait for all UI elements to settle
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of game screen on desktop Full HD
+    await expect(page).toHaveScreenshot('desktop-fullhd-game.png', {
+      fullPage: true,
+    })
+  })
+
+  test('multiplayer hub on desktop Full HD', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: 'Multijoueur' })
+    ).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of multiplayer hub on desktop Full HD
+    await expect(page).toHaveScreenshot('desktop-fullhd-multiplayer-hub.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game reveal state on desktop Full HD', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click reveal button to skip to reveal state
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    await revealButton.click()
+
+    // Wait for reveal state - "Chanson suivante" button appears
+    const nextButton = page.getByRole('button', { name: 'Chanson suivante' })
+    await expect(nextButton).toBeVisible({ timeout: 5000 })
+
+    // Wait for UI to settle (cover unblur animation, etc.)
+    await page.waitForTimeout(500)
+
+    // Take screenshot of reveal state on desktop Full HD
+    await expect(page).toHaveScreenshot('desktop-fullhd-game-reveal.png', {
+      fullPage: true,
+    })
+  })
+
+  test('advanced settings expanded on desktop Full HD', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Click on advanced settings to expand
+    await page.click('[data-testid="advanced-settings"]')
+
+    // Wait for animation to complete
+    await page.waitForTimeout(400)
+
+    // Verify advanced settings content is visible
+    await expect(page.locator('text=Temps pour répondre')).toBeVisible()
+    await expect(page.locator('text=Mode sans timer')).toBeVisible()
+
+    // Take screenshot with advanced settings expanded
+    await expect(page).toHaveScreenshot(
+      'desktop-fullhd-advanced-settings.png',
+      {
+        fullPage: true,
+      }
+    )
+  })
+
+  test('verifies content is centered and readable on desktop Full HD', async ({
+    page,
+  }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Verify no horizontal scrolling
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      )
+    })
+    expect(hasHorizontalScroll).toBe(false)
+
+    // Verify buttons are appropriately sized for desktop
+    const soloButton = page.locator('[data-testid="solo-button"]')
+    const soloBox = await soloButton.boundingBox()
+    expect(soloBox!.width).toBeGreaterThanOrEqual(200)
+    expect(soloBox!.height).toBeGreaterThanOrEqual(60)
+
+    // Verify content is centered (button should not be at the edges)
+    const viewportWidth = 1920
+    const buttonCenterX = soloBox!.x + soloBox!.width / 2
+    const viewportCenterX = viewportWidth / 2
+    // Button center should be within 300px of viewport center (larger tolerance for Full HD)
+    expect(Math.abs(buttonCenterX - viewportCenterX)).toBeLessThan(300)
+  })
+
+  test('homepage on desktop Full HD', async ({ page }) => {
+    await page.goto('/')
+
+    // Wait for the page to be fully loaded
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of homepage on desktop Full HD
+    await expect(page).toHaveScreenshot('desktop-fullhd-homepage.png', {
+      fullPage: true,
+    })
+  })
+})
+
+test.describe('Desktop - Content Readability', () => {
+  test.use({ viewport: { width: 1280, height: 720 } })
+
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('text is readable and not stretched on desktop', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Verify page title is present and visible
+    const heading = page.getByRole('heading', { level: 1 })
+    await expect(heading).toBeVisible()
+
+    // Verify content is centered - check that the main container is not flush against edges
+    // The solo button should have proper margins from the viewport edges
+    const soloButton = page.locator('[data-testid="solo-button"]')
+    const buttonBox = await soloButton.boundingBox()
+    if (buttonBox) {
+      // Button should have some margin from left edge
+      expect(buttonBox.x).toBeGreaterThan(20)
+      // Button should not extend to the very right edge
+      expect(buttonBox.x + buttonBox.width).toBeLessThan(1260)
+    }
+  })
+
+  test('game screen content is properly constrained on desktop', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Verify buzzer is appropriately sized for desktop (not too small, not too large)
+    const buzzerBox = await buzzerButton.boundingBox()
+    // Buzzer should be at least minimum touch target
+    expect(buzzerBox!.width).toBeGreaterThanOrEqual(100)
+    expect(buzzerBox!.height).toBeGreaterThanOrEqual(100)
+    // Buzzer shouldn't be excessively large on desktop
+    expect(buzzerBox!.width).toBeLessThanOrEqual(400)
+    expect(buzzerBox!.height).toBeLessThanOrEqual(400)
+  })
+
+  test('multiplayer hub layout is optimal on desktop', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: 'Multijoueur' })
+    ).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Verify no horizontal scrolling
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      )
+    })
+    expect(hasHorizontalScroll).toBe(false)
+
+    // Verify form inputs are not too wide (readability)
+    const roomCodeInput = page.locator('input[placeholder*="code"]').first()
+    if ((await roomCodeInput.count()) > 0) {
+      const inputBox = await roomCodeInput.boundingBox()
+      if (inputBox) {
+        // Input should not span the entire viewport width
+        expect(inputBox.width).toBeLessThan(800)
+      }
+    }
   })
 })
