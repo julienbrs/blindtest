@@ -1018,3 +1018,10 @@ Commit: b2856dc
 Notes: Configured Playwright for visual regression testing with screenshot comparison capabilities. Added snapshotDir (./e2e/__screenshots__), snapshotPathTemplate for organized screenshot storage, and expect.toHaveScreenshot configuration with tolerance settings (maxDiffPixels: 100, threshold: 0.2, animations: disabled). Created e2e/__screenshots__/ directory with .gitkeep. Updated .gitignore to ignore screenshots (except .gitkeep) and playwright-report artifacts. Created e2e/visual-regression.spec.ts with baseline setup tests for homepage and play mode selection page. Tests use reducedMotion: 'reduce' for consistent screenshots and wait for networkidle state.
 Files: playwright.config.ts, e2e/visual-regression.spec.ts, e2e/__screenshots__/.gitkeep, .gitignore
 
+
+=== Issue 16.2: Add visual tests for homepage and play mode selection ===
+Timestamp: 2026-01-22T17:52:00Z
+Status: COMPLETED
+Commit: 837cbe8
+Notes: Added comprehensive visual regression tests for homepage and play mode selection page. Tests include: play mode selection page screenshot (play-selection.png), solo button hover state (solo-hover.png), multiplayer button hover state (multiplayer-hover.png), gradient styling verification, and element positioning tests. Added data-testid attributes (solo-button, multiplayer-button) to ModeCard component for reliable test selectors. Updated .gitignore to track baseline screenshots in e2e/__screenshots__/ for visual regression. Generated baseline screenshots for chromium browser. All 6 visual tests pass.
+Files: e2e/visual-regression.spec.ts, src/app/play/page.tsx, e2e/__screenshots__/visual-regression.spec.ts/chromium/*.png, .gitignore
