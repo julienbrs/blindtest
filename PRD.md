@@ -206,6 +206,24 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 14.5 Ajouter un healthcheck endpoint
 - [x] 14.6 Créer un Dockerfile
 
+---
+
+### Epic 15: Multiplayer Testing (docs/epics/15-multiplayer-testing.md)
+
+**Testing Workflow:**
+Ralph doit utiliser deux approches complémentaires pour tester et corriger:
+
+1. **Tests Playwright automatisés** (`npx playwright test`) - détecte les régressions
+2. **Browser automation MCP** (claude-in-chrome) - tests visuels et debug interactif
+
+**Important:** Toujours tester en LOCAL (http://localhost:3000) pour pouvoir corriger le code et voir les changements immédiatement. Le serveur de dev se lance automatiquement avec Playwright.
+
+- [x] 15.1 Add E2E tests for multiplayer lobby flow
+- [ ] 15.2 Add E2E tests for multiplayer game flow
+- [ ] 15.3 Add E2E tests for audio synchronization
+- [ ] 15.4 Add E2E tests for player reconnection
+- [ ] 15.5 Test with MCP browser tools on localhost
+
 ## Completion
 
 When all tasks are checked, output: `<promise>COMPLETE</promise>`
