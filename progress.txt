@@ -1071,3 +1071,10 @@ Status: COMPLETED
 Commit: 2f0de79
 Notes: Added comprehensive visual regression tests for desktop layouts. Tests cover Desktop HD (1280x720) and Desktop Full HD (1920x1080) viewports. Added 18 new tests including: play selection page on both resolutions, solo config page, game screen with centered content, multiplayer hub, game reveal state, advanced settings expanded, homepage on Full HD, content centering and readability verification, game screen content constraint tests, and multiplayer hub layout optimization tests. All tests verify that content is properly centered, readable on wide screens, and buttons are appropriately sized for desktop interaction. Generated 13 baseline screenshots for chromium project. Updated file header comment to reflect desktop test addition with exact viewport dimensions.
 Files: e2e/visual-responsive.spec.ts, e2e/__screenshots__/visual-responsive.spec.ts/chromium/desktop-*.png (13 screenshots)
+
+=== Issue 16.10: Test game configuration UX flow ===
+Timestamp: 2026-01-22T18:40:00Z
+Status: COMPLETED
+Commit: 953161c
+Notes: Added comprehensive UX flow tests for game configuration on the /solo page. Created e2e/ux-config-flow.spec.ts with 21 tests organized into 6 test groups: (1) Config UX - Slider Interaction: tests for smooth drag interaction, click position updates, step increments of 5 seconds, and value persistence across page reloads; (2) Config UX - Guess Mode Selection: tests for radio button responsiveness, selection persistence, and visual feedback; (3) Config UX - Advanced Settings: tests for panel open/close animations, timer duration buttons, no-timer toggle, and start position radio buttons; (4) Config UX - Form Validation: tests for successful form submission, validation error handling, and loading state; (5) Config UX - Navigation Flow: tests for back button navigation, complete configuration flow without friction, and keyboard navigation through form elements; (6) Config UX - Playlist Selection: tests for playlist panel open/close and filter options visibility. All tests verify smooth UX interactions without friction.
+Files: e2e/ux-config-flow.spec.ts
