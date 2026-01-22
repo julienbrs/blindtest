@@ -599,3 +599,431 @@ test.describe('Game Screen Visual', () => {
     })
   })
 })
+
+test.describe('Multiplayer Visual', () => {
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('multiplayer hub page renders correctly', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: 'Multijoueur' })
+    ).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+
+    // Additional wait for any remaining transitions
+    await page.waitForTimeout(500)
+
+    // Verify create and join forms are visible
+    await expect(
+      page.getByRole('heading', { name: 'Créer une partie' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Rejoindre une partie' })
+    ).toBeVisible()
+
+    // Verify input fields are present
+    await expect(page.locator('#create-nickname')).toBeVisible()
+    await expect(page.locator('#join-code')).toBeVisible()
+    await expect(page.locator('#join-nickname')).toBeVisible()
+
+    // Take screenshot of multiplayer hub page
+    await expect(page).toHaveScreenshot('multiplayer-hub.png', {
+      fullPage: true,
+    })
+  })
+
+  test('create room form with nickname filled', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('#create-nickname')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Fill in a nickname
+    await page.locator('#create-nickname').fill('TestPlayer')
+
+    // Wait for UI update
+    await page.waitForTimeout(200)
+
+    // Take screenshot with nickname filled
+    await expect(page).toHaveScreenshot('create-room-form-filled.png', {
+      fullPage: true,
+    })
+  })
+
+  test('join room form with code and nickname filled', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('#join-code')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Fill in room code and nickname
+    await page.locator('#join-code').fill('ABC123')
+    await page.locator('#join-nickname').fill('JoinPlayer')
+
+    // Wait for UI update
+    await page.waitForTimeout(200)
+
+    // Take screenshot with fields filled
+    await expect(page).toHaveScreenshot('join-room-form-filled.png', {
+      fullPage: true,
+    })
+  })
+
+  test('lobby with players renders correctly', async ({ browser }) => {
+    // Create two browser contexts for host and player
+    const hostContext = await browser.newContext()
+    const playerContext = await browser.newContext()
+
+    const hostPage = await hostContext.newPage()
+    const playerPage = await playerContext.newPage()
+
+    try {
+      // Disable animations for consistent screenshots
+      await hostPage.emulateMedia({ reducedMotion: 'reduce' })
+      await playerPage.emulateMedia({ reducedMotion: 'reduce' })
+
+      // Host creates room
+      await hostPage.goto('/play')
+      await expect(
+        hostPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await hostPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await hostPage.locator('#create-nickname').fill('HostPlayer')
+      await hostPage.getByRole('button', { name: 'Créer une partie' }).click()
+
+      // Wait for lobby and get room code
+      await expect(hostPage.getByText('Code de la room')).toBeVisible({
+        timeout: 10000,
+      })
+
+      // Get room code from URL
+      const url = hostPage.url()
+      const match = url.match(/\/multiplayer\/([A-Z0-9]+)/)
+      if (!match) throw new Error('Could not find room code')
+      const roomCode = match[1]
+
+      // Player joins room
+      await playerPage.goto('/play')
+      await expect(
+        playerPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await playerPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await playerPage.locator('#join-code').fill(roomCode)
+      await playerPage.locator('#join-nickname').fill('GuestPlayer')
+      await playerPage.getByRole('button', { name: 'Rejoindre' }).click()
+
+      // Wait for both players to be visible in lobby
+      await expect(hostPage.getByText('GuestPlayer')).toBeVisible({
+        timeout: 10000,
+      })
+      await expect(hostPage.getByText('Joueurs (2/10)')).toBeVisible()
+
+      // Wait for page to settle
+      await hostPage.waitForLoadState('networkidle')
+      await hostPage.waitForTimeout(500)
+
+      // Take screenshot of lobby with players (host view)
+      await expect(hostPage).toHaveScreenshot('lobby-players.png', {
+        fullPage: true,
+      })
+    } finally {
+      await hostContext.close()
+      await playerContext.close()
+    }
+  })
+
+  test('room code display is prominent and copyable', async ({ browser }) => {
+    const hostContext = await browser.newContext()
+    const hostPage = await hostContext.newPage()
+
+    try {
+      // Disable animations for consistent screenshots
+      await hostPage.emulateMedia({ reducedMotion: 'reduce' })
+
+      // Host creates room
+      await hostPage.goto('/play')
+      await expect(
+        hostPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await hostPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await hostPage.locator('#create-nickname').fill('CodeHost')
+      await hostPage.getByRole('button', { name: 'Créer une partie' }).click()
+
+      // Wait for lobby with room code
+      await expect(hostPage.getByText('Code de la room')).toBeVisible({
+        timeout: 10000,
+      })
+
+      // Wait for page to settle
+      await hostPage.waitForLoadState('networkidle')
+      await hostPage.waitForTimeout(500)
+
+      // Verify room code is visible with proper styling
+      // Room code should be in large monospace font
+      const roomCodeSection = hostPage
+        .locator('text=Code de la room')
+        .locator('..')
+      await expect(roomCodeSection).toBeVisible()
+
+      // Verify copy button is present
+      await expect(
+        hostPage.locator('button[title="Copier le code"]')
+      ).toBeVisible()
+
+      // Take screenshot focusing on room code area
+      await expect(hostPage).toHaveScreenshot('room-code.png', {
+        fullPage: true,
+      })
+
+      // Test copy functionality - click copy button
+      await hostPage.locator('button[title="Copier le code"]').click()
+
+      // Wait for "Code copié" message
+      await expect(hostPage.getByText('Code copié !')).toBeVisible({
+        timeout: 3000,
+      })
+
+      // Take screenshot showing copied state
+      await expect(hostPage).toHaveScreenshot('room-code-copied.png', {
+        fullPage: true,
+      })
+    } finally {
+      await hostContext.close()
+    }
+  })
+
+  test('multiplayer game recap with podium', async ({ browser }) => {
+    const hostContext = await browser.newContext()
+    const playerContext = await browser.newContext()
+
+    const hostPage = await hostContext.newPage()
+    const playerPage = await playerContext.newPage()
+
+    try {
+      // Disable animations for consistent screenshots
+      await hostPage.emulateMedia({ reducedMotion: 'reduce' })
+      await playerPage.emulateMedia({ reducedMotion: 'reduce' })
+
+      // Host creates room
+      await hostPage.goto('/play')
+      await expect(
+        hostPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await hostPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await hostPage.locator('#create-nickname').fill('RecapHost')
+      await hostPage.getByRole('button', { name: 'Créer une partie' }).click()
+
+      // Wait for lobby and get room code
+      await expect(hostPage.getByText('Code de la room')).toBeVisible({
+        timeout: 10000,
+      })
+
+      const url = hostPage.url()
+      const match = url.match(/\/multiplayer\/([A-Z0-9]+)/)
+      if (!match) throw new Error('Could not find room code')
+      const roomCode = match[1]
+
+      // Player joins room
+      await playerPage.goto('/play')
+      await expect(
+        playerPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await playerPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await playerPage.locator('#join-code').fill(roomCode)
+      await playerPage.locator('#join-nickname').fill('RecapPlayer')
+      await playerPage.getByRole('button', { name: 'Rejoindre' }).click()
+
+      // Wait for both players to be visible
+      await expect(hostPage.getByText('RecapPlayer')).toBeVisible({
+        timeout: 10000,
+      })
+
+      // Start game
+      await hostPage
+        .getByRole('button', { name: /démarrer|commencer/i })
+        .click()
+      await expect(hostPage.getByText(/controles hote/i)).toBeVisible({
+        timeout: 10000,
+      })
+
+      // Load a song first
+      await hostPage.getByRole('button', { name: /chanson suivante/i }).click()
+      await expect(hostPage.getByText(/en cours/i)).toBeVisible({
+        timeout: 15000,
+      })
+
+      // End game
+      const endButton = hostPage.getByRole('button', { name: /terminer/i })
+      await expect(endButton).toBeVisible({ timeout: 5000 })
+      await endButton.click()
+
+      // Wait for recap to show
+      await expect(
+        hostPage.getByRole('heading', { name: /Partie terminée/i })
+      ).toBeVisible({ timeout: 10000 })
+
+      // Wait for animations to complete
+      await hostPage.waitForTimeout(1500)
+
+      // Verify recap elements are visible
+      await expect(hostPage.getByText('Classement final')).toBeVisible()
+
+      // Take screenshot of multiplayer recap (host view)
+      await expect(hostPage).toHaveScreenshot('multiplayer-recap.png', {
+        fullPage: true,
+      })
+    } finally {
+      await hostContext.close()
+      await playerContext.close()
+    }
+  })
+
+  test('lobby configuration panel expanded', async ({ browser }) => {
+    const hostContext = await browser.newContext()
+    const hostPage = await hostContext.newPage()
+
+    try {
+      // Disable animations for consistent screenshots
+      await hostPage.emulateMedia({ reducedMotion: 'reduce' })
+
+      // Host creates room
+      await hostPage.goto('/play')
+      await expect(
+        hostPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await hostPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await hostPage.locator('#create-nickname').fill('ConfigHost')
+      await hostPage.getByRole('button', { name: 'Créer une partie' }).click()
+
+      // Wait for lobby
+      await expect(hostPage.getByText('Code de la room')).toBeVisible({
+        timeout: 10000,
+      })
+
+      // Expand configuration panel
+      await hostPage.getByText('Configuration').click()
+
+      // Wait for panel to expand
+      await hostPage.waitForTimeout(400)
+
+      // Verify configuration options are visible
+      await expect(hostPage.getByText('Que deviner ?')).toBeVisible()
+      await expect(hostPage.getByText('Durée des extraits')).toBeVisible()
+      await expect(hostPage.getByText('Temps pour répondre')).toBeVisible()
+
+      // Wait for page to settle
+      await hostPage.waitForLoadState('networkidle')
+      await hostPage.waitForTimeout(300)
+
+      // Take screenshot with configuration expanded
+      await expect(hostPage).toHaveScreenshot('lobby-config-expanded.png', {
+        fullPage: true,
+      })
+    } finally {
+      await hostContext.close()
+    }
+  })
+
+  test('player view of lobby (non-host)', async ({ browser }) => {
+    const hostContext = await browser.newContext()
+    const playerContext = await browser.newContext()
+
+    const hostPage = await hostContext.newPage()
+    const playerPage = await playerContext.newPage()
+
+    try {
+      // Disable animations for consistent screenshots
+      await hostPage.emulateMedia({ reducedMotion: 'reduce' })
+      await playerPage.emulateMedia({ reducedMotion: 'reduce' })
+
+      // Host creates room
+      await hostPage.goto('/play')
+      await expect(
+        hostPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await hostPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await hostPage.locator('#create-nickname').fill('LobbyHost')
+      await hostPage.getByRole('button', { name: 'Créer une partie' }).click()
+
+      // Wait for lobby and get room code
+      await expect(hostPage.getByText('Code de la room')).toBeVisible({
+        timeout: 10000,
+      })
+
+      const url = hostPage.url()
+      const match = url.match(/\/multiplayer\/([A-Z0-9]+)/)
+      if (!match) throw new Error('Could not find room code')
+      const roomCode = match[1]
+
+      // Player joins room
+      await playerPage.goto('/play')
+      await expect(
+        playerPage.getByRole('button', { name: 'Multijoueur' })
+      ).toBeVisible({
+        timeout: 10000,
+      })
+      await playerPage.getByRole('button', { name: 'Multijoueur' }).click()
+      await playerPage.locator('#join-code').fill(roomCode)
+      await playerPage.locator('#join-nickname').fill('LobbyGuest')
+      await playerPage.getByRole('button', { name: 'Rejoindre' }).click()
+
+      // Wait for lobby
+      await expect(playerPage.getByText('Code de la room')).toBeVisible({
+        timeout: 10000,
+      })
+
+      // Wait for both players to appear
+      await expect(playerPage.getByText('LobbyHost')).toBeVisible({
+        timeout: 10000,
+      })
+
+      // Wait for page to settle
+      await playerPage.waitForLoadState('networkidle')
+      await playerPage.waitForTimeout(500)
+
+      // Verify player view has "waiting for host" message
+      await expect(
+        playerPage.getByText('En attente du lancement...')
+      ).toBeVisible()
+
+      // Take screenshot of player view (non-host)
+      await expect(playerPage).toHaveScreenshot('lobby-player-view.png', {
+        fullPage: true,
+      })
+    } finally {
+      await hostContext.close()
+      await playerContext.close()
+    }
+  })
+})
