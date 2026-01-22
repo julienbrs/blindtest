@@ -1078,3 +1078,10 @@ Status: COMPLETED
 Commit: 953161c
 Notes: Added comprehensive UX flow tests for game configuration on the /solo page. Created e2e/ux-config-flow.spec.ts with 21 tests organized into 6 test groups: (1) Config UX - Slider Interaction: tests for smooth drag interaction, click position updates, step increments of 5 seconds, and value persistence across page reloads; (2) Config UX - Guess Mode Selection: tests for radio button responsiveness, selection persistence, and visual feedback; (3) Config UX - Advanced Settings: tests for panel open/close animations, timer duration buttons, no-timer toggle, and start position radio buttons; (4) Config UX - Form Validation: tests for successful form submission, validation error handling, and loading state; (5) Config UX - Navigation Flow: tests for back button navigation, complete configuration flow without friction, and keyboard navigation through form elements; (6) Config UX - Playlist Selection: tests for playlist panel open/close and filter options visibility. All tests verify smooth UX interactions without friction.
 Files: e2e/ux-config-flow.spec.ts
+
+=== Issue 16.11: Test buzzer interaction UX ===
+Timestamp: 2026-01-22T19:42:00Z
+Status: COMPLETED
+Commit: 30aaf5f
+Notes: Created comprehensive E2E tests for buzzer UX covering: click feedback timing, visual disabled state clarity, haptic feedback (vibration API), mobile touch interaction, keyboard accessibility (Enter/Space), and visual state transitions (glow effect, gradient styling).
+Files: e2e/ux-buzzer.spec.ts

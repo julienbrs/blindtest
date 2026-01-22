@@ -246,7 +246,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 **UX Flow Testing**
 
 - [x] 16.10 Test game configuration UX flow
-- [ ] 16.11 Test buzzer interaction UX
+- [x] 16.11 Test buzzer interaction UX
 - [ ] 16.12 Test multiplayer room join UX
 - [ ] 16.13 Test error recovery UX flows
 
