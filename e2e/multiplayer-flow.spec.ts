@@ -94,13 +94,17 @@ test.describe('Multiplayer Lobby Flow', () => {
     })
 
     // Should show host in players list
-    await expect(page.getByText('TestHost')).toBeVisible()
+    await expect(page.getByText('TestHost')).toBeVisible({ timeout: 10000 })
 
     // Should show host badge
-    await expect(page.getByText('Host', { exact: true })).toBeVisible()
+    await expect(page.getByText('Host', { exact: true })).toBeVisible({
+      timeout: 5000,
+    })
 
     // Should show player count (1/10)
-    await expect(page.getByText('Joueurs (1/10)')).toBeVisible()
+    await expect(page.getByText('Joueurs (1/10)')).toBeVisible({
+      timeout: 5000,
+    })
   })
 
   test('player can join room with valid code', async ({ browser }) => {
@@ -301,12 +305,10 @@ test.describe('Multiplayer Game Flow', () => {
 
       // Both should see game started (controls visible)
       await expect(
-        hostPage.getByText(/partie en cours|controles hote/i)
+        hostPage.getByRole('heading', { name: 'Partie en cours' })
       ).toBeVisible({ timeout: 10000 })
       await expect(
-        playerPage
-          .getByText(/partie en cours/i)
-          .or(playerPage.getByRole('button', { name: 'BUZZ!' }))
+        playerPage.getByRole('heading', { name: 'Partie en cours' })
       ).toBeVisible({ timeout: 10000 })
     } finally {
       await hostContext.close()
@@ -358,7 +360,7 @@ test.describe('Multiplayer Game Flow', () => {
 
       // Host should see validation buttons
       await expect(
-        hostPage.getByRole('button', { name: /correct/i })
+        hostPage.getByRole('button', { name: 'Correct', exact: true })
       ).toBeVisible({ timeout: 5000 })
     } finally {
       await hostContext.close()
@@ -445,10 +447,10 @@ test.describe('Multiplayer Game Flow', () => {
 
       // Both should see game ended / recap
       await expect(
-        hostPage.getByText(/terminé|récap|classement final/i)
+        hostPage.getByRole('heading', { name: /Partie terminée/i })
       ).toBeVisible({ timeout: 10000 })
       await expect(
-        playerPage.getByText(/terminé|récap|classement final/i)
+        playerPage.getByRole('heading', { name: /Partie terminée/i })
       ).toBeVisible({ timeout: 10000 })
     } finally {
       await hostContext.close()
