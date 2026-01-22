@@ -1037,3 +1037,9 @@ Status: COMPLETED
 Commit: 82de6cd
 Notes: Added comprehensive visual regression tests for the game screen in all possible states. Tests cover: playing state with buzzer visible (game-playing.png), buzzed state with validation buttons (game-buzzed.png), timer running state with countdown (game-timer.png), reveal state with song info visible (game-reveal.png), correct answer celebration with green flash (game-correct.png), incorrect answer shake with red flash (game-incorrect.png), game header with score and controls (game-header.png), and quit confirmation modal (game-quit-modal.png). Tests navigate from /solo config page, start a game, and interact with game controls to reach each state. All tests use reducedMotion: 'reduce' for consistent screenshots and wait for appropriate UI elements before capturing.
 Files: e2e/visual-regression.spec.ts
+=== Issue 16.5: Add visual tests for multiplayer lobby and game ===
+Timestamp: 2026-01-22T18:16:00Z
+Status: COMPLETED
+Commit: 8b0b599
+Notes: Added comprehensive visual regression tests for multiplayer lobby and game screens. Tests cover: multiplayer hub page rendering (multiplayer-hub.png) with create/join forms, create room form with nickname filled (create-room-form-filled.png), join room form with code and nickname filled (join-room-form-filled.png), lobby with multiple players using multi-browser contexts (lobby-players.png), room code display with copy functionality (room-code.png, room-code-copied.png), multiplayer game recap with podium and scoreboard (multiplayer-recap.png), lobby configuration panel expanded (lobby-config-expanded.png), and player view of lobby as non-host (lobby-player-view.png). Tests use reducedMotion: 'reduce' for consistent screenshots and proper browser context management for multi-player scenarios.
+Files: e2e/visual-regression.spec.ts
