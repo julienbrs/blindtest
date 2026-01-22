@@ -239,7 +239,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 **Responsive Visual Testing**
 
 - [x] 16.6 Add visual tests for mobile portrait layouts
-- [ ] 16.7 Add visual tests for mobile landscape layouts
+- [x] 16.7 Add visual tests for mobile landscape layouts
 - [ ] 16.8 Add visual tests for tablet layouts
 - [ ] 16.9 Add visual tests for desktop layouts
 

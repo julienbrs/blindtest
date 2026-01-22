@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  *
  * Tests visual layouts across different device sizes:
  * - Mobile Portrait: iPhone SE (375x667), iPhone 12 (390x844)
- * - Mobile Landscape: (to be added in 16.7)
+ * - Mobile Landscape: iPhone SE (667x375), iPhone 12 (844x390)
  * - Tablet: (to be added in 16.8)
  * - Desktop: (to be added in 16.9)
  *
@@ -362,6 +362,399 @@ test.describe('Mobile Portrait - iPhone 12 (390x844)', () => {
     await expect(page).toHaveScreenshot('mobile-12-advanced-settings.png', {
       fullPage: true,
     })
+  })
+})
+
+test.describe('Mobile Landscape - iPhone SE (667x375)', () => {
+  test.use({ viewport: { width: 667, height: 375 } })
+
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('play selection page in landscape', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of play mode selection page in landscape
+    await expect(page).toHaveScreenshot('landscape-se-play.png', {
+      fullPage: true,
+    })
+  })
+
+  test('solo config page in landscape', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of solo config page in landscape
+    await expect(page).toHaveScreenshot('landscape-se-solo-config.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game screen in landscape - all controls visible', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Wait for all UI elements to settle
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of game screen in landscape
+    await expect(page).toHaveScreenshot('landscape-se-game.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game controls visible and accessible in landscape', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Verify buzzer button is visible and properly sized
+    const buzzerBox = await buzzerButton.boundingBox()
+    expect(buzzerBox!.width).toBeGreaterThanOrEqual(44)
+    expect(buzzerBox!.height).toBeGreaterThanOrEqual(44)
+
+    // Verify reveal button is visible and accessible
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    const revealBox = await revealButton.boundingBox()
+    expect(revealBox!.width).toBeGreaterThanOrEqual(44)
+    expect(revealBox!.height).toBeGreaterThanOrEqual(44)
+
+    // Verify quit button is visible
+    const quitButton = page.getByRole('button', { name: 'Quitter' })
+    await expect(quitButton).toBeVisible()
+
+    // Take screenshot showing all controls in landscape
+    await expect(page).toHaveScreenshot('landscape-se-controls.png', {
+      fullPage: true,
+    })
+  })
+
+  test('no horizontal scrolling in landscape', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Get the scroll width and client width
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      )
+    })
+
+    // Verify no horizontal scrolling
+    expect(hasHorizontalScroll).toBe(false)
+  })
+
+  test('multiplayer hub in landscape', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: 'Multijoueur' })
+    ).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of multiplayer hub in landscape
+    await expect(page).toHaveScreenshot('landscape-se-multiplayer-hub.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game reveal state in landscape', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click reveal button to skip to reveal state
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    await revealButton.click()
+
+    // Wait for reveal state - "Chanson suivante" button appears
+    const nextButton = page.getByRole('button', { name: 'Chanson suivante' })
+    await expect(nextButton).toBeVisible({ timeout: 5000 })
+
+    // Wait for UI to settle (cover unblur animation, etc.)
+    await page.waitForTimeout(500)
+
+    // Take screenshot of reveal state in landscape
+    await expect(page).toHaveScreenshot('landscape-se-game-reveal.png', {
+      fullPage: true,
+    })
+  })
+})
+
+test.describe('Mobile Landscape - iPhone 12 (844x390)', () => {
+  test.use({ viewport: { width: 844, height: 390 } })
+
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('play selection page on iPhone 12 landscape', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of play mode selection page on iPhone 12 landscape
+    await expect(page).toHaveScreenshot('landscape-12-play.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game screen on iPhone 12 landscape - all controls visible', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Wait for all UI elements to settle
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of game screen on iPhone 12 landscape
+    await expect(page).toHaveScreenshot('landscape-12-game.png', {
+      fullPage: true,
+    })
+  })
+
+  test('no horizontal scrolling on iPhone 12 landscape', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Get the scroll width and client width
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      )
+    })
+
+    // Verify no horizontal scrolling
+    expect(hasHorizontalScroll).toBe(false)
+  })
+
+  test('game reveal state on iPhone 12 landscape', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click reveal button to skip to reveal state
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    await revealButton.click()
+
+    // Wait for reveal state - "Chanson suivante" button appears
+    const nextButton = page.getByRole('button', { name: 'Chanson suivante' })
+    await expect(nextButton).toBeVisible({ timeout: 5000 })
+
+    // Wait for UI to settle (cover unblur animation, etc.)
+    await page.waitForTimeout(500)
+
+    // Take screenshot of reveal state on iPhone 12 landscape
+    await expect(page).toHaveScreenshot('landscape-12-game-reveal.png', {
+      fullPage: true,
+    })
+  })
+})
+
+test.describe('Mobile Landscape - Touch Targets', () => {
+  test.use({ viewport: { width: 667, height: 375 } })
+
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('buzzer button meets minimum touch target in landscape', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Get buzzer button bounding box
+    const box = await buzzerButton.boundingBox()
+
+    // Verify buzzer is at least 44px (WCAG minimum touch target size)
+    expect(box!.width).toBeGreaterThanOrEqual(44)
+    expect(box!.height).toBeGreaterThanOrEqual(44)
+
+    // Buzzer should still be reasonably large in landscape
+    expect(box!.width).toBeGreaterThanOrEqual(100)
+    expect(box!.height).toBeGreaterThanOrEqual(100)
+  })
+
+  test('control buttons meet minimum touch target in landscape', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Check reveal button touch target
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    const revealBox = await revealButton.boundingBox()
+    expect(revealBox!.width).toBeGreaterThanOrEqual(44)
+    expect(revealBox!.height).toBeGreaterThanOrEqual(44)
+
+    // Press buzzer and check validation buttons
+    await buzzerButton.click()
+
+    const correctButton = page.getByRole('button', { name: 'Correct' })
+    await expect(correctButton).toBeVisible({ timeout: 10000 })
+    const correctBox = await correctButton.boundingBox()
+    expect(correctBox!.width).toBeGreaterThanOrEqual(44)
+    expect(correctBox!.height).toBeGreaterThanOrEqual(44)
+
+    const incorrectButton = page.getByRole('button', { name: 'Incorrect' })
+    await expect(incorrectButton).toBeVisible()
+    const incorrectBox = await incorrectButton.boundingBox()
+    expect(incorrectBox!.width).toBeGreaterThanOrEqual(44)
+    expect(incorrectBox!.height).toBeGreaterThanOrEqual(44)
   })
 })
 

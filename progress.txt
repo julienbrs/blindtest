@@ -1050,3 +1050,10 @@ Status: COMPLETED
 Commit: 7ebca50
 Notes: Created comprehensive visual regression tests for mobile portrait layouts. Tests cover iPhone SE (375x667) and iPhone 12 (390x844) viewports. Includes screenshots for play page, solo config, game screen, buzzer, multiplayer hub, and reveal state. Added touch target verification tests to ensure WCAG compliance (44px minimum). All tests verify that buzzer button is large enough for comfortable mobile interaction.
 Files: e2e/visual-responsive.spec.ts
+
+=== Issue 16.7: Add visual tests for mobile landscape layouts ===
+Timestamp: 2026-01-22T19:25:00Z
+Status: COMPLETED
+Commit: (pending)
+Notes: Added comprehensive visual regression tests for mobile landscape layouts. Tests cover iPhone SE landscape (667x375) and iPhone 12 landscape (844x390) viewports. Added 13 new tests including: play selection page in landscape, solo config page in landscape, game screen with all controls visible, control buttons accessibility verification, no horizontal scrolling verification, multiplayer hub in landscape, game reveal state in landscape, and touch target tests for landscape mode. All tests verify proper layout adaptation without horizontal scroll and that controls remain visible and accessible in landscape orientation.
+Files: e2e/visual-responsive.spec.ts
