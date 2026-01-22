@@ -261,7 +261,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 
 - [x] 16.18 Test focus states and indicators
 - [x] 16.19 Test dark mode contrast and readability
-- [ ] 16.20 Test touch target sizes
+- [x] 16.20 Test touch target sizes
 
 **Performance Metrics**
 

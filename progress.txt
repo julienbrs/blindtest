@@ -1141,3 +1141,10 @@ Status: COMPLETED
 Commit: 7ab0004
 Notes: Created comprehensive Playwright E2E tests for dark mode contrast and readability (WCAG AA compliance). Created e2e/accessibility-dark-mode.spec.ts with 27 tests organized into 8 test groups: (1) Dark Mode - Play Selection Page: tests for text readable on dark background, title having sufficient contrast, buttons visible in dark mode, button text readable, and hover states visible; (2) Dark Mode - Solo Configuration Page: tests for solo config page screenshot, form labels readable, slider values visible, advanced settings readable, and start button visible; (3) Dark Mode - Game Screen: tests for game screen screenshot, score display readable, buzzer button visible, reveal button readable, validation buttons visible after buzz, song reveal readable, and quit modal readable; (4) Dark Mode - Multiplayer Hub: tests for multiplayer hub screenshot, form labels readable, input fields visible and usable, and buttons visible; (5) Dark Mode - Contrast Verification: tests for dark mode background being sufficiently dark, and text contrast meeting accessibility standards (luminosity > 0.5 for light text); (6) Dark Mode - Theme Toggle: tests for theme toggle from solo config, and dark mode persistence across navigation; (7) Dark Mode - Error States: test for error messages readable in dark mode. Helper function enableDarkMode() uses addInitScript to set localStorage blindtest_theme to 'dark' before page navigation.
 Files: e2e/accessibility-dark-mode.spec.ts
+
+=== Issue 16.20: Test touch target sizes ===
+Timestamp: 2026-01-22T20:55:00Z
+Status: COMPLETED
+Commit: 11ea5ce
+Notes: Created comprehensive E2E tests for touch target sizes. Tests verify all interactive elements meet the 44x44px minimum (WCAG 2.5.5 Target Size). Tests cover multiple viewports (iPhone SE 375px, iPhone 12 Pro 390px, iPad 768px) and all key pages (play selection, solo config, multiplayer hub, game screen). Buzzer button tested for larger size (>=100px). Includes audit tests for all buttons/inputs and spacing tests between elements.
+Files: e2e/accessibility-touch-targets.spec.ts
