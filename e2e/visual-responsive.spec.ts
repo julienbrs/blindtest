@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test'
  * Tests visual layouts across different device sizes:
  * - Mobile Portrait: iPhone SE (375x667), iPhone 12 (390x844)
  * - Mobile Landscape: iPhone SE (667x375), iPhone 12 (844x390)
- * - Tablet: (to be added in 16.8)
+ * - Tablet: iPad (768x1024), iPad Pro (1024x1366)
  * - Desktop: (to be added in 16.9)
  *
  * Run with --update-snapshots to generate/update baseline screenshots:
@@ -755,6 +755,445 @@ test.describe('Mobile Landscape - Touch Targets', () => {
     const incorrectBox = await incorrectButton.boundingBox()
     expect(incorrectBox!.width).toBeGreaterThanOrEqual(44)
     expect(incorrectBox!.height).toBeGreaterThanOrEqual(44)
+  })
+})
+
+test.describe('Tablet - iPad (768x1024)', () => {
+  test.use({ viewport: { width: 768, height: 1024 } })
+
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('play selection page on iPad', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of play mode selection page on iPad
+    await expect(page).toHaveScreenshot('tablet-ipad-play.png', {
+      fullPage: true,
+    })
+  })
+
+  test('solo config page on iPad', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of solo config page on iPad
+    await expect(page).toHaveScreenshot('tablet-ipad-solo-config.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game screen on iPad - optimal space usage', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Wait for all UI elements to settle
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of game screen on iPad
+    await expect(page).toHaveScreenshot('tablet-ipad-game.png', {
+      fullPage: true,
+    })
+  })
+
+  test('multiplayer hub on iPad', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: 'Multijoueur' })
+    ).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of multiplayer hub on iPad
+    await expect(page).toHaveScreenshot('tablet-ipad-multiplayer-hub.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game reveal state on iPad', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click reveal button to skip to reveal state
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    await revealButton.click()
+
+    // Wait for reveal state - "Chanson suivante" button appears
+    const nextButton = page.getByRole('button', { name: 'Chanson suivante' })
+    await expect(nextButton).toBeVisible({ timeout: 5000 })
+
+    // Wait for UI to settle (cover unblur animation, etc.)
+    await page.waitForTimeout(500)
+
+    // Take screenshot of reveal state on iPad
+    await expect(page).toHaveScreenshot('tablet-ipad-game-reveal.png', {
+      fullPage: true,
+    })
+  })
+
+  test('advanced settings expanded on iPad', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Click on advanced settings to expand
+    await page.click('[data-testid="advanced-settings"]')
+
+    // Wait for animation to complete
+    await page.waitForTimeout(400)
+
+    // Verify advanced settings content is visible
+    await expect(page.locator('text=Temps pour répondre')).toBeVisible()
+    await expect(page.locator('text=Mode sans timer')).toBeVisible()
+
+    // Take screenshot with advanced settings expanded
+    await expect(page).toHaveScreenshot('tablet-ipad-advanced-settings.png', {
+      fullPage: true,
+    })
+  })
+
+  test('verifies optimal space utilization on iPad', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Verify no horizontal scrolling
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      )
+    })
+    expect(hasHorizontalScroll).toBe(false)
+
+    // Verify buttons are appropriately sized for tablet
+    const soloButton = page.locator('[data-testid="solo-button"]')
+    const soloBox = await soloButton.boundingBox()
+    expect(soloBox!.width).toBeGreaterThanOrEqual(200) // Tablet buttons should be larger
+    expect(soloBox!.height).toBeGreaterThanOrEqual(60)
+  })
+})
+
+test.describe('Tablet - iPad Pro (1024x1366)', () => {
+  test.use({ viewport: { width: 1024, height: 1366 } })
+
+  test.beforeEach(async ({ page }) => {
+    // Disable animations for consistent screenshots
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('play selection page on iPad Pro', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+
+    // Wait for fonts and images to load
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of play mode selection page on iPad Pro
+    await expect(page).toHaveScreenshot('tablet-ipad-pro-play.png', {
+      fullPage: true,
+    })
+  })
+
+  test('solo config page on iPad Pro', async ({ page }) => {
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of solo config page on iPad Pro
+    await expect(page).toHaveScreenshot('tablet-ipad-pro-solo-config.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game screen on iPad Pro - optimal space usage', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Wait for all UI elements to settle
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of game screen on iPad Pro
+    await expect(page).toHaveScreenshot('tablet-ipad-pro-game.png', {
+      fullPage: true,
+    })
+  })
+
+  test('multiplayer hub on iPad Pro', async ({ page }) => {
+    await page.goto('/multiplayer')
+
+    // Wait for the page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: 'Multijoueur' })
+    ).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
+
+    // Take screenshot of multiplayer hub on iPad Pro
+    await expect(page).toHaveScreenshot('tablet-ipad-pro-multiplayer-hub.png', {
+      fullPage: true,
+    })
+  })
+
+  test('game reveal state on iPad Pro', async ({ page }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Click reveal button to skip to reveal state
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    await revealButton.click()
+
+    // Wait for reveal state - "Chanson suivante" button appears
+    const nextButton = page.getByRole('button', { name: 'Chanson suivante' })
+    await expect(nextButton).toBeVisible({ timeout: 5000 })
+
+    // Wait for UI to settle (cover unblur animation, etc.)
+    await page.waitForTimeout(500)
+
+    // Take screenshot of reveal state on iPad Pro
+    await expect(page).toHaveScreenshot('tablet-ipad-pro-game-reveal.png', {
+      fullPage: true,
+    })
+  })
+
+  test('verifies optimal space utilization on iPad Pro', async ({ page }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Verify no horizontal scrolling
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      )
+    })
+    expect(hasHorizontalScroll).toBe(false)
+
+    // Verify buttons are appropriately sized for tablet
+    const soloButton = page.locator('[data-testid="solo-button"]')
+    const soloBox = await soloButton.boundingBox()
+    expect(soloBox!.width).toBeGreaterThanOrEqual(200) // Tablet buttons should be larger
+    expect(soloBox!.height).toBeGreaterThanOrEqual(60)
+  })
+})
+
+test.describe('Tablet - Touch Targets', () => {
+  test.use({ viewport: { width: 768, height: 1024 } })
+
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  })
+
+  test('buzzer button meets minimum touch target on tablet', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Get buzzer button bounding box
+    const box = await buzzerButton.boundingBox()
+
+    // Verify buzzer is at least 44px (WCAG minimum touch target size)
+    expect(box!.width).toBeGreaterThanOrEqual(44)
+    expect(box!.height).toBeGreaterThanOrEqual(44)
+
+    // Buzzer should be even larger on tablet
+    expect(box!.width).toBeGreaterThanOrEqual(150)
+    expect(box!.height).toBeGreaterThanOrEqual(150)
+  })
+
+  test('control buttons meet minimum touch target on tablet', async ({
+    page,
+  }) => {
+    // Navigate to solo config page first
+    await page.goto('/solo')
+
+    // Wait for the config page to load
+    await expect(page.locator('[data-testid="duration-slider"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Start the game
+    await page.click('button:has-text("Nouvelle Partie")')
+
+    // Wait for game page to load and buzzer to appear
+    await page.waitForURL('/game*')
+    const buzzerButton = page.getByRole('button', { name: 'BUZZ!' })
+    await expect(buzzerButton).toBeVisible({ timeout: 45000 })
+
+    // Check reveal button touch target
+    const revealButton = page.getByRole('button', {
+      name: 'Révéler la réponse',
+    })
+    await expect(revealButton).toBeVisible()
+    const revealBox = await revealButton.boundingBox()
+    expect(revealBox!.width).toBeGreaterThanOrEqual(44)
+    expect(revealBox!.height).toBeGreaterThanOrEqual(44)
+
+    // Press buzzer and check validation buttons
+    await buzzerButton.click()
+
+    const correctButton = page.getByRole('button', { name: 'Correct' })
+    await expect(correctButton).toBeVisible({ timeout: 10000 })
+    const correctBox = await correctButton.boundingBox()
+    expect(correctBox!.width).toBeGreaterThanOrEqual(44)
+    expect(correctBox!.height).toBeGreaterThanOrEqual(44)
+
+    const incorrectButton = page.getByRole('button', { name: 'Incorrect' })
+    await expect(incorrectButton).toBeVisible()
+    const incorrectBox = await incorrectButton.boundingBox()
+    expect(incorrectBox!.width).toBeGreaterThanOrEqual(44)
+    expect(incorrectBox!.height).toBeGreaterThanOrEqual(44)
+  })
+
+  test('all major buttons on play page meet touch target on tablet', async ({
+    page,
+  }) => {
+    await page.goto('/play')
+
+    // Wait for the page to be fully loaded
+    await expect(page.locator('[data-testid="solo-button"]')).toBeVisible({
+      timeout: 30000,
+    })
+    await page.waitForLoadState('networkidle')
+
+    // Check solo button touch target
+    const soloButton = page.locator('[data-testid="solo-button"]')
+    const soloBox = await soloButton.boundingBox()
+    expect(soloBox!.width).toBeGreaterThanOrEqual(44)
+    expect(soloBox!.height).toBeGreaterThanOrEqual(44)
+
+    // Check multiplayer button touch target
+    const multiplayerButton = page.locator('[data-testid="multiplayer-button"]')
+    const multiplayerBox = await multiplayerButton.boundingBox()
+    expect(multiplayerBox!.width).toBeGreaterThanOrEqual(44)
+    expect(multiplayerBox!.height).toBeGreaterThanOrEqual(44)
   })
 })
 
