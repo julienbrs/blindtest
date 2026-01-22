@@ -18,6 +18,7 @@ interface ModeCardProps {
   onClick: () => void
   delay: number
   gradient: string
+  testId: string
 }
 
 function ModeCard({
@@ -27,6 +28,7 @@ function ModeCard({
   onClick,
   delay,
   gradient,
+  testId,
 }: ModeCardProps) {
   const shouldReduceMotion = useReducedMotion()
 
@@ -49,6 +51,7 @@ function ModeCard({
       >
         <button
           onClick={onClick}
+          data-testid={testId}
           className="flex w-full flex-col items-center text-center focus:outline-none focus:ring-4 focus:ring-purple-400/50 rounded-xl"
         >
           <div
@@ -146,6 +149,7 @@ export default function PlayPage() {
           onClick={handleSoloClick}
           delay={0}
           gradient="from-blue-500 to-cyan-500"
+          testId="solo-button"
         />
         <ModeCard
           title="Multijoueur"
@@ -154,6 +158,7 @@ export default function PlayPage() {
           onClick={handleMultiplayerClick}
           delay={0.1}
           gradient="from-pink-500 to-purple-600"
+          testId="multiplayer-button"
         />
       </div>
     </motion.main>
