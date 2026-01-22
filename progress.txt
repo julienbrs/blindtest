@@ -1043,3 +1043,10 @@ Status: COMPLETED
 Commit: 8b0b599
 Notes: Added comprehensive visual regression tests for multiplayer lobby and game screens. Tests cover: multiplayer hub page rendering (multiplayer-hub.png) with create/join forms, create room form with nickname filled (create-room-form-filled.png), join room form with code and nickname filled (join-room-form-filled.png), lobby with multiple players using multi-browser contexts (lobby-players.png), room code display with copy functionality (room-code.png, room-code-copied.png), multiplayer game recap with podium and scoreboard (multiplayer-recap.png), lobby configuration panel expanded (lobby-config-expanded.png), and player view of lobby as non-host (lobby-player-view.png). Tests use reducedMotion: 'reduce' for consistent screenshots and proper browser context management for multi-player scenarios.
 Files: e2e/visual-regression.spec.ts
+
+=== Issue 16.6: Add visual tests for mobile portrait layouts ===
+Timestamp: 2026-01-22T19:20:00Z
+Status: COMPLETED
+Commit: 7ebca50
+Notes: Created comprehensive visual regression tests for mobile portrait layouts. Tests cover iPhone SE (375x667) and iPhone 12 (390x844) viewports. Includes screenshots for play page, solo config, game screen, buzzer, multiplayer hub, and reveal state. Added touch target verification tests to ensure WCAG compliance (44px minimum). All tests verify that buzzer button is large enough for comfortable mobile interaction.
+Files: e2e/visual-responsive.spec.ts
