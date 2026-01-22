@@ -233,7 +233,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 - [x] 16.1 Setup Playwright visual regression testing infrastructure
 - [x] 16.2 Add visual tests for homepage and play mode selection
 - [x] 16.3 Add visual tests for solo game configuration page
-- [ ] 16.4 Add visual tests for game screen (all states)
+- [x] 16.4 Add visual tests for game screen (all states)
 - [ ] 16.5 Add visual tests for multiplayer lobby and game
 
 **Responsive Visual Testing**

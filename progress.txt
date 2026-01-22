@@ -1031,3 +1031,9 @@ Status: COMPLETED
 Commit: 827e75e
 Notes: Added visual regression tests for the solo game configuration page (/solo). Tests cover: config form rendering (solo-config.png), slider interaction visual with value change (slider-active.png), advanced settings expanded view (advanced-settings.png), solo config styling elements verification, and guess mode selection visual (guess-mode-title.png). Added data-testid attributes (duration-slider, duration-value, advanced-settings) to GameConfigForm component for reliable test selectors. All 5 new tests pass with baseline screenshots generated.
 Files: e2e/visual-regression.spec.ts, src/components/game/GameConfigForm.tsx, e2e/__screenshots__/visual-regression.spec.ts/chromium/solo-config.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/slider-active.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/advanced-settings.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/guess-mode-title.png
+=== Issue 16.4: Add visual tests for game screen (all states) ===
+Timestamp: 2026-01-22T19:12:00Z
+Status: COMPLETED
+Commit: 82de6cd
+Notes: Added comprehensive visual regression tests for the game screen in all possible states. Tests cover: playing state with buzzer visible (game-playing.png), buzzed state with validation buttons (game-buzzed.png), timer running state with countdown (game-timer.png), reveal state with song info visible (game-reveal.png), correct answer celebration with green flash (game-correct.png), incorrect answer shake with red flash (game-incorrect.png), game header with score and controls (game-header.png), and quit confirmation modal (game-quit-modal.png). Tests navigate from /solo config page, start a game, and interact with game controls to reach each state. All tests use reducedMotion: 'reduce' for consistent screenshots and wait for appropriate UI elements before capturing.
+Files: e2e/visual-regression.spec.ts
