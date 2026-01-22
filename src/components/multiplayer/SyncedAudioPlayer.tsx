@@ -209,16 +209,10 @@ export function SyncedAudioPlayer({
         syncTimeoutRef.current = null
       }
     }
-  }, [
-    isLoaded,
-    songId,
-    startedAt,
-    isPlaying,
-    maxDuration,
-    startPosition,
-    handleEnded,
-    isSyncing,
-  ])
+    // Note: isSyncing is intentionally NOT in dependencies to avoid re-running
+    // the effect when syncing state changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, songId, startedAt, isPlaying, maxDuration, startPosition, handleEnded])
 
   // Handle pause
   useEffect(() => {
