@@ -1028,6 +1028,6 @@ Files: e2e/visual-regression.spec.ts, src/app/play/page.tsx, e2e/__screenshots__
 === Issue 16.3: Add visual tests for solo game configuration page ===
 Timestamp: 2026-01-22T19:10:00Z
 Status: COMPLETED
-Commit: pending
+Commit: 827e75e
 Notes: Added visual regression tests for the solo game configuration page (/solo). Tests cover: config form rendering (solo-config.png), slider interaction visual with value change (slider-active.png), advanced settings expanded view (advanced-settings.png), solo config styling elements verification, and guess mode selection visual (guess-mode-title.png). Added data-testid attributes (duration-slider, duration-value, advanced-settings) to GameConfigForm component for reliable test selectors. All 5 new tests pass with baseline screenshots generated.
 Files: e2e/visual-regression.spec.ts, src/components/game/GameConfigForm.tsx, e2e/__screenshots__/visual-regression.spec.ts/chromium/solo-config.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/slider-active.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/advanced-settings.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/guess-mode-title.png
