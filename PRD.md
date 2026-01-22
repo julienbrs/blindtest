@@ -265,7 +265,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 
 **Performance Metrics**
 
-- [ ] 16.21 Test Cumulative Layout Shift (CLS)
+- [x] 16.21 Test Cumulative Layout Shift (CLS)
 - [ ] 16.22 Test loading states and skeleton screens
 
 ---

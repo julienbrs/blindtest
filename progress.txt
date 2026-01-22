@@ -1148,3 +1148,10 @@ Status: COMPLETED
 Commit: 11ea5ce
 Notes: Created comprehensive E2E tests for touch target sizes. Tests verify all interactive elements meet the 44x44px minimum (WCAG 2.5.5 Target Size). Tests cover multiple viewports (iPhone SE 375px, iPhone 12 Pro 390px, iPad 768px) and all key pages (play selection, solo config, multiplayer hub, game screen). Buzzer button tested for larger size (>=100px). Includes audit tests for all buttons/inputs and spacing tests between elements.
 Files: e2e/accessibility-touch-targets.spec.ts
+
+=== Issue 16.21: Test Cumulative Layout Shift (CLS) ===
+Timestamp: 2026-01-22T21:00:00Z
+Status: COMPLETED
+Commit: 3179603
+Notes: Created comprehensive CLS performance tests using PerformanceObserver API. Tests verify CLS < 0.1 (good score) on all main pages including play selection, solo config, multiplayer hub, and game screen during loading, gameplay, and state transitions. Added responsive viewport CLS tests for mobile, tablet, and large desktop. Tests verify no visible layout jumps during font loading and image reveal.
+Files: e2e/performance-cls.spec.ts
