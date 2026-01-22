@@ -71,6 +71,7 @@ function createMockSupabase() {
   const mockDelete = vi.fn()
   const mockEq = vi.fn()
   const mockSingle = vi.fn()
+  const mockMaybeSingle = vi.fn()
   const mockOrder = vi.fn()
 
   // Chain methods
@@ -84,6 +85,7 @@ function createMockSupabase() {
     eq: mockEq,
     order: mockOrder,
     single: mockSingle,
+    maybeSingle: mockMaybeSingle,
   })
   mockInsert.mockReturnValue({
     select: mockSelect,
@@ -98,12 +100,14 @@ function createMockSupabase() {
   mockEq.mockReturnValue({
     eq: mockEq,
     single: mockSingle,
+    maybeSingle: mockMaybeSingle,
     order: mockOrder,
   })
   mockOrder.mockReturnValue({
     eq: mockEq,
   })
   mockSingle.mockResolvedValue({ data: null, error: null })
+  mockMaybeSingle.mockResolvedValue({ data: null, error: null })
 
   return {
     channel: vi.fn().mockReturnValue(mockChannel),
@@ -117,6 +121,7 @@ function createMockSupabase() {
       mockDelete,
       mockEq,
       mockSingle,
+      mockMaybeSingle,
       mockOrder,
     },
     _callbacks: subscribeCallback,
@@ -423,8 +428,8 @@ describe('useMultiplayerGame', () => {
         isHost: false,
       }
 
-      // Mock existing winner
-      mockSupabase._mocks.mockSingle.mockResolvedValueOnce({
+      // Mock existing winner (uses maybeSingle)
+      mockSupabase._mocks.mockMaybeSingle.mockResolvedValueOnce({
         data: { id: 'existing-buzz' },
         error: null,
       })

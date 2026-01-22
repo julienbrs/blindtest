@@ -30,6 +30,7 @@ function createMockSupabase() {
   const mockDelete = vi.fn()
   const mockEq = vi.fn()
   const mockSingle = vi.fn()
+  const mockMaybeSingle = vi.fn()
   const mockOrder = vi.fn()
 
   // Chain methods
@@ -43,6 +44,7 @@ function createMockSupabase() {
     eq: mockEq,
     order: mockOrder,
     single: mockSingle,
+    maybeSingle: mockMaybeSingle,
   })
   mockInsert.mockReturnValue({
     select: mockSelect,
@@ -56,6 +58,7 @@ function createMockSupabase() {
   mockEq.mockReturnValue({
     eq: mockEq,
     single: mockSingle,
+    maybeSingle: mockMaybeSingle,
     order: mockOrder,
   })
   mockOrder.mockReturnValue({
@@ -74,6 +77,7 @@ function createMockSupabase() {
       mockDelete,
       mockEq,
       mockSingle,
+      mockMaybeSingle,
       mockOrder,
     },
   }
@@ -167,7 +171,8 @@ describe('useRoom', () => {
         resolvePromise = resolve
       })
 
-      mockSupabase._mocks.mockSingle.mockReturnValueOnce(pendingPromise)
+      // The createRoom function first calls maybeSingle() to check for existing room codes
+      mockSupabase._mocks.mockMaybeSingle.mockReturnValueOnce(pendingPromise)
 
       const { result } = renderHook(() => useRoom())
 
@@ -181,7 +186,7 @@ describe('useRoom', () => {
 
       // Clean up by resolving
       await act(async () => {
-        resolvePromise!({ data: null, error: { code: 'PGRST116' } })
+        resolvePromise!({ data: null, error: null })
       })
     })
   })
