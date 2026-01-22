@@ -220,7 +220,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 
 - [x] 15.1 Add E2E tests for multiplayer lobby flow
 - [x] 15.2 Add E2E tests for multiplayer game flow
-- [ ] 15.3 Add E2E tests for audio synchronization
+- [x] 15.3 Add E2E tests for audio synchronization
 - [x] 15.4 Add E2E tests for player reconnection
 - [ ] 15.5 Test with MCP browser tools on localhost
 

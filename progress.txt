@@ -997,3 +997,10 @@ Status: COMPLETED
 Commit: 6a49099
 Notes: Added comprehensive E2E Playwright tests for multiplayer lobby functionality. Tests cover: host creating a room and seeing room code; player joining with valid/invalid room codes; lobby displaying all connected players; host badge visibility (only on host player); player leaving room. Also added data-testid attributes to PlayerCard component for better test targeting. Fixed pre-existing test mock issues by adding maybeSingle method to Supabase mock in useRoom.test.ts and useMultiplayerGame.test.ts. Created epic documentation file for multiplayer testing (docs/epics/15-multiplayer-testing.md).
 Files: e2e/multiplayer-flow.spec.ts, src/components/multiplayer/PlayerCard.tsx, src/hooks/useRoom.test.ts, src/hooks/useMultiplayerGame.test.ts, docs/epics/15-multiplayer-testing.md
+
+=== Issue 15.3: Add E2E tests for audio synchronization ===
+Timestamp: 2026-01-22T15:07:00Z
+Status: COMPLETED
+Commit: dcd8fec
+Notes: Added 4 E2E tests for audio synchronization in multiplayer mode. Tests verify sync tolerance of ±500ms. Added data-testid attributes to SyncedAudioPlayer for reliable selectors.
+Files: e2e/multiplayer-flow.spec.ts, src/components/multiplayer/SyncedAudioPlayer.tsx
