@@ -27,6 +27,9 @@ import { usePresence } from '@/hooks/usePresence'
 import { useHostMigration } from '@/hooks/useHostMigration'
 import { useMultiplayerGame } from '@/hooks/useMultiplayerGame'
 import { useAudioPreloader } from '@/hooks/useAudioPreloader'
+import { useReactions } from '@/hooks/useReactions'
+import { ReactionPicker } from '@/components/multiplayer/ReactionPicker'
+import { ReactionOverlay } from '@/components/multiplayer/ReactionOverlay'
 import type { Song } from '@/lib/types'
 
 /**
@@ -103,6 +106,13 @@ export default function MultiplayerRoomPage() {
 
   // Audio preloader for intelligent next song preloading (host only)
   const audioPreloader = useAudioPreloader({ enabled: isHost })
+
+  // Live reactions for multiplayer games
+  const { reactions, sendReaction } = useReactions({
+    roomCode,
+    playerId: myPlayer?.id ?? null,
+    nickname: myPlayer?.nickname ?? null,
+  })
 
   const [isReconnecting, setIsReconnecting] = useState(true)
   const [reconnectFailed, setReconnectFailed] = useState(false)
@@ -449,6 +459,9 @@ export default function MultiplayerRoomPage() {
 
       return (
         <PageTransition>
+          {/* Reaction overlay (floating emojis) */}
+          <ReactionOverlay reactions={reactions} />
+
           <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
             {/* Reconnection notification */}
             <ReconnectionNotification
@@ -601,6 +614,16 @@ export default function MultiplayerRoomPage() {
                     Quitter la partie
                   </Button>
                 )}
+
+                {/* Reaction picker bar */}
+                <motion.div
+                  className="mt-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <ReactionPicker onReact={sendReaction} />
+                </motion.div>
               </div>
             </div>
           </main>

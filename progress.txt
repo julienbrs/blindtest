@@ -1204,3 +1204,16 @@ Status: COMPLETED
 Commit: b6050e2
 Notes: Created emoji avatar system for multiplayer games. Players must select a unique avatar when creating or joining a room. 20 fun emojis available (musical instruments, stars, trophies, etc.). AvatarPicker component displays grid with taken avatars greyed out. Avatar choice persisted in localStorage for future sessions. Previous avatar suggested when available. Added avatar column to Supabase players table via migration. Updated Player type and all dbRowToPlayer functions to include avatar field.
 Files: src/lib/avatars.ts (created), src/components/multiplayer/AvatarPicker.tsx (created), supabase/migrations/20260123_add_avatar_column.sql (created), src/lib/types.ts (modified), src/components/multiplayer/CreateRoomForm.tsx (modified), src/components/multiplayer/JoinRoomForm.tsx (modified), src/hooks/useRoom.ts (modified), src/hooks/useMultiplayerGame.ts (modified)
+
+=== Issue 18.2: Afficher les avatars dans lobby, leaderboard et podium ===
+Timestamp: 2026-01-23T02:38:00Z
+Status: COMPLETED
+Commit: 3ba2f20
+Notes: Integrated player avatars across all multiplayer UI components. Created PlayerAvatar component with three size variants (sm: 32px, md: 40px, lg: 56px) and gradient background. Displays emoji avatar or falls back to first letter of nickname. Updated PlayerCard in lobby to show avatar with online indicator badge. Updated Leaderboard to display small avatars next to player names with online status. Updated MultiplayerRecap podium to show large avatars above winner names and small avatars in final scoreboard. Consistent styling with purple/pink gradient background throughout.
+Files: src/components/ui/PlayerAvatar.tsx (created), src/components/multiplayer/PlayerCard.tsx (modified), src/components/multiplayer/Leaderboard.tsx (modified), src/components/multiplayer/MultiplayerRecap.tsx (modified)
+=== Issue 18.3: Implémenter les reactions live en jeu ===
+Timestamp: 2026-01-23T02:45:00Z
+Status: COMPLETED
+Commit: pending
+Notes: Implemented Twitch-style live emoji reactions for multiplayer games. Created src/lib/reactions.ts with 8 predefined reaction emojis (👏 🔥 😱 😂 🎉 ❤️ 💀 🤯). Created useReactions hook with Supabase Broadcast channel subscription, rate limiting (1 reaction/second), and auto-removal (3 seconds). ReactionPicker component displays horizontal bar of emoji buttons. ReactionOverlay component shows floating emojis rising from bottom of screen with random horizontal positions. Animations respect prefers-reduced-motion preference. Integrated into multiplayer game page during playing state - overlay renders above game content, picker below game controls.
+Files: src/lib/reactions.ts (created), src/hooks/useReactions.ts (created), src/components/multiplayer/ReactionPicker.tsx (created), src/components/multiplayer/ReactionOverlay.tsx (created), src/app/multiplayer/[code]/page.tsx (modified)
