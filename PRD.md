@@ -293,7 +293,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 
 - [x] 19.1 Créer le visualizer audio décoratif
 - [x] 19.2 Implémenter le streak bonus avec animation
-- [ ] 19.3 Créer le podium animé de fin de partie
+- [x] 19.3 Créer le podium animé de fin de partie
 
 ---
 
