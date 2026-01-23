@@ -282,7 +282,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 
 ### Epic 18: Social Features (docs/epics/18-social-features.md)
 
-- [ ] 18.1 Créer le système d'avatars emoji
+- [x] 18.1 Créer le système d'avatars emoji
 - [ ] 18.2 Afficher les avatars dans lobby, leaderboard et podium
 - [ ] 18.3 Implémenter les reactions live en jeu
 - [ ] 18.4 Créer l'historique des réponses en fin de partie

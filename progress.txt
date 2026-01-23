@@ -1197,3 +1197,10 @@ Status: COMPLETED
 Commit: 2c5b3b0
 Notes: Created useAudioPreloader hook for intelligent next song preloading during reveal state. Hook provides preloadNext, consumePreloaded, and clearPreloaded methods with in-memory caching (not Service Worker). Integrated with both solo game page (replacing inline preload logic) and multiplayer game page (host only). Memory management automatically releases old preloads.
 Files: src/hooks/useAudioPreloader.ts (created), src/app/game/page.tsx (modified), src/app/multiplayer/[code]/page.tsx (modified)
+
+=== Issue 18.1: Créer le système d'avatars emoji ===
+Timestamp: 2026-01-23T02:35:00Z
+Status: COMPLETED
+Commit: b6050e2
+Notes: Created emoji avatar system for multiplayer games. Players must select a unique avatar when creating or joining a room. 20 fun emojis available (musical instruments, stars, trophies, etc.). AvatarPicker component displays grid with taken avatars greyed out. Avatar choice persisted in localStorage for future sessions. Previous avatar suggested when available. Added avatar column to Supabase players table via migration. Updated Player type and all dbRowToPlayer functions to include avatar field.
+Files: src/lib/avatars.ts (created), src/components/multiplayer/AvatarPicker.tsx (created), supabase/migrations/20260123_add_avatar_column.sql (created), src/lib/types.ts (modified), src/components/multiplayer/CreateRoomForm.tsx (modified), src/components/multiplayer/JoinRoomForm.tsx (modified), src/hooks/useRoom.ts (modified), src/hooks/useMultiplayerGame.ts (modified)
