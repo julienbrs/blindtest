@@ -276,7 +276,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 - [x] 17.2 Ajouter les micro-interactions bounce sur boutons de jeu
 - [x] 17.3 Créer les skeleton loaders glass-morphism
 - [x] 17.4 Implémenter le Service Worker pour caching
-- [ ] 17.5 Ajouter le pre-loading audio intelligent
+- [x] 17.5 Ajouter le pre-loading audio intelligent
 
 ---
 

@@ -1190,3 +1190,10 @@ Status: COMPLETED
 Commit: 1a6c13c
 Notes: Implemented Service Worker for offline support and performance caching. Created public/sw.js with three caching strategies: Cache-first for fonts and static assets, Network-first for API calls and navigation, and Stale-while-revalidate for JS/CSS/images. SW caches app shell routes (/, /play, /solo, /game, /multiplayer) on install. Created src/lib/serviceWorker.ts with registration helper, update handling, and message communication utilities (getSWVersion, clearSWCache, skipWaiting). Created ServiceWorkerRegistration client component for browser-safe registration. SW only registers in production mode to avoid caching issues during development. Includes proper cleanup of old caches on activate. All feedback loops pass (typecheck, test, lint).
 Files: public/sw.js (created), src/lib/serviceWorker.ts (created), src/components/ServiceWorkerRegistration.tsx (created), src/app/layout.tsx (modified)
+
+=== Issue 17.5: Ajouter le pre-loading audio intelligent ===
+Timestamp: 2026-01-23T02:30:00Z
+Status: COMPLETED
+Commit: 2c5b3b0
+Notes: Created useAudioPreloader hook for intelligent next song preloading during reveal state. Hook provides preloadNext, consumePreloaded, and clearPreloaded methods with in-memory caching (not Service Worker). Integrated with both solo game page (replacing inline preload logic) and multiplayer game page (host only). Memory management automatically releases old preloads.
+Files: src/hooks/useAudioPreloader.ts (created), src/app/game/page.tsx (modified), src/app/multiplayer/[code]/page.tsx (modified)
