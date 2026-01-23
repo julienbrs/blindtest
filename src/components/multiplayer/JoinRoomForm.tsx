@@ -173,6 +173,7 @@ export function JoinRoomForm({ className = '' }: JoinRoomFormProps) {
           </label>
           <input
             id="join-code"
+            data-testid="room-code-input"
             type="text"
             value={roomCode}
             onChange={handleCodeChange}
@@ -207,7 +208,10 @@ export function JoinRoomForm({ className = '' }: JoinRoomFormProps) {
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-500/20 px-4 py-2 text-sm text-red-300">
+          <div
+            data-testid="error-message"
+            className="rounded-lg bg-red-500/20 px-4 py-2 text-sm text-red-300"
+          >
             {error}
           </div>
         )}
@@ -221,9 +225,13 @@ export function JoinRoomForm({ className = '' }: JoinRoomFormProps) {
             roomCode.length !== ROOM_CODE_LENGTH ||
             !nickname.trim()
           }
+          data-testid="join-button"
         >
           {isLoading ? (
-            <span className="flex items-center justify-center gap-2">
+            <span
+              className="flex items-center justify-center gap-2"
+              data-testid="loading-spinner"
+            >
               <svg
                 className="h-5 w-5 animate-spin"
                 xmlns="http://www.w3.org/2000/svg"

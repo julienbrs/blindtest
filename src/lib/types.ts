@@ -25,6 +25,7 @@ export interface GameConfig {
   clipDuration: number // Durée de l'extrait en secondes
   timerDuration: number // Temps pour répondre après buzz
   noTimer: boolean // Si true, pas de timer - validation manuelle uniquement
+  revealDuration: number // Durée d'affichage de la révélation avant auto-advance (mode découverte)
 }
 
 export type GuessMode = 'title' | 'artist' | 'both'
@@ -51,6 +52,8 @@ export interface GameState {
   timerRemaining: number // Secondes restantes sur le timer
   isRevealed: boolean // Si la réponse est révélée
   previousStatus: 'playing' | 'timer' | 'buzzed' | null // État avant pause (pour resume)
+  revealCountdown: number // Secondes avant passage auto à la chanson suivante (mode découverte)
+  isListeningToRest: boolean // Si l'utilisateur écoute le reste de la chanson
 }
 
 /**
@@ -159,8 +162,12 @@ export type GameAction =
   | { type: 'NEXT_SONG'; timerDuration: number }
   | { type: 'END_GAME' }
   | { type: 'RESET' }
-  | { type: 'CLIP_ENDED' }
+  | { type: 'CLIP_ENDED'; revealDuration: number }
   | { type: 'REPLAY' }
+  | { type: 'TICK_REVEAL'; revealDuration: number } // Countdown pendant reveal (mode découverte)
+  | { type: 'LISTEN_TO_REST' } // Écouter le reste de la chanson
+  | { type: 'QUICK_SCORE'; knew: boolean } // Score rapide pendant reveal
+  | { type: 'SONG_ENDED'; revealDuration: number } // Fin de la chanson complète
 
 // ============================================
 // Types pour les playlists personnalisées

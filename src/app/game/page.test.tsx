@@ -341,7 +341,8 @@ describe('GamePage - Quit Button', () => {
   })
 })
 
-describe('GamePage - BUZZED → TIMER transition (Issue 6.6)', () => {
+// Skip: Discovery mode removed buzzer and timer
+describe.skip('GamePage - BUZZED → TIMER transition (Issue 6.6)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetMockState()
@@ -592,8 +593,7 @@ describe('GamePage - Next Song Preloading (Issue 6.14)', () => {
 
     render(<GamePage />)
 
-    // Game controls should still be visible during reveal
-    expect(screen.getByTestId('game-controls')).toBeInTheDocument()
+    // Discovery mode: inline controls during reveal
     expect(screen.getByTestId('song-reveal')).toBeInTheDocument()
     expect(screen.getByTestId('score-display')).toBeInTheDocument()
   })
@@ -610,11 +610,12 @@ describe('GamePage - Next Song Preloading (Issue 6.14)', () => {
 
     // Fetch should not have been called for prefetching during playing
     // The initial fetch for the game is handled separately
-    // Buzzer should be visible (playing state)
-    expect(screen.getByTestId('buzzer-button')).toBeInTheDocument()
+    // Discovery mode: no buzzer, just a "En écoute..." indicator
+    expect(screen.getByText('En écoute...')).toBeInTheDocument()
   })
 
-  it('does not prefetch during timer state', () => {
+  // Skip: Discovery mode removed timer state
+  it.skip('does not prefetch during timer state', () => {
     mockGameState.status = 'timer'
     mockGameState.currentSong = {
       id: 'test123abc',
@@ -657,7 +658,7 @@ describe('GamePage - Next Song Preloading (Issue 6.14)', () => {
 
     // Game should still be functional
     expect(screen.getByTestId('song-reveal')).toBeInTheDocument()
-    expect(screen.getByTestId('game-controls')).toBeInTheDocument()
+    // Discovery mode: inline controls during reveal
   })
 
   it('excludes current song and played songs from prefetch', () => {
@@ -1309,7 +1310,7 @@ describe('GamePage - Browser Audio Support Detection (Issue 10.4)', () => {
 
     expect(screen.getByTestId('audio-player')).toBeInTheDocument()
     expect(screen.getByTestId('score-display')).toBeInTheDocument()
-    expect(screen.getByTestId('game-controls')).toBeInTheDocument()
+    // Discovery mode doesn't have GameControls, just inline controls
   })
 
   it('does not show error when audio is supported', () => {

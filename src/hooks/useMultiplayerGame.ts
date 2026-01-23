@@ -423,7 +423,7 @@ export function useMultiplayerGame(
         .eq('room_id', room.id)
         .eq('song_id', gameState.currentSongId)
         .eq('is_winner', true)
-        .single()
+        .maybeSingle()
 
       if (existingWinner) {
         setError("Quelqu'un a déjà buzzé")
@@ -437,7 +437,7 @@ export function useMultiplayerGame(
         .eq('room_id', room.id)
         .eq('song_id', gameState.currentSongId)
         .eq('player_id', myPlayerId)
-        .single()
+        .maybeSingle()
 
       if (existingBuzz) {
         setError('Vous avez déjà buzzé')

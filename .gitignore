@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/playwright-report/
+/test-results/
+# Note: e2e/__screenshots__/ is NOT gitignored - it contains baseline screenshots for visual regression

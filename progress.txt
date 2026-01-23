@@ -991,3 +991,174 @@ Status: COMPLETED
 Commit: 5aaee1b
 Notes: Created Docker configuration for containerized deployment. Multi-stage Dockerfile with: builder stage using node:18-alpine with pnpm for dependency install and build; runner stage using node:18-alpine with standalone Next.js output (small image size). Non-root user (nextjs:nodejs) for security. docker-compose.yml with: port mapping (3000), environment variables (NODE_ENV, AUDIO_FOLDER_PATH), volume mount for music folder (read-only), healthcheck using wget to /api/health endpoint (30s interval, 10s timeout, 3 retries), unless-stopped restart policy. Created .dockerignore to exclude node_modules, .next, test artifacts, IDE files, and sensitive env files from build context. Added npm scripts: docker:build (builds image tagged as 'blindtest'), docker:run (runs container with volume mount).
 Files: Dockerfile, docker-compose.yml, .dockerignore, package.json
+=== Issue 15.1: Add E2E tests for multiplayer lobby flow ===
+Timestamp: 2026-01-22T02:00:00Z
+Status: COMPLETED
+Commit: 6a49099
+Notes: Added comprehensive E2E Playwright tests for multiplayer lobby functionality. Tests cover: host creating a room and seeing room code; player joining with valid/invalid room codes; lobby displaying all connected players; host badge visibility (only on host player); player leaving room. Also added data-testid attributes to PlayerCard component for better test targeting. Fixed pre-existing test mock issues by adding maybeSingle method to Supabase mock in useRoom.test.ts and useMultiplayerGame.test.ts. Created epic documentation file for multiplayer testing (docs/epics/15-multiplayer-testing.md).
+Files: e2e/multiplayer-flow.spec.ts, src/components/multiplayer/PlayerCard.tsx, src/hooks/useRoom.test.ts, src/hooks/useMultiplayerGame.test.ts, docs/epics/15-multiplayer-testing.md
+
+=== Issue 15.3: Add E2E tests for audio synchronization ===
+Timestamp: 2026-01-22T15:07:00Z
+Status: COMPLETED
+Commit: dcd8fec
+Notes: Added 4 E2E tests for audio synchronization in multiplayer mode. Tests verify sync tolerance of ±500ms. Added data-testid attributes to SyncedAudioPlayer for reliable selectors.
+Files: e2e/multiplayer-flow.spec.ts, src/components/multiplayer/SyncedAudioPlayer.tsx
+
+=== Issue 15.5: Test with MCP browser tools on localhost ===
+Timestamp: 2026-01-22T15:30:00Z
+Status: COMPLETED
+Commit: N/A (visual testing only)
+Notes: Performed comprehensive visual testing of the blindtest multiplayer application using Playwright browser automation (MCP browser tools). Test scenarios covered: (1) Homepage verification - confirmed Solo/Multiplayer buttons display correctly with proper styling; (2) Multiplayer page navigation - verified "Créer une partie" and "Rejoindre une partie" sections render properly; (3) Room creation - tested filling pseudo input, creating room via Supabase, verifying room code generation (e.g., HGUTAC); (4) Lobby display - confirmed host player visible in lobby, room code displayed, start button disabled until 2+ players join; (5) Join room form - tested code input (uppercase, 6 chars), nickname input, join validation; (6) Room joining - successfully joined created room as second player; (7) Solo mode navigation - verified solo mode redirects to /solo page. All 20 test assertions passed with 100% pass rate. Screenshots captured at each step for documentation. No bugs identified requiring fixes.
+Files: /tmp/playwright-test-blindtest-complete.js (test script), /tmp/blindtest-*.png (8 screenshots)
+=== Issue 16.1: Setup Playwright visual regression testing infrastructure ===
+Timestamp: 2026-01-22T17:00:00Z
+Status: COMPLETED
+Commit: b2856dc
+Notes: Configured Playwright for visual regression testing with screenshot comparison capabilities. Added snapshotDir (./e2e/__screenshots__), snapshotPathTemplate for organized screenshot storage, and expect.toHaveScreenshot configuration with tolerance settings (maxDiffPixels: 100, threshold: 0.2, animations: disabled). Created e2e/__screenshots__/ directory with .gitkeep. Updated .gitignore to ignore screenshots (except .gitkeep) and playwright-report artifacts. Created e2e/visual-regression.spec.ts with baseline setup tests for homepage and play mode selection page. Tests use reducedMotion: 'reduce' for consistent screenshots and wait for networkidle state.
+Files: playwright.config.ts, e2e/visual-regression.spec.ts, e2e/__screenshots__/.gitkeep, .gitignore
+
+
+=== Issue 16.2: Add visual tests for homepage and play mode selection ===
+Timestamp: 2026-01-22T17:52:00Z
+Status: COMPLETED
+Commit: 837cbe8
+Notes: Added comprehensive visual regression tests for homepage and play mode selection page. Tests include: play mode selection page screenshot (play-selection.png), solo button hover state (solo-hover.png), multiplayer button hover state (multiplayer-hover.png), gradient styling verification, and element positioning tests. Added data-testid attributes (solo-button, multiplayer-button) to ModeCard component for reliable test selectors. Updated .gitignore to track baseline screenshots in e2e/__screenshots__/ for visual regression. Generated baseline screenshots for chromium browser. All 6 visual tests pass.
+Files: e2e/visual-regression.spec.ts, src/app/play/page.tsx, e2e/__screenshots__/visual-regression.spec.ts/chromium/*.png, .gitignore
+=== Issue 16.3: Add visual tests for solo game configuration page ===
+Timestamp: 2026-01-22T19:10:00Z
+Status: COMPLETED
+Commit: 827e75e
+Notes: Added visual regression tests for the solo game configuration page (/solo). Tests cover: config form rendering (solo-config.png), slider interaction visual with value change (slider-active.png), advanced settings expanded view (advanced-settings.png), solo config styling elements verification, and guess mode selection visual (guess-mode-title.png). Added data-testid attributes (duration-slider, duration-value, advanced-settings) to GameConfigForm component for reliable test selectors. All 5 new tests pass with baseline screenshots generated.
+Files: e2e/visual-regression.spec.ts, src/components/game/GameConfigForm.tsx, e2e/__screenshots__/visual-regression.spec.ts/chromium/solo-config.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/slider-active.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/advanced-settings.png, e2e/__screenshots__/visual-regression.spec.ts/chromium/guess-mode-title.png
+=== Issue 16.4: Add visual tests for game screen (all states) ===
+Timestamp: 2026-01-22T19:12:00Z
+Status: COMPLETED
+Commit: 82de6cd
+Notes: Added comprehensive visual regression tests for the game screen in all possible states. Tests cover: playing state with buzzer visible (game-playing.png), buzzed state with validation buttons (game-buzzed.png), timer running state with countdown (game-timer.png), reveal state with song info visible (game-reveal.png), correct answer celebration with green flash (game-correct.png), incorrect answer shake with red flash (game-incorrect.png), game header with score and controls (game-header.png), and quit confirmation modal (game-quit-modal.png). Tests navigate from /solo config page, start a game, and interact with game controls to reach each state. All tests use reducedMotion: 'reduce' for consistent screenshots and wait for appropriate UI elements before capturing.
+Files: e2e/visual-regression.spec.ts
+=== Issue 16.5: Add visual tests for multiplayer lobby and game ===
+Timestamp: 2026-01-22T18:16:00Z
+Status: COMPLETED
+Commit: 8b0b599
+Notes: Added comprehensive visual regression tests for multiplayer lobby and game screens. Tests cover: multiplayer hub page rendering (multiplayer-hub.png) with create/join forms, create room form with nickname filled (create-room-form-filled.png), join room form with code and nickname filled (join-room-form-filled.png), lobby with multiple players using multi-browser contexts (lobby-players.png), room code display with copy functionality (room-code.png, room-code-copied.png), multiplayer game recap with podium and scoreboard (multiplayer-recap.png), lobby configuration panel expanded (lobby-config-expanded.png), and player view of lobby as non-host (lobby-player-view.png). Tests use reducedMotion: 'reduce' for consistent screenshots and proper browser context management for multi-player scenarios.
+Files: e2e/visual-regression.spec.ts
+
+=== Issue 16.6: Add visual tests for mobile portrait layouts ===
+Timestamp: 2026-01-22T19:20:00Z
+Status: COMPLETED
+Commit: 7ebca50
+Notes: Created comprehensive visual regression tests for mobile portrait layouts. Tests cover iPhone SE (375x667) and iPhone 12 (390x844) viewports. Includes screenshots for play page, solo config, game screen, buzzer, multiplayer hub, and reveal state. Added touch target verification tests to ensure WCAG compliance (44px minimum). All tests verify that buzzer button is large enough for comfortable mobile interaction.
+Files: e2e/visual-responsive.spec.ts
+
+=== Issue 16.7: Add visual tests for mobile landscape layouts ===
+Timestamp: 2026-01-22T19:25:00Z
+Status: COMPLETED
+Commit: 6380331
+Notes: Added comprehensive visual regression tests for mobile landscape layouts. Tests cover iPhone SE landscape (667x375) and iPhone 12 landscape (844x390) viewports. Added 13 new tests including: play selection page in landscape, solo config page in landscape, game screen with all controls visible, control buttons accessibility verification, no horizontal scrolling verification, multiplayer hub in landscape, game reveal state in landscape, and touch target tests for landscape mode. All tests verify proper layout adaptation without horizontal scroll and that controls remain visible and accessible in landscape orientation.
+Files: e2e/visual-responsive.spec.ts
+
+=== Issue 16.8: Add visual tests for tablet layouts ===
+Timestamp: 2026-01-22T19:30:00Z
+Status: COMPLETED
+Commit: 9e69f2a
+Notes: Added comprehensive visual regression tests for tablet layouts. Tests cover iPad (768x1024) and iPad Pro (1024x1366) viewports. Added 16 new tests including: play selection page on iPad/iPad Pro, solo config page on both tablets, game screen with optimal space usage, multiplayer hub on both devices, game reveal state, advanced settings expanded, space utilization verification (no horizontal scroll, appropriately sized buttons), and touch target verification tests ensuring buttons meet minimum 44px requirements. All tests use reducedMotion: 'reduce' for consistent screenshots. Updated file header comment to reflect tablet test addition.
+Files: e2e/visual-responsive.spec.ts
+
+=== Issue 16.9: Add visual tests for desktop layouts ===
+Timestamp: 2026-01-22T19:35:00Z
+Status: COMPLETED
+Commit: 2f0de79
+Notes: Added comprehensive visual regression tests for desktop layouts. Tests cover Desktop HD (1280x720) and Desktop Full HD (1920x1080) viewports. Added 18 new tests including: play selection page on both resolutions, solo config page, game screen with centered content, multiplayer hub, game reveal state, advanced settings expanded, homepage on Full HD, content centering and readability verification, game screen content constraint tests, and multiplayer hub layout optimization tests. All tests verify that content is properly centered, readable on wide screens, and buttons are appropriately sized for desktop interaction. Generated 13 baseline screenshots for chromium project. Updated file header comment to reflect desktop test addition with exact viewport dimensions.
+Files: e2e/visual-responsive.spec.ts, e2e/__screenshots__/visual-responsive.spec.ts/chromium/desktop-*.png (13 screenshots)
+
+=== Issue 16.10: Test game configuration UX flow ===
+Timestamp: 2026-01-22T18:40:00Z
+Status: COMPLETED
+Commit: 953161c
+Notes: Added comprehensive UX flow tests for game configuration on the /solo page. Created e2e/ux-config-flow.spec.ts with 21 tests organized into 6 test groups: (1) Config UX - Slider Interaction: tests for smooth drag interaction, click position updates, step increments of 5 seconds, and value persistence across page reloads; (2) Config UX - Guess Mode Selection: tests for radio button responsiveness, selection persistence, and visual feedback; (3) Config UX - Advanced Settings: tests for panel open/close animations, timer duration buttons, no-timer toggle, and start position radio buttons; (4) Config UX - Form Validation: tests for successful form submission, validation error handling, and loading state; (5) Config UX - Navigation Flow: tests for back button navigation, complete configuration flow without friction, and keyboard navigation through form elements; (6) Config UX - Playlist Selection: tests for playlist panel open/close and filter options visibility. All tests verify smooth UX interactions without friction.
+Files: e2e/ux-config-flow.spec.ts
+
+=== Issue 16.11: Test buzzer interaction UX ===
+Timestamp: 2026-01-22T19:42:00Z
+Status: COMPLETED
+Commit: 30aaf5f
+Notes: Created comprehensive E2E tests for buzzer UX covering: click feedback timing, visual disabled state clarity, haptic feedback (vibration API), mobile touch interaction, keyboard accessibility (Enter/Space), and visual state transitions (glow effect, gradient styling).
+Files: e2e/ux-buzzer.spec.ts
+
+=== Issue 16.12: Test multiplayer room join UX ===
+Timestamp: 2026-01-22T19:47:00Z
+Status: COMPLETED
+Commit: dfa0cc0
+Notes: Created comprehensive E2E tests for multiplayer room join UX. Added data-testid attributes to JoinRoomForm component (room-code-input, error-message, join-button, loading-spinner). Created e2e/ux-room-join.spec.ts with 22 tests organized into 6 test groups: (1) Room Join UX - Code Input: tests for auto-uppercase conversion, invalid character filtering, 6-character limit, monospace font, centered text, and letter-spacing; (2) Room Join UX - Error Messages: tests for invalid room code error display, red styling visibility, error clearing on new input, short code validation, and empty nickname validation; (3) Room Join UX - Loading State: tests for loading spinner visibility, "Connexion en cours..." text, and disabled inputs during loading; (4) Room Join UX - Successful Join: tests for lobby redirect and host visibility after joining; (5) Room Join UX - Focus and Keyboard: tests for logical tab order, Enter key submission, and visible focus ring; (6) Room Join UX - Mobile: tests for mobile viewport usability and touch target sizes (minimum 44px).
+Files: e2e/ux-room-join.spec.ts, src/components/multiplayer/JoinRoomForm.tsx
+
+=== Issue 16.13: Test error recovery UX flows ===
+Timestamp: 2026-01-22T18:50:00Z
+Status: COMPLETED
+Commit: 4939e8f
+Notes: Created comprehensive E2E tests for error recovery UX flows. Created e2e/ux-error-recovery.spec.ts with 15 tests organized into 6 test groups: (1) Error Recovery UX - Network Errors: tests for network error toast display with retry option, retry button functionality, and toast dismissal; (2) Error Recovery UX - Empty Library: tests for helpful error message with audio path display, retry button page reload, and supported formats mention; (3) Error Recovery UX - Audio File Errors: tests for automatic skip to next song on audio file error and loading indicator during audio load; (4) Error Recovery UX - Browser Support: tests for unsupported browser error with browser suggestions; (5) Error Recovery UX - Graceful Degradation: tests for game functionality after error recovery and navigation during error states; (6) Error Recovery UX - Visual Feedback: tests for error toast styling/positioning/accessibility (role="alert", aria-live="assertive") and retry button touch target size on mobile (minimum 44px).
+Files: e2e/ux-error-recovery.spec.ts
+
+=== Issue 16.14: Test buzzer button animations ===
+Timestamp: 2026-01-22T18:58:00Z
+Status: COMPLETED
+Commit: 083042c
+Notes: Created comprehensive Playwright E2E tests for buzzer button animations. Created e2e/animation-buzzer.spec.ts with 18 tests organized into 7 test groups: (1) Scale on Press: tests for whileTap scale down animation (0.9), click triggering state transition, and visual screenshots of pressed state; (2) Hover Effect: tests for whileHover scale up animation (1.05) and hover state screenshot; (3) Pulse (Glow) Animation: tests for box-shadow glow effect, animated glow styling verification, and smooth animation (no saccades); (4) Shockwave Effect: tests for shockwave element absence before click, shockwave fade-out after 300ms, and immediate visual feedback on click; (5) Performance: tests for no layout shifts during hover, and animations not blocking UI interactions; (6) Visual Regression: screenshots of default and hover states; (7) Framer Motion Integration: tests for gradient styling (from-red-500 to-red-700), focus ring accessibility, and border styling. Generated 5 baseline screenshots for chromium project.
+Files: e2e/animation-buzzer.spec.ts, e2e/__screenshots__/animation-buzzer.spec.ts/chromium/*.png (5 screenshots)
+
+=== Issue 16.15: Test correct/incorrect answer flash animations ===
+Timestamp: 2026-01-22T20:26:00Z
+Status: COMPLETED
+Commit: c39f58b
+Notes: Created comprehensive Playwright E2E tests for correct/incorrect answer flash animations. Created e2e/animation-answer-flash.spec.ts with 26 tests organized into 6 test groups: (1) Correct Answer Flash Animation: tests for green flash overlay visibility, bg-green-500 class, fixed inset-0 positioning, pointer-events-none for non-blocking, flash disappearance after ~500ms, and visual screenshot; (2) Incorrect Answer Flash Animation: tests for red flash overlay visibility, bg-red-500 class, fixed inset-0 positioning, pointer-events-none, flash disappearance after ~300ms, screen shake animation trigger, and visual screenshot; (3) Answer Flash - Reduced Motion: tests for correct flash not shown with reduced motion, incorrect flash not shown with reduced motion, and game still transitions correctly; (4) Answer Flash - Animation Properties: tests for z-40 z-index on both flashes, and smooth opacity transition verification; (5) Answer Flash - Multiple Rapid Validations: tests for correct answer triggering flash and allowing next song navigation, and flash not interfering with UI interactions; (6) Answer Flash - Visual Regression: screenshots of game state after correct and incorrect answers.
+Files: e2e/animation-answer-flash.spec.ts
+
+=== Issue 16.16: Test song reveal transition animations ===
+Timestamp: 2026-01-22T20:30:00Z
+Status: COMPLETED
+Commit: b955294
+Notes: Created comprehensive Playwright E2E tests for song reveal transition animations. Created e2e/animation-reveal.spec.ts with 35 tests organized into 7 test groups: (1) Song Reveal - Cover Blur-to-Clear Transition: tests for cover starting with blur-xl scale-110 classes, blur removal after reveal, transition-all duration-500 classes, before/after reveal screenshots, and music note icon visibility toggle; (2) Song Reveal - Text Animation: tests for song info hidden before reveal, title/artist appearing with animate-fade-in class, fade-in animation properties verification; (3) Song Reveal - No Flash/Jump Effects: tests for no layout shift during transition, no abrupt opacity changes, smooth 110% to 100% scale transition, and smooth blur filter removal; (4) Song Reveal - Reduced Motion Support: tests for instant blur removal with prefers-reduced-motion, instant fade-in animation, content still displaying correctly, and reduced motion screenshot; (5) Song Reveal - Visual Regression: full reveal transition sequence screenshots (blurred, mid, complete); (6) Song Reveal - Animation Timing: tests for cover transition duration ~500ms, text fade-in duration ~500ms, and animations completing within reasonable time; (7) Song Reveal - Integration with Game Flow: tests for reveal animation after correct/incorrect answers, proceeding to next song after reveal, and reveal not interfering with UI interactions.
+Files: e2e/animation-reveal.spec.ts
+
+=== Issue 16.17: Test reduced motion preference support ===
+Timestamp: 2026-01-22T20:36:00Z
+Status: COMPLETED
+Commit: e97cc43
+Notes: Created comprehensive Playwright E2E tests for prefers-reduced-motion accessibility support. Created e2e/reduced-motion.spec.ts with 30 tests organized into 10 test groups: (1) CSS Animations Disabled: tests for play page rendering correctly with reduced motion, CSS animation-duration being nearly instant (0.01ms), and CSS transition-duration being nearly instant; (2) Background Components: tests for FestiveBackground showing static gradient (no floating orbs), BackgroundParticles not rendering, and background still having gradient styling; (3) Flash Animations: tests for correct/incorrect answer flashes not appearing with reduced motion, and game still transitioning correctly without flash; (4) Buzzer Functionality: tests for buzzer button being clickable, correct appearance without animations, shockwave effect not causing errors, and visual screenshot; (5) Song Reveal: tests for cover blur removal being instant, song info appearing instantly, and reveal screenshot; (6) No JavaScript Errors: tests for homepage/play/solo/multiplayer pages loading without JS errors, and full game flow completing without errors; (7) Functionality Preserved: tests for navigation between pages working, form inputs working correctly, buttons responding to clicks, audio player controls working, and score updates after correct answer; (8) Visual Regression: screenshots of homepage, solo config, game playing state, and multiplayer hub with reduced motion; (9) Comparison with Normal Motion: test for same content visible with and without reduced motion using dual browser contexts; (10) Dark Mode Combination: test for reduced motion working correctly with dark color scheme.
+Files: e2e/reduced-motion.spec.ts
+
+=== Issue 16.18: Test focus states and indicators ===
+Timestamp: 2026-01-22T20:46:00Z
+Status: COMPLETED
+Commit: 8e8f44e
+Notes: Created comprehensive Playwright E2E tests for focus states and indicators (WCAG 2.4.7 Focus Visible compliance). Created e2e/accessibility-focus.spec.ts with 28 tests organized into 8 test groups: (1) Focus States - Play Selection Page: tests for solo button focus ring when tabbed, multiplayer button focus ring, all interactive elements keyboard accessible via Tab, and Enter key activating focused button; (2) Focus States - Solo Configuration Page: tests for back button focus ring, guess mode radio buttons keyboard navigation, duration slider focus ring, slider adjustment with arrow keys, start game button focus ring, and advanced settings toggle keyboard accessibility; (3) Focus States - Multiplayer Hub: tests for nickname input focus ring, room code input focus ring, create/join room button focus rings, and inputs fillable with keyboard only; (4) Focus States - Game Screen: tests for buzzer button focus ring and focusability, reveal button focus ring, quit button focus ring, validation buttons focus ring after buzz, incorrect button focus ring, next song button focus ring in reveal state, and keyboard navigation through game controls; (5) Focus States - Modal Dialogs: tests for quit confirmation modal buttons having focus rings, and modal closeable with keyboard via cancel button; (6) Focus States - Focus Trap in Modals: test for focus staying trapped within quit modal (cycling between Annuler and Quitter buttons); (7) Focus Visibility - Visual Verification: tests for focus rings being visible against dark background (box-shadow check), and input focus border color change (border/ring color verification). Generated 32 baseline screenshots (19 chromium, 13 mobile-chrome) for visual regression testing of all focus states across different elements: solo-button, multiplayer-button, back-button, guess-mode-radio, duration-slider, start-button, advanced-toggle, nickname-input, room-code-input, create-room-button, join-room-button, buzzer-button, reveal-button, quit-button, correct-button, incorrect-button, next-song-button, modal-cancel-button, modal-quit-button.
+Files: e2e/accessibility-focus.spec.ts, e2e/__screenshots__/accessibility-focus.spec.ts/chromium/*.png (19 screenshots), e2e/__screenshots__/accessibility-focus.spec.ts/mobile-chrome/*.png (13 screenshots)
+
+=== Issue 16.19: Test dark mode contrast and readability ===
+Timestamp: 2026-01-22T20:52:00Z
+Status: COMPLETED
+Commit: 7ab0004
+Notes: Created comprehensive Playwright E2E tests for dark mode contrast and readability (WCAG AA compliance). Created e2e/accessibility-dark-mode.spec.ts with 27 tests organized into 8 test groups: (1) Dark Mode - Play Selection Page: tests for text readable on dark background, title having sufficient contrast, buttons visible in dark mode, button text readable, and hover states visible; (2) Dark Mode - Solo Configuration Page: tests for solo config page screenshot, form labels readable, slider values visible, advanced settings readable, and start button visible; (3) Dark Mode - Game Screen: tests for game screen screenshot, score display readable, buzzer button visible, reveal button readable, validation buttons visible after buzz, song reveal readable, and quit modal readable; (4) Dark Mode - Multiplayer Hub: tests for multiplayer hub screenshot, form labels readable, input fields visible and usable, and buttons visible; (5) Dark Mode - Contrast Verification: tests for dark mode background being sufficiently dark, and text contrast meeting accessibility standards (luminosity > 0.5 for light text); (6) Dark Mode - Theme Toggle: tests for theme toggle from solo config, and dark mode persistence across navigation; (7) Dark Mode - Error States: test for error messages readable in dark mode. Helper function enableDarkMode() uses addInitScript to set localStorage blindtest_theme to 'dark' before page navigation.
+Files: e2e/accessibility-dark-mode.spec.ts
+
+=== Issue 16.20: Test touch target sizes ===
+Timestamp: 2026-01-22T20:55:00Z
+Status: COMPLETED
+Commit: 11ea5ce
+Notes: Created comprehensive E2E tests for touch target sizes. Tests verify all interactive elements meet the 44x44px minimum (WCAG 2.5.5 Target Size). Tests cover multiple viewports (iPhone SE 375px, iPhone 12 Pro 390px, iPad 768px) and all key pages (play selection, solo config, multiplayer hub, game screen). Buzzer button tested for larger size (>=100px). Includes audit tests for all buttons/inputs and spacing tests between elements.
+Files: e2e/accessibility-touch-targets.spec.ts
+
+=== Issue 16.21: Test Cumulative Layout Shift (CLS) ===
+Timestamp: 2026-01-22T21:00:00Z
+Status: COMPLETED
+Commit: 3179603
+Notes: Created comprehensive CLS performance tests using PerformanceObserver API. Tests verify CLS < 0.1 (good score) on all main pages including play selection, solo config, multiplayer hub, and game screen during loading, gameplay, and state transitions. Added responsive viewport CLS tests for mobile, tablet, and large desktop. Tests verify no visible layout jumps during font loading and image reveal.
+Files: e2e/performance-cls.spec.ts
+
+=== Issue 16.22: Test loading states and skeleton screens ===
+Timestamp: 2026-01-22T21:05:00Z
+Status: COMPLETED
+Commit: 45dd0c8
+Notes: Created comprehensive E2E tests for loading states and skeleton screens. Created e2e/loading-states.spec.ts with 20 tests organized into 7 test groups: (1) Solo Page Loading: tests for loading screen visibility while library loads, accessibility attributes (aria-live, aria-busy), and loading message display; (2) Game Screen Loading: tests for loading indicator during song loading, spinner styling (border-purple, rounded-full), and smooth transition from loading to game content; (3) Next Song Loading: tests for loading indicator during next song transition; (4) Suspense Fallback: tests for game page Suspense fallback rendering; (5) Library Stats Loading: tests for loading state visibility and spinner animation (animate-spin class); (6) Multiplayer Loading States: tests for create room and join room loading states; (7) Loading States - Mobile: tests for mobile spinner visibility, sizing (>=32px), and game loading indicator visibility. Tests use route interception to simulate slow network conditions.
+Files: e2e/loading-states.spec.ts

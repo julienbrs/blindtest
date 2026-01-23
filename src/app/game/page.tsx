@@ -18,6 +18,9 @@ import {
   MusicalNoteIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
+  CheckIcon,
+  ArrowRightIcon,
+  PlayIcon,
 } from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
@@ -149,6 +152,7 @@ function GameContent() {
       clipDuration: Number(searchParams.get('duration')) || 20,
       timerDuration: noTimer ? 0 : Number(timerParam) || 5,
       noTimer,
+      revealDuration: Number(searchParams.get('revealDuration')) || 5,
     }
   }, [searchParams])
 
@@ -711,6 +715,37 @@ function GameContent() {
     [celebrate, triggerShake, game.actions, unlockAudio]
   )
 
+  // Handle "Écouter la suite" - user wants to hear the rest of the song
+  const handleListenToRest = useCallback(async () => {
+    await unlockAudio()
+    game.actions.listenToRest()
+  }, [unlockAudio, game.actions])
+
+  // Handle quick score during reveal (optional scoring that doesn't block auto-advance)
+  const handleQuickScore = useCallback(
+    async (knew: boolean) => {
+      await unlockAudio()
+      if (knew) {
+        celebrate()
+        setShowCorrectFlash(true)
+        setTimeout(() => setShowCorrectFlash(false), 500)
+      }
+      game.actions.quickScore(knew)
+    },
+    [unlockAudio, game.actions, celebrate]
+  )
+
+  // Handle audio ended - decides whether to call clipEnded or songEnded based on state
+  const handleAudioEnded = useCallback(() => {
+    if (game.state.isListeningToRest) {
+      // Full song ended after "Écouter la suite"
+      game.actions.songEnded()
+    } else {
+      // Clip duration reached
+      game.actions.clipEnded()
+    }
+  }, [game.state.isListeningToRest, game.actions])
+
   const handleNewGame = () => {
     // Reload the page with same config to start a new game
     window.location.reload()
@@ -906,7 +941,7 @@ function GameContent() {
       </AnimatePresence>
 
       {/* Main content area - Portrait: vertical stack, Landscape/Desktop: two columns */}
-      <div className="flex flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row sm:gap-6 lg:flex-row lg:gap-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row landscape:justify-center sm:gap-6 lg:flex-row lg:justify-center lg:gap-8">
         {/* Left column (Portrait: full width, Landscape/Desktop: left side) */}
         {/* Contains: Cover image + Audio player */}
         <div className="flex flex-1 flex-col items-center justify-center gap-3 landscape:gap-2 sm:gap-4 lg:gap-6">
@@ -921,24 +956,27 @@ function GameContent() {
           <div className="w-full max-w-xs px-2 sm:max-w-sm sm:px-0 md:max-w-md">
             <AudioPlayer
               songId={game.state.currentSong?.id}
-              isPlaying={game.state.status === 'playing'}
+              isPlaying={
+                game.state.status === 'playing' ||
+                game.state.status === 'reveal'
+              }
               maxDuration={config.clipDuration}
-              onEnded={game.actions.clipEnded}
+              onEnded={handleAudioEnded}
               onReady={handleAudioReady}
               shouldReplay={shouldReplay}
               onReplayComplete={handleReplayComplete}
               volume={musicVolume}
               startPosition={audioStartPosition}
+              unlimitedPlayback={game.state.status === 'reveal'}
             />
           </div>
         </div>
 
         {/* Right column (Portrait: bottom area, Landscape/Desktop: right side) */}
-        {/* Contains: Buzzer/Timer + Game Controls */}
+        {/* Contains: Discovery mode controls */}
         <div className="flex flex-col items-center justify-center gap-4 landscape:w-64 landscape:flex-shrink-0 sm:gap-6 lg:w-80 lg:flex-shrink-0">
-          {/* Animated state transitions for loading/buzzer/timer */}
           <AnimatePresence mode="wait">
-            {/* Loading indicator - visible during loading state */}
+            {/* Loading indicator */}
             {game.state.status === 'loading' && (
               <motion.div
                 key="loading"
@@ -952,47 +990,120 @@ function GameContent() {
               </motion.div>
             )}
 
-            {/* Buzzer - visible during playing state */}
-            {game.state.status === 'playing' && (
+            {/* Reveal countdown + Quick scoring + Controls */}
+            {game.state.status === 'reveal' && (
               <motion.div
-                key="buzzer"
-                className="flex items-center justify-center"
-                {...getAnimationProps(fadeSlideUp)}
+                key="reveal-controls"
+                className="flex w-full flex-col items-center gap-4"
+                {...getAnimationProps(fadeScale)}
               >
-                <BuzzerButton onBuzz={handleBuzz} onPlaySound={sfx.buzz} />
+                {/* Countdown circle (only when not listening to rest) */}
+                {!game.state.isListeningToRest && (
+                  <div className="relative flex h-16 w-16 items-center justify-center">
+                    <svg className="h-full w-full -rotate-90">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth="4"
+                      />
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        fill="none"
+                        stroke="#f97316"
+                        strokeWidth="4"
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={
+                          2 *
+                          Math.PI *
+                          28 *
+                          (1 -
+                            game.state.revealCountdown / config.revealDuration)
+                        }
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <span className="absolute text-xl font-bold text-white">
+                      {game.state.revealCountdown}
+                    </span>
+                  </div>
+                )}
+
+                {/* Quick scoring buttons */}
+                <div className="flex w-full max-w-xs gap-3">
+                  <Button
+                    onClick={() => handleQuickScore(true)}
+                    variant="success"
+                    size="md"
+                    className="flex flex-1 items-center justify-center gap-2"
+                  >
+                    <CheckIcon className="h-5 w-5" />
+                    <span className="text-sm">Je savais</span>
+                  </Button>
+                  <Button
+                    onClick={() => handleQuickScore(false)}
+                    variant="danger"
+                    size="md"
+                    className="flex flex-1 items-center justify-center gap-2"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                    <span className="text-sm">Pas trouvé</span>
+                  </Button>
+                </div>
+
+                {/* Listen to rest / Skip to next button */}
+                {!game.state.isListeningToRest ? (
+                  <Button
+                    onClick={handleListenToRest}
+                    variant="secondary"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <PlayIcon className="h-4 w-4" />
+                    <span className="text-xs">Écouter la suite</span>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNextSong}
+                    variant="secondary"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowRightIcon className="h-4 w-4" />
+                    <span className="text-xs">Chanson suivante</span>
+                  </Button>
+                )}
               </motion.div>
             )}
 
-            {/* Timer - visible during timer state */}
-            {game.state.status === 'timer' && (
+            {/* Playing state - "Je sais !" button to reveal early */}
+            {game.state.status === 'playing' && (
               <motion.div
-                key="timer"
-                className="flex items-center justify-center"
-                {...getAnimationProps(fadeScale)}
+                key="playing-controls"
+                className="flex flex-col items-center gap-4"
+                {...getAnimationProps(fadeIn, quickTransition)}
               >
-                <Timer
-                  duration={config.timerDuration}
-                  remaining={game.state.timerRemaining}
-                  onPlayTick={sfx.tick}
-                  onPlayTimeout={sfx.timeout}
-                />
+                <div className="flex items-center gap-2 text-purple-300">
+                  <div className="h-3 w-3 animate-pulse rounded-full bg-green-500" />
+                  <span className="text-sm">En écoute...</span>
+                </div>
+                <Button
+                  onClick={() => game.actions.clipEnded()}
+                  variant="primary"
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <CheckIcon className="h-5 w-5" />
+                  <span>Je sais !</span>
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Contrôles du MJ */}
-          <div className="w-full max-w-xs px-2 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-none">
-            <GameControls
-              status={game.state.status}
-              isRevealed={game.state.isRevealed}
-              onValidate={handleValidate}
-              onReveal={handleReveal}
-              onNext={handleNextSong}
-              onPlay={handlePlay}
-              onPause={handlePause}
-              onReplay={handleReplay}
-            />
-          </div>
         </div>
       </div>
 

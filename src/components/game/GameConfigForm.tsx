@@ -485,60 +485,6 @@ export function GameConfigForm() {
         </div>
       </Card>
 
-      {/* Playlists */}
-      <Card className="p-6">
-        <button
-          type="button"
-          onClick={() => setShowPlaylistManager(!showPlaylistManager)}
-          className="flex w-full items-center justify-between"
-        >
-          <h2 className="flex items-center gap-2 text-xl font-semibold">
-            <QueueListIcon className="h-5 w-5 text-purple-400" />
-            Playlists
-          </h2>
-          <div className="flex items-center gap-2">
-            {selectedPlaylistId ? (
-              <span className="text-sm text-purple-300">
-                {getPlaylist(selectedPlaylistId)?.name ||
-                  'Playlist sélectionnée'}
-              </span>
-            ) : (
-              <span className="text-sm text-purple-300">
-                Toute la bibliothèque
-              </span>
-            )}
-            <ChevronRightIcon
-              className={`h-4 w-4 transform text-purple-300 transition-transform duration-200 ${showPlaylistManager ? 'rotate-90' : ''}`}
-            />
-          </div>
-        </button>
-
-        <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            showPlaylistManager
-              ? 'mt-4 max-h-[500px] opacity-100'
-              : 'max-h-0 opacity-0'
-          }`}
-        >
-          <PlaylistManager
-            selectedPlaylistId={selectedPlaylistId}
-            onSelect={handlePlaylistSelect}
-          />
-        </div>
-      </Card>
-
-      {/* Filtres bibliothèque - Hidden when playlist is selected */}
-      {!selectedPlaylistId && (
-        <Card className="p-6">
-          <LibraryFilters
-            filters={filters}
-            onChange={handleFiltersChange}
-            filteredCount={filteredCount}
-            totalCount={totalCount}
-          />
-        </Card>
-      )}
-
       {/* Durée des extraits */}
       <Card className="p-6">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
@@ -548,7 +494,9 @@ export function GameConfigForm() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-purple-200">Durée</span>
-            <span className="text-2xl font-bold">{clipDuration}s</span>
+            <span className="text-2xl font-bold" data-testid="duration-value">
+              {clipDuration}s
+            </span>
           </div>
 
           <input
@@ -558,6 +506,7 @@ export function GameConfigForm() {
             step={5}
             value={clipDuration}
             onChange={(e) => handleClipDurationChange(Number(e.target.value))}
+            data-testid="duration-slider"
             className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/20 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-pink-500 [&::-webkit-slider-thumb]:to-purple-500 [&::-webkit-slider-thumb]:shadow-lg"
           />
 
@@ -574,6 +523,7 @@ export function GameConfigForm() {
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
+          data-testid="advanced-settings"
           className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg p-3 text-purple-300 transition-colors hover:bg-white/5 hover:text-white"
         >
           <ChevronRightIcon
@@ -585,10 +535,66 @@ export function GameConfigForm() {
 
         <div
           className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            showAdvanced ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            showAdvanced ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <Card className="space-y-4 p-6">
+            {/* Playlists */}
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowPlaylistManager(!showPlaylistManager)}
+                className="flex w-full items-center justify-between"
+              >
+                <div className="flex items-center gap-2 text-purple-200">
+                  <QueueListIcon className="h-5 w-5 text-purple-400" />
+                  Playlists
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedPlaylistId ? (
+                    <span className="text-sm text-purple-300">
+                      {getPlaylist(selectedPlaylistId)?.name ||
+                        'Playlist sélectionnée'}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-purple-300">
+                      Toute la bibliothèque
+                    </span>
+                  )}
+                  <ChevronRightIcon
+                    className={`h-4 w-4 transform text-purple-300 transition-transform duration-200 ${showPlaylistManager ? 'rotate-90' : ''}`}
+                  />
+                </div>
+              </button>
+
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  showPlaylistManager
+                    ? 'max-h-[500px] opacity-100'
+                    : 'max-h-0 opacity-0'
+                }`}
+              >
+                <PlaylistManager
+                  selectedPlaylistId={selectedPlaylistId}
+                  onSelect={handlePlaylistSelect}
+                />
+              </div>
+            </div>
+
+            {/* Filtres bibliothèque - Hidden when playlist is selected */}
+            {!selectedPlaylistId && (
+              <div className="border-t border-white/10 pt-4">
+                <LibraryFilters
+                  filters={filters}
+                  onChange={handleFiltersChange}
+                  filteredCount={filteredCount}
+                  totalCount={totalCount}
+                />
+              </div>
+            )}
+
+            <div className="border-t border-white/10 pt-4" />
+
             {/* Timer duration */}
             <div className="space-y-3">
               <div className="text-purple-200">Temps pour répondre</div>

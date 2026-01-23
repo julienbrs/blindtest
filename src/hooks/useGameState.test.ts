@@ -20,6 +20,7 @@ const mockConfig: GameConfig = {
   clipDuration: 20,
   timerDuration: 5,
   noTimer: false,
+  revealDuration: 5,
 }
 
 describe('useGameState', () => {
@@ -527,12 +528,12 @@ describe('useGameState', () => {
       })
       expect(result.current.state.status).toBe('reveal')
 
-      // Timer should stop
+      // Buzz timer should stop, but reveal countdown will auto-advance
       act(() => {
         vi.advanceTimersByTime(5000)
       })
-      // timerRemaining should stay at 3 since we validated
-      expect(result.current.state.status).toBe('reveal')
+      // Discovery mode: reveal countdown auto-advances to loading
+      expect(result.current.state.status).toBe('loading')
     })
   })
 
@@ -1205,6 +1206,7 @@ describe('useGameState', () => {
       clipDuration: 20,
       timerDuration: 5,
       noTimer: true,
+      revealDuration: 5,
     }
 
     it('transitions from playing to buzzed (not timer) when noTimer is true', () => {

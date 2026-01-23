@@ -46,6 +46,9 @@ export function PlayerCard({
       animate="animate"
       exit="exit"
       transition={{ duration: 0.3, ease: 'easeOut' }}
+      data-testid="player-card"
+      data-player={player.nickname}
+      data-is-host={player.isHost}
       className={`flex items-center justify-between rounded-xl p-4 transition-colors ${
         isCurrentPlayer
           ? 'border-2 border-purple-400 bg-purple-500/20'

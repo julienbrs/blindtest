@@ -206,6 +206,97 @@ After this task, all subsequent issues run with full feedback loops.
 - [x] 14.5 Ajouter un healthcheck endpoint
 - [x] 14.6 Créer un Dockerfile
 
+---
+
+### Epic 15: Multiplayer Testing (docs/epics/15-multiplayer-testing.md)
+
+**Testing Workflow:**
+Ralph doit utiliser deux approches complémentaires pour tester et corriger:
+
+1. **Tests Playwright automatisés** (`npx playwright test`) - détecte les régressions
+2. **Browser automation MCP** (claude-in-chrome) - tests visuels et debug interactif
+
+**Important:** Toujours tester en LOCAL (http://localhost:3000) pour pouvoir corriger le code et voir les changements immédiatement. Le serveur de dev se lance automatiquement avec Playwright.
+
+- [x] 15.1 Add E2E tests for multiplayer lobby flow
+- [x] 15.2 Add E2E tests for multiplayer game flow
+- [x] 15.3 Add E2E tests for audio synchronization
+- [x] 15.4 Add E2E tests for player reconnection
+- [x] 15.5 Test with MCP browser tools on localhost
+
+---
+
+### Epic 16: UI/UX Testing (docs/epics/16-ui-ux-testing.md)
+
+**Visual Regression Testing**
+
+- [x] 16.1 Setup Playwright visual regression testing infrastructure
+- [x] 16.2 Add visual tests for homepage and play mode selection
+- [x] 16.3 Add visual tests for solo game configuration page
+- [x] 16.4 Add visual tests for game screen (all states)
+- [x] 16.5 Add visual tests for multiplayer lobby and game
+
+**Responsive Visual Testing**
+
+- [x] 16.6 Add visual tests for mobile portrait layouts
+- [x] 16.7 Add visual tests for mobile landscape layouts
+- [x] 16.8 Add visual tests for tablet layouts
+- [x] 16.9 Add visual tests for desktop layouts
+
+**UX Flow Testing**
+
+- [x] 16.10 Test game configuration UX flow
+- [x] 16.11 Test buzzer interaction UX
+- [x] 16.12 Test multiplayer room join UX
+- [x] 16.13 Test error recovery UX flows
+
+**Animation & Motion Testing**
+
+- [x] 16.14 Test buzzer button animations
+- [x] 16.15 Test correct/incorrect answer flash animations
+- [x] 16.16 Test song reveal transition animations
+- [x] 16.17 Test reduced motion preference support
+
+**Accessibility Visual Testing**
+
+- [x] 16.18 Test focus states and indicators
+- [x] 16.19 Test dark mode contrast and readability
+- [x] 16.20 Test touch target sizes
+
+**Performance Metrics**
+
+- [x] 16.21 Test Cumulative Layout Shift (CLS)
+- [x] 16.22 Test loading states and skeleton screens
+
+---
+
+### Epic 17: Performance & Polish (docs/epics/17-performance-polish.md)
+
+- [ ] 17.1 Ajouter les transitions de page avec Framer Motion
+- [ ] 17.2 Ajouter les micro-interactions bounce sur boutons de jeu
+- [ ] 17.3 Créer les skeleton loaders glass-morphism
+- [ ] 17.4 Implémenter le Service Worker pour caching
+- [ ] 17.5 Ajouter le pre-loading audio intelligent
+
+---
+
+### Epic 18: Social Features (docs/epics/18-social-features.md)
+
+- [ ] 18.1 Créer le système d'avatars emoji
+- [ ] 18.2 Afficher les avatars dans lobby, leaderboard et podium
+- [ ] 18.3 Implémenter les reactions live en jeu
+- [ ] 18.4 Créer l'historique des réponses en fin de partie
+
+---
+
+### Epic 19: Fun & Visual (docs/epics/19-fun-visual.md)
+
+- [ ] 19.1 Créer le visualizer audio décoratif
+- [ ] 19.2 Implémenter le streak bonus avec animation
+- [ ] 19.3 Créer le podium animé de fin de partie
+
+---
+
 ## Completion
 
 When all tasks are checked, output: `<promise>COMPLETE</promise>`

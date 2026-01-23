@@ -12,6 +12,8 @@ const initialState: GameState = {
   timerRemaining: 5,
   isRevealed: false,
   previousStatus: null,
+  revealCountdown: 5,
+  isListeningToRest: false,
 }
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -133,6 +135,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         playedSongIds: state.currentSong
           ? [...state.playedSongIds, state.currentSong.id]
           : state.playedSongIds,
+        revealCountdown: action.revealDuration,
+        isListeningToRest: false,
       }
 
     case 'REPLAY':
@@ -143,6 +147,52 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         status: 'playing',
+        isListeningToRest: false,
+      }
+
+    case 'TICK_REVEAL':
+      // Countdown during reveal state (discovery mode)
+      if (state.status !== 'reveal' || state.isListeningToRest) return state
+      const newRevealRemaining = state.revealCountdown - 1
+      if (newRevealRemaining <= 0) {
+        // Auto-advance to next song
+        return {
+          ...state,
+          status: 'loading',
+          currentSong: null,
+          isRevealed: false,
+          revealCountdown: action.revealDuration,
+          isListeningToRest: false,
+        }
+      }
+      return { ...state, revealCountdown: newRevealRemaining }
+
+    case 'LISTEN_TO_REST':
+      // User wants to hear the rest of the song
+      if (state.status !== 'reveal') return state
+      return {
+        ...state,
+        isListeningToRest: true,
+      }
+
+    case 'QUICK_SCORE':
+      // Quick scoring during reveal - doesn't change state, just updates score
+      if (state.status !== 'reveal') return state
+      return {
+        ...state,
+        score: action.knew ? state.score + 1 : state.score,
+      }
+
+    case 'SONG_ENDED':
+      // Full song ended (after "Écouter la suite")
+      if (state.status !== 'reveal' || !state.isListeningToRest) return state
+      return {
+        ...state,
+        status: 'loading',
+        currentSong: null,
+        isRevealed: false,
+        revealCountdown: action.revealDuration,
+        isListeningToRest: false,
       }
 
     default:
@@ -166,6 +216,9 @@ interface UseGameStateReturn {
     reset: () => void
     clipEnded: () => void
     replay: () => void
+    listenToRest: () => void
+    quickScore: (knew: boolean) => void
+    songEnded: () => void
   }
   dispatch: React.Dispatch<GameAction>
 }
@@ -174,6 +227,7 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
   const [state, dispatch] = useReducer(gameReducer, {
     ...initialState,
     timerRemaining: config.timerDuration,
+    revealCountdown: config.revealDuration,
   })
 
   // Timer countdown effect
@@ -186,6 +240,18 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
 
     return () => clearInterval(interval)
   }, [state.status])
+
+  // Reveal countdown effect (discovery mode - auto-advance to next song)
+  useEffect(() => {
+    // Only countdown if in reveal state and not listening to rest of song
+    if (state.status !== 'reveal' || state.isListeningToRest) return
+
+    const interval = setInterval(() => {
+      dispatch({ type: 'TICK_REVEAL', revealDuration: config.revealDuration })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [state.status, state.isListeningToRest, config.revealDuration])
 
   // Memoized actions
   const startGame = useCallback(() => dispatch({ type: 'START_GAME' }), [])
@@ -232,16 +298,30 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
   const reset = useCallback(() => dispatch({ type: 'RESET' }), [])
 
   const clipEnded = useCallback(() => {
-    // End of clip without buzz = reveal
-    // We dispatch unconditionally and let the reducer decide based on current state
-    dispatch({ type: 'CLIP_ENDED' })
-  }, [])
+    // End of clip = auto-reveal and start countdown (discovery mode)
+    dispatch({ type: 'CLIP_ENDED', revealDuration: config.revealDuration })
+  }, [config.revealDuration])
 
   const replay = useCallback(() => {
     // Replay the same song from the beginning
     // Timer is NOT reset - only the audio restarts
     dispatch({ type: 'REPLAY' })
   }, [])
+
+  const listenToRest = useCallback(() => {
+    // User wants to hear the rest of the song - stops auto-advance countdown
+    dispatch({ type: 'LISTEN_TO_REST' })
+  }, [])
+
+  const quickScore = useCallback((knew: boolean) => {
+    // Quick scoring during reveal (doesn't block auto-advance)
+    dispatch({ type: 'QUICK_SCORE', knew })
+  }, [])
+
+  const songEnded = useCallback(() => {
+    // Full song ended (after "Écouter la suite") - advance to next
+    dispatch({ type: 'SONG_ENDED', revealDuration: config.revealDuration })
+  }, [config.revealDuration])
 
   // Memoize the actions object to prevent unnecessary re-renders
   // Individual actions are already memoized, but the object itself must be stable
@@ -260,6 +340,9 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
       reset,
       clipEnded,
       replay,
+      listenToRest,
+      quickScore,
+      songEnded,
     }),
     [
       startGame,
@@ -275,6 +358,9 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
       reset,
       clipEnded,
       replay,
+      listenToRest,
+      quickScore,
+      songEnded,
     ]
   )
 
