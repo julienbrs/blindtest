@@ -28,8 +28,11 @@ import { useHostMigration } from '@/hooks/useHostMigration'
 import { useMultiplayerGame } from '@/hooks/useMultiplayerGame'
 import { useAudioPreloader } from '@/hooks/useAudioPreloader'
 import { useReactions } from '@/hooks/useReactions'
+import { useStreak } from '@/hooks/useStreak'
+import { useSoundEffects } from '@/hooks/useSoundEffects'
 import { ReactionPicker } from '@/components/multiplayer/ReactionPicker'
 import { ReactionOverlay } from '@/components/multiplayer/ReactionOverlay'
+import { StreakCelebration } from '@/components/game/StreakCelebration'
 import type { Song } from '@/lib/types'
 
 /**
@@ -115,6 +118,17 @@ export default function MultiplayerRoomPage() {
     playerId: myPlayer?.id ?? null,
     nickname: myPlayer?.nickname ?? null,
   })
+
+  // Sound effects for streak celebration
+  const sfx = useSoundEffects()
+
+  // Streak tracking for consecutive correct answers (player-specific, tracks own correct answers)
+  const {
+    showCelebration: showStreakCelebration,
+    recordCorrect: recordStreakCorrect,
+    recordIncorrect: recordStreakIncorrect,
+    recordSkip: recordStreakSkip,
+  } = useStreak({ threshold: 3 })
 
   const [isReconnecting, setIsReconnecting] = useState(true)
   const [reconnectFailed, setReconnectFailed] = useState(false)
@@ -269,13 +283,23 @@ export default function MultiplayerRoomPage() {
 
   const handleValidate = useCallback(
     async (correct: boolean) => {
+      // Track streak for the player who buzzed (if it's me)
+      const buzzerIsMe = currentBuzzer?.id === myPlayer?.id
+      if (buzzerIsMe) {
+        if (correct) {
+          recordStreakCorrect()
+        } else {
+          recordStreakIncorrect()
+        }
+      }
+
       const success = await validate(correct)
       if (success) {
         setIsRevealed(true)
       }
       return success
     },
-    [validate]
+    [validate, currentBuzzer, myPlayer, recordStreakCorrect, recordStreakIncorrect]
   )
 
   const handleNextSong = useCallback(async () => {
@@ -307,12 +331,14 @@ export default function MultiplayerRoomPage() {
   }, [nextSong, gameState.playedSongIds, audioPreloader])
 
   const handleReveal = useCallback(async () => {
+    // Revealing without buzz/answer resets streak (skip)
+    recordStreakSkip()
     const success = await reveal()
     if (success) {
       setIsRevealed(true)
     }
     return success
-  }, [reveal])
+  }, [reveal, recordStreakSkip])
 
   const handleEndGame = useCallback(async () => {
     return await endGame()
@@ -471,6 +497,13 @@ export default function MultiplayerRoomPage() {
         <PageTransition>
           {/* Reaction overlay (floating emojis) */}
           <ReactionOverlay reactions={reactions} />
+
+          {/* Streak celebration overlay (3+ consecutive correct answers) */}
+          <StreakCelebration
+            show={showStreakCelebration}
+            isMuted={sfx.isMuted}
+            volume={sfx.volume}
+          />
 
           <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
             {/* Reconnection notification */}

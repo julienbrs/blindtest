@@ -31,6 +31,7 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAudioUnlock } from '@/hooks/useAudioUnlock'
 import { useAudioSupport } from '@/hooks/useAudioSupport'
 import { usePageVisibility } from '@/hooks/usePageVisibility'
+import { useStreak } from '@/hooks/useStreak'
 import { fetchWithRetry, NetworkError, getStartPosition } from '@/lib/utils'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
@@ -44,6 +45,7 @@ import { IncorrectAnswerFlash } from '@/components/game/IncorrectAnswerFlash'
 import { NetworkErrorToast } from '@/components/game/NetworkErrorToast'
 import { BrowserUnsupportedError } from '@/components/game/BrowserUnsupportedError'
 import { PausedOverlay } from '@/components/game/PausedOverlay'
+import { StreakCelebration } from '@/components/game/StreakCelebration'
 import { Button } from '@/components/ui/Button'
 import { PageTransition } from '@/components/ui/PageTransition'
 import type { GameConfig, GuessMode, Song, StartPosition } from '@/lib/types'
@@ -138,6 +140,15 @@ function GameContent() {
     triggerShake,
     cleanup: cleanupShake,
   } = useWrongAnswerEffect({ onPlaySound: sfx.incorrect })
+
+  // Streak tracking for consecutive correct answers (surprise celebration at 3+)
+  const {
+    showCelebration: showStreakCelebration,
+    recordCorrect: recordStreakCorrect,
+    recordIncorrect: recordStreakIncorrect,
+    recordSkip: recordStreakSkip,
+    reset: resetStreak,
+  } = useStreak({ threshold: 3 })
 
   // Parse config from URL parameters - memoized to prevent unnecessary re-renders
   // Timer value of '0' from GameConfigForm means no timer mode
@@ -537,8 +548,9 @@ function GameContent() {
       audioPreloader.clearPreloaded()
       cleanupCelebration()
       cleanupShake()
+      resetStreak()
     }
-  }, [audioPreloader, cleanupCelebration, cleanupShake])
+  }, [audioPreloader, cleanupCelebration, cleanupShake, resetStreak])
 
   // Calculate start position when a new song is loaded
   // This ensures the start position is calculated once per song
@@ -631,6 +643,8 @@ function GameContent() {
       await unlockAudio()
 
       if (correct) {
+        // Track streak for consecutive correct answers
+        recordStreakCorrect()
         // Trigger confetti and green flash
         celebrate()
         setShowCorrectFlash(true)
@@ -639,6 +653,8 @@ function GameContent() {
           setShowCorrectFlash(false)
         }, 500)
       } else {
+        // Reset streak on incorrect answer
+        recordStreakIncorrect()
         // Trigger shake and red flash for incorrect answer
         triggerShake()
         setShowIncorrectFlash(true)
@@ -649,7 +665,7 @@ function GameContent() {
       }
       game.actions.validate(correct)
     },
-    [celebrate, triggerShake, game.actions, unlockAudio]
+    [celebrate, triggerShake, game.actions, unlockAudio, recordStreakCorrect, recordStreakIncorrect]
   )
 
   // Handle "Écouter la suite" - user wants to hear the rest of the song
@@ -663,13 +679,18 @@ function GameContent() {
     async (knew: boolean) => {
       await unlockAudio()
       if (knew) {
+        // Track streak for consecutive correct answers
+        recordStreakCorrect()
         celebrate()
         setShowCorrectFlash(true)
         setTimeout(() => setShowCorrectFlash(false), 500)
+      } else {
+        // Reset streak on "didn't know" (similar to skip/reveal without answer)
+        recordStreakSkip()
       }
       game.actions.quickScore(knew)
     },
-    [unlockAudio, game.actions, celebrate]
+    [unlockAudio, game.actions, celebrate, recordStreakCorrect, recordStreakSkip]
   )
 
   // Handle audio ended - decides whether to call clipEnded or songEnded based on state
@@ -1061,6 +1082,13 @@ function GameContent() {
 
       {/* Red flash overlay for incorrect answers */}
       <IncorrectAnswerFlash show={showIncorrectFlash} />
+
+      {/* Streak celebration overlay (3+ consecutive correct answers) */}
+      <StreakCelebration
+        show={showStreakCelebration}
+        isMuted={sfx.isMuted}
+        volume={sfx.volume}
+      />
 
       {/* Network error toast with retry option */}
       <NetworkErrorToast
