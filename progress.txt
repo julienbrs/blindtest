@@ -1162,3 +1162,10 @@ Status: COMPLETED
 Commit: 45dd0c8
 Notes: Created comprehensive E2E tests for loading states and skeleton screens. Created e2e/loading-states.spec.ts with 20 tests organized into 7 test groups: (1) Solo Page Loading: tests for loading screen visibility while library loads, accessibility attributes (aria-live, aria-busy), and loading message display; (2) Game Screen Loading: tests for loading indicator during song loading, spinner styling (border-purple, rounded-full), and smooth transition from loading to game content; (3) Next Song Loading: tests for loading indicator during next song transition; (4) Suspense Fallback: tests for game page Suspense fallback rendering; (5) Library Stats Loading: tests for loading state visibility and spinner animation (animate-spin class); (6) Multiplayer Loading States: tests for create room and join room loading states; (7) Loading States - Mobile: tests for mobile spinner visibility, sizing (>=32px), and game loading indicator visibility. Tests use route interception to simulate slow network conditions.
 Files: e2e/loading-states.spec.ts
+
+=== Issue 17.1: Ajouter les transitions de page avec Framer Motion ===
+Timestamp: 2026-01-23T10:30:00Z
+Status: COMPLETED
+Commit: 942595e
+Notes: Created PageTransition component with fade animation (250ms duration, ease-out easing). Component uses Framer Motion's useReducedMotion hook to respect prefers-reduced-motion setting - when enabled, no animation is applied. Wrapped all 6 page files with PageTransition: homepage, play mode selection, solo config, game screen, multiplayer hub, and multiplayer room pages. Uses GPU-accelerated opacity property for smooth 60fps transitions. Component includes min-h-screen and flex layout for proper page structure.
+Files: src/components/ui/PageTransition.tsx (created), src/app/page.tsx, src/app/play/page.tsx, src/app/solo/page.tsx, src/app/game/page.tsx, src/app/multiplayer/page.tsx, src/app/multiplayer/[code]/page.tsx
