@@ -150,6 +150,7 @@ const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
   id: 'player-123',
   roomId: 'room-123',
   nickname: 'TestPlayer',
+  avatar: '🎸',
   score: 0,
   isHost: false,
   isOnline: true,

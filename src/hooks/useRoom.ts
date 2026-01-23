@@ -61,6 +61,7 @@ function dbRowToPlayer(row: Record<string, unknown>): Player {
     id: row.id as string,
     roomId: row.room_id as string,
     nickname: row.nickname as string,
+    avatar: (row.avatar as string | null) ?? null,
     score: row.score as number,
     isHost: row.is_host as boolean,
     isOnline: true, // Will be updated by presence later

@@ -227,6 +227,7 @@ export interface Player {
   id: string // UUID from Supabase
   roomId: string // UUID of the room this player belongs to
   nickname: string // Display name (max 20 characters)
+  avatar: string | null // Emoji avatar (unique within the room)
   score: number // Current score in this game
   isHost: boolean // Whether this player is the room host
   isOnline: boolean // Whether this player is currently connected (via presence)
