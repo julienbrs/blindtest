@@ -896,6 +896,9 @@ function GameContent() {
             song={game.state.currentSong}
             isRevealed={game.state.isRevealed}
             guessMode={config.guessMode}
+            isPlaying={
+              game.state.status === 'playing' || game.state.status === 'reveal'
+            }
           />
 
           {/* Lecteur audio */}

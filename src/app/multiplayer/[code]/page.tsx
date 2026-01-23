@@ -549,6 +549,9 @@ export default function MultiplayerRoomPage() {
                       song={currentSong}
                       guessMode={room.settings.guessMode ?? 'both'}
                       isRevealed={isRevealed}
+                      isPlaying={
+                        gameState.status === 'playing' && !shouldPauseAudio
+                      }
                     />
                   </motion.div>
                 )}
