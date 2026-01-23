@@ -23,6 +23,7 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
+import { useAudioPreloader } from '@/hooks/useAudioPreloader'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
 import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
@@ -138,11 +139,6 @@ function GameContent() {
     cleanup: cleanupShake,
   } = useWrongAnswerEffect({ onPlaySound: sfx.incorrect })
 
-  // Preloading state for the next song
-  const [nextSong, setNextSong] = useState<Song | null>(null)
-  const preloadedAudioRef = useRef<HTMLAudioElement | null>(null)
-  const isPrefetchingRef = useRef(false)
-
   // Parse config from URL parameters - memoized to prevent unnecessary re-renders
   // Timer value of '0' from GameConfigForm means no timer mode
   const config: GameConfig = useMemo(() => {
@@ -224,6 +220,9 @@ function GameContent() {
     return params.toString()
   }, [libraryFilters, playlistSongIds])
 
+  // Audio preloader hook for intelligent preloading
+  const audioPreloader = useAudioPreloader({ filterQueryString })
+
   const game = useGameState(config)
 
   // Load SFX muted state from localStorage on mount
@@ -300,55 +299,6 @@ function GameContent() {
     []
   )
 
-  // Prefetch the next song during REVEAL state
-  const prefetchNextSong = useCallback(
-    async (excludeIds: string[]) => {
-      if (isPrefetchingRef.current) return
-      isPrefetchingRef.current = true
-
-      // Build URL with exclude and filter params
-      const params = new URLSearchParams()
-      if (excludeIds.length > 0) {
-        params.set('exclude', excludeIds.join(','))
-      }
-      if (filterQueryString) {
-        // Append filter params
-        const filterParams = new URLSearchParams(filterQueryString)
-        filterParams.forEach((value, key) => params.set(key, value))
-      }
-      const url = `/api/songs/random?${params.toString()}`
-
-      try {
-        // Use fetchWithRetry with 2 retries for prefetch (non-critical)
-        const res = await fetchWithRetry(url, {}, 2, 10000)
-
-        if (!res.ok) {
-          // No more songs available - will be handled when transitioning to next song
-          isPrefetchingRef.current = false
-          return
-        }
-
-        const data = (await res.json()) as { song: Song }
-        if (data.song) {
-          setNextSong(data.song)
-          // Preload the audio
-          if (preloadedAudioRef.current) {
-            preloadedAudioRef.current.pause()
-            preloadedAudioRef.current.src = ''
-          }
-          const audio = new Audio(`/api/audio/${data.song.id}`)
-          audio.preload = 'auto'
-          preloadedAudioRef.current = audio
-        }
-      } catch {
-        // Silently fail - will load normally when needed
-      } finally {
-        isPrefetchingRef.current = false
-      }
-    },
-    [filterQueryString]
-  )
-
   // Check if an audio file is accessible via HEAD request
   const checkAudioFileAccessible = useCallback(
     async (songId: string, signal?: AbortSignal): Promise<boolean> => {
@@ -373,11 +323,7 @@ function GameContent() {
   // If the audio file is not accessible, auto-skip and try another song
   // Uses fetchWithRetry for network resilience with timeout and retry
   const loadRandomSong = useCallback(
-    async (
-      excludeIds: string[],
-      preloadedSong: Song | null,
-      signal?: AbortSignal
-    ) => {
+    async (excludeIds: string[], signal?: AbortSignal) => {
       // Check if aborted before starting
       if (signal?.aborted) {
         return
@@ -386,19 +332,19 @@ function GameContent() {
       // Clear any previous network error
       setNetworkError({ show: false })
 
-      // If we have a preloaded song, verify it's still accessible
-      if (preloadedSong) {
+      // Check if we have a preloaded song from the hook
+      const preloaded = audioPreloader.consumePreloaded()
+      if (preloaded) {
         try {
           const isAccessible = await checkAudioFileAccessible(
-            preloadedSong.id,
+            preloaded.song.id,
             signal
           )
           // Check abort after async operation
           if (signal?.aborted) return
 
           if (isAccessible) {
-            game.actions.loadSong(preloadedSong)
-            setNextSong(null)
+            game.actions.loadSong(preloaded.song)
             return
           }
         } catch (error) {
@@ -409,10 +355,11 @@ function GameContent() {
         }
         // Preloaded song is not accessible, add to exclude list and load normally
         console.warn(
-          `Audio file for preloaded song "${preloadedSong.title}" not accessible, skipping...`
+          `Audio file for preloaded song "${preloaded.song.title}" not accessible, skipping...`
         )
-        excludeIds = [...excludeIds, preloadedSong.id]
-        setNextSong(null)
+        excludeIds = [...excludeIds, preloaded.song.id]
+        // Clear the preloaded audio since it's not usable
+        audioPreloader.clearPreloaded()
       }
 
       // Build URL with exclude and filter params
@@ -464,7 +411,8 @@ function GameContent() {
               `Audio file for song "${data.song.title}" not accessible, skipping...`
             )
             // Recursively call to get another song with updated exclude list
-            await loadRandomSong([...excludeIds, data.song.id], null, signal)
+            // eslint-disable-next-line react-hooks/immutability
+            await loadRandomSong([...excludeIds, data.song.id], signal)
             return
           }
           game.actions.loadSong(data.song)
@@ -491,13 +439,13 @@ function GameContent() {
 
         // Store retry callback
         retryCallbackRef.current = () => {
-          void loadRandomSong(excludeIds, null)
+          void loadRandomSong(excludeIds)
         }
 
         setNetworkError({ show: true, message })
       }
     },
-    [game.actions, checkAudioFileAccessible, filterQueryString]
+    [game.actions, checkAudioFileAccessible, filterQueryString, audioPreloader]
   )
 
   // Handle network error retry
@@ -548,61 +496,49 @@ function GameContent() {
 
     // Capture values for the async function
     const playedIds = game.state.playedSongIds
-    const preloadedSong = nextSong
 
     // Reset the audioReady state for the new song
     setAudioReadyForSongId(null)
 
     // Load a new random song (excluding already played songs), using preloaded if available
-    void loadRandomSong(playedIds, preloadedSong, abortController.signal)
+    void loadRandomSong(playedIds, abortController.signal)
 
     // Cleanup: abort the operation when effect is cleaned up (component unmount or deps change)
     return () => {
       abortController.abort()
       isLoadingSongRef.current = false
     }
-  }, [
-    game.state.status,
-    game.state.currentSong,
-    game.state.playedSongIds,
-    loadRandomSong,
-    nextSong,
-  ])
+  }, [game.state.status, game.state.currentSong, game.state.playedSongIds, loadRandomSong])
 
-  // Prefetch next song during REVEAL state
+  // Prefetch next song during REVEAL state using the audio preloader hook
   useEffect(() => {
     if (
       game.state.status === 'reveal' &&
-      !nextSong &&
-      !isPrefetchingRef.current
+      !audioPreloader.getPreloaded() &&
+      !audioPreloader.isPrefetching
     ) {
       // Build exclude list: already played songs + current song
       const excludeIds = [
         ...game.state.playedSongIds,
         game.state.currentSong?.id,
       ].filter((id): id is string => Boolean(id))
-      void prefetchNextSong(excludeIds)
+      void audioPreloader.preloadNext(excludeIds)
     }
   }, [
     game.state.status,
     game.state.playedSongIds,
     game.state.currentSong,
-    nextSong,
-    prefetchNextSong,
+    audioPreloader,
   ])
 
   // Cleanup preloaded audio and celebration on unmount
   useEffect(() => {
     return () => {
-      if (preloadedAudioRef.current) {
-        preloadedAudioRef.current.pause()
-        preloadedAudioRef.current.src = ''
-        preloadedAudioRef.current = null
-      }
+      audioPreloader.clearPreloaded()
       cleanupCelebration()
       cleanupShake()
     }
-  }, [cleanupCelebration, cleanupShake])
+  }, [audioPreloader, cleanupCelebration, cleanupShake])
 
   // Calculate start position when a new song is loaded
   // This ensures the start position is calculated once per song

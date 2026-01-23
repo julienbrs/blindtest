@@ -26,6 +26,7 @@ import { useRoom } from '@/hooks/useRoom'
 import { usePresence } from '@/hooks/usePresence'
 import { useHostMigration } from '@/hooks/useHostMigration'
 import { useMultiplayerGame } from '@/hooks/useMultiplayerGame'
+import { useAudioPreloader } from '@/hooks/useAudioPreloader'
 import type { Song } from '@/lib/types'
 
 /**
@@ -99,6 +100,9 @@ export default function MultiplayerRoomPage() {
     onlineStatus,
     isOnline,
   })
+
+  // Audio preloader for intelligent next song preloading (host only)
+  const audioPreloader = useAudioPreloader({ enabled: isHost })
 
   const [isReconnecting, setIsReconnecting] = useState(true)
   const [reconnectFailed, setReconnectFailed] = useState(false)
@@ -176,6 +180,29 @@ export default function MultiplayerRoomPage() {
     }
   }, [gameState.status, room?.settings.timerDuration])
 
+  // Preload next song during reveal state (host only)
+  useEffect(() => {
+    if (
+      isHost &&
+      gameState.status === 'reveal' &&
+      !audioPreloader.getPreloaded() &&
+      !audioPreloader.isPrefetching
+    ) {
+      // Build exclude list: already played songs + current song
+      const excludeIds = [
+        ...gameState.playedSongIds,
+        gameState.currentSongId,
+      ].filter((id): id is string => Boolean(id))
+      void audioPreloader.preloadNext(excludeIds)
+    }
+  }, [
+    isHost,
+    gameState.status,
+    gameState.playedSongIds,
+    gameState.currentSongId,
+    audioPreloader,
+  ])
+
   // Timer countdown effect
   useEffect(() => {
     if (!timerActive || timerRemaining <= 0) return
@@ -232,7 +259,15 @@ export default function MultiplayerRoomPage() {
   )
 
   const handleNextSong = useCallback(async () => {
-    // Fetch a random song and start it
+    // Try to use preloaded song first for instant transition
+    const preloaded = audioPreloader.consumePreloaded()
+    if (preloaded) {
+      await nextSong(preloaded.song.id)
+      setIsRevealed(false)
+      return
+    }
+
+    // Fallback: Fetch a random song and start it
     try {
       const excludeIds = gameState.playedSongIds.join(',')
       const url = excludeIds
@@ -249,7 +284,7 @@ export default function MultiplayerRoomPage() {
     } catch {
       // Ignore fetch errors
     }
-  }, [nextSong, gameState.playedSongIds])
+  }, [nextSong, gameState.playedSongIds, audioPreloader])
 
   const handleReveal = useCallback(async () => {
     const success = await reveal()
