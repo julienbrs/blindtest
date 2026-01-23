@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { TrophyIcon } from '@heroicons/react/24/solid'
+import { PlayerAvatar } from '@/components/ui/PlayerAvatar'
 import type { Player } from '@/lib/types'
 import { LeaderboardSkeleton } from '@/components/ui/LeaderboardSkeleton'
 
@@ -103,15 +104,20 @@ function LeaderboardEntry({
 
       {/* Player info */}
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        {/* Online indicator */}
+        {/* Avatar with online indicator */}
         <div className="relative flex-shrink-0">
+          <PlayerAvatar
+            avatar={player.avatar}
+            nickname={player.nickname}
+            size="sm"
+          />
           <div
-            className={`h-2 w-2 rounded-full ${
+            className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-purple-900/50 ${
               player.isOnline ? 'bg-green-500' : 'bg-gray-500'
             }`}
           />
           {player.isOnline && !shouldReduceMotion && (
-            <div className="absolute inset-0 h-2 w-2 animate-ping rounded-full bg-green-500 opacity-50" />
+            <div className="absolute -bottom-0.5 -right-0.5 h-2 w-2 animate-ping rounded-full bg-green-500 opacity-50" />
           )}
         </div>
 

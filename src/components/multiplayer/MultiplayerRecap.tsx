@@ -10,6 +10,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/solid'
 import { Button } from '@/components/ui/Button'
+import { PlayerAvatar } from '@/components/ui/PlayerAvatar'
 import type { Player, Room } from '@/lib/types'
 
 interface ConfettiParticle {
@@ -99,7 +100,24 @@ function PodiumPlace({ player, position, isCurrentPlayer }: PodiumPlaceProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: config.delay, duration: 0.5, ease: 'easeOut' }}
     >
-      {/* Player avatar/name */}
+      {/* Player avatar */}
+      <motion.div
+        className="mb-2"
+        initial={shouldReduceMotion ? {} : { scale: 0.8 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: config.delay + 0.15, duration: 0.3 }}
+      >
+        <PlayerAvatar
+          avatar={player.avatar}
+          nickname={player.nickname}
+          size="lg"
+          className={
+            isCurrentPlayer ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-purple-900/50' : ''
+          }
+        />
+      </motion.div>
+
+      {/* Player name */}
       <motion.div
         className={`mb-2 rounded-full px-4 py-2 text-center ${
           isCurrentPlayer
@@ -414,6 +432,13 @@ export function MultiplayerRecap({
                       </span>
                     )}
                   </div>
+
+                  {/* Avatar */}
+                  <PlayerAvatar
+                    avatar={player.avatar}
+                    nickname={player.nickname}
+                    size="sm"
+                  />
 
                   {/* Player name */}
                   <div className="min-w-0 flex-1">
