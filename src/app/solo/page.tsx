@@ -14,6 +14,7 @@ import { LibraryStats } from '@/components/game/LibraryStats'
 import { EmptyLibraryError } from '@/components/game/EmptyLibraryError'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 import { Button } from '@/components/ui/Button'
+import { PageTransition } from '@/components/ui/PageTransition'
 
 export default function SoloPage() {
   const router = useRouter()
@@ -63,7 +64,7 @@ export default function SoloPage() {
 
   if (isLoading) {
     return (
-      <>
+      <PageTransition>
         <LoadingScreen message="Chargement de la bibliothèque..." />
         <div className="hidden">
           <LibraryStats
@@ -71,17 +72,18 @@ export default function SoloPage() {
             onLoadingChange={handleLoadingChange}
           />
         </div>
-      </>
+      </PageTransition>
     )
   }
 
   return (
-    <motion.main
-      className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4 lg:p-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <PageTransition>
+      <motion.main
+        className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4 lg:p-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
       {/* Back button */}
       <motion.div
         className="mb-4 w-full max-w-md px-2 sm:px-0"
@@ -168,6 +170,7 @@ export default function SoloPage() {
           onLoadingChange={handleLoadingChange}
         />
       </motion.div>
-    </motion.main>
+      </motion.main>
+    </PageTransition>
   )
 }

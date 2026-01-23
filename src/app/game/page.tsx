@@ -44,6 +44,7 @@ import { NetworkErrorToast } from '@/components/game/NetworkErrorToast'
 import { BrowserUnsupportedError } from '@/components/game/BrowserUnsupportedError'
 import { PausedOverlay } from '@/components/game/PausedOverlay'
 import { Button } from '@/components/ui/Button'
+import { PageTransition } from '@/components/ui/PageTransition'
 import type { GameConfig, GuessMode, Song, StartPosition } from '@/lib/types'
 
 // Animation variants for game state transitions
@@ -775,29 +776,37 @@ function GameContent() {
   // Show loading screen while checking audio support
   if (isCheckingAudio) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
-      </div>
+      <PageTransition>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
+        </div>
+      </PageTransition>
     )
   }
 
   // Show error screen if browser doesn't support audio
   if (!isAudioSupported) {
-    return <BrowserUnsupportedError />
+    return (
+      <PageTransition>
+        <BrowserUnsupportedError />
+      </PageTransition>
+    )
   }
 
   // Show recap screen when game is ended
   if (game.state.status === 'ended') {
     return (
-      <motion.div key="game-recap" {...getAnimationProps(fadeScale)}>
-        <GameRecap
-          score={game.state.score}
-          songsPlayed={game.state.songsPlayed}
-          onNewGame={handleNewGame}
-          onHome={handleHome}
-          allSongsPlayed={allSongsPlayed}
-        />
-      </motion.div>
+      <PageTransition>
+        <motion.div key="game-recap" {...getAnimationProps(fadeScale)}>
+          <GameRecap
+            score={game.state.score}
+            songsPlayed={game.state.songsPlayed}
+            onNewGame={handleNewGame}
+            onHome={handleHome}
+            allSongsPlayed={allSongsPlayed}
+          />
+        </motion.div>
+      </PageTransition>
     )
   }
 
@@ -807,10 +816,11 @@ function GameContent() {
     : {}
 
   return (
-    <motion.main
-      className="flex min-h-screen w-full flex-col overflow-x-hidden p-3 sm:p-4 lg:p-6"
-      animate={shouldReduceMotion ? {} : shakeAnimation}
-    >
+    <PageTransition>
+      <motion.main
+        className="flex min-h-screen w-full flex-col overflow-x-hidden p-3 sm:p-4 lg:p-6"
+        animate={shouldReduceMotion ? {} : shakeAnimation}
+      >
       {/* Header avec score - Responsive layout */}
       <header className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4 lg:mb-6">
         <ScoreDisplay
@@ -1126,7 +1136,8 @@ function GameContent() {
         show={wasPausedByVisibility}
         onResume={handleVisibilityResume}
       />
-    </motion.main>
+      </motion.main>
+    </PageTransition>
   )
 }
 

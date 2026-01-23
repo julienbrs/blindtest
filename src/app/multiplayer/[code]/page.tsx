@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
+import { PageTransition } from '@/components/ui/PageTransition'
 import { Lobby } from '@/components/multiplayer/Lobby'
 import { HostControls } from '@/components/multiplayer/HostControls'
 import { BuzzIndicator } from '@/components/multiplayer/BuzzIndicator'
@@ -281,46 +282,53 @@ export default function MultiplayerRoomPage() {
 
   // Loading state
   if (isReconnecting || isLoading) {
-    return <LoadingScreen message="Connexion a la room..." />
+    return (
+      <PageTransition>
+        <LoadingScreen message="Connexion a la room..." />
+      </PageTransition>
+    )
   }
 
   // Supabase not configured
   if (!isConfigured) {
     return (
-      <main className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4">
-        <motion.div
-          className="w-full max-w-md"
-          initial="hidden"
-          animate="visible"
-          variants={fadeUpVariants}
-        >
-          <Card variant="elevated" className="p-6 text-center">
-            <ExclamationTriangleIcon className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
-            <h2 className="mb-2 text-xl font-bold text-white">
-              Supabase non configure
-            </h2>
-            <p className="mb-6 text-purple-200">
-              Le mode multijoueur necessite une configuration Supabase.
-            </p>
-            <Button variant="secondary" onClick={handleBack} fullWidth>
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Retour
-            </Button>
-          </Card>
-        </motion.div>
-      </main>
+      <PageTransition>
+        <main className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4">
+          <motion.div
+            className="w-full max-w-md"
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpVariants}
+          >
+            <Card variant="elevated" className="p-6 text-center">
+              <ExclamationTriangleIcon className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
+              <h2 className="mb-2 text-xl font-bold text-white">
+                Supabase non configure
+              </h2>
+              <p className="mb-6 text-purple-200">
+                Le mode multijoueur necessite une configuration Supabase.
+              </p>
+              <Button variant="secondary" onClick={handleBack} fullWidth>
+                <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                Retour
+              </Button>
+            </Card>
+          </motion.div>
+        </main>
+      </PageTransition>
     )
   }
 
   // Room not found or player not in room (needs to join)
   if (reconnectFailed || (!room && !isLoading)) {
     return (
-      <main className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4">
-        <motion.div
-          className="w-full max-w-md"
-          initial="hidden"
-          animate="visible"
-          variants={fadeUpVariants}
+      <PageTransition>
+        <main className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4">
+          <motion.div
+            className="w-full max-w-md"
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpVariants}
         >
           <Card variant="elevated" className="p-6 text-center">
             <ExclamationTriangleIcon className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
@@ -344,7 +352,8 @@ export default function MultiplayerRoomPage() {
             </div>
           </Card>
         </motion.div>
-      </main>
+        </main>
+      </PageTransition>
     )
   }
 
@@ -353,46 +362,48 @@ export default function MultiplayerRoomPage() {
     // Waiting room (lobby)
     if (room.status === 'waiting') {
       return (
-        <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
-          {/* Reconnection notification */}
-          <ReconnectionNotification
-            show={showReconnectedMessage}
-            onDismiss={clearReconnectionMessage}
-          />
+        <PageTransition>
+          <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
+            {/* Reconnection notification */}
+            <ReconnectionNotification
+              show={showReconnectedMessage}
+              onDismiss={clearReconnectionMessage}
+            />
 
-          {/* Host migration notification */}
-          <HostMigrationNotification
-            newHostNickname={newHostNickname}
-            onDismiss={clearNotification}
-          />
+            {/* Host migration notification */}
+            <HostMigrationNotification
+              newHostNickname={newHostNickname}
+              onDismiss={clearNotification}
+            />
 
-          {/* Header */}
-          <motion.div
-            className="mb-8 text-center"
-            initial="hidden"
-            animate="visible"
-            variants={fadeUpVariants}
-          >
-            <h1 className="bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
-              Lobby
-            </h1>
-            <p className="mt-2 text-purple-200">En attente des joueurs...</p>
-          </motion.div>
+            {/* Header */}
+            <motion.div
+              className="mb-8 text-center"
+              initial="hidden"
+              animate="visible"
+              variants={fadeUpVariants}
+            >
+              <h1 className="bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
+                Lobby
+              </h1>
+              <p className="mt-2 text-purple-200">En attente des joueurs...</p>
+            </motion.div>
 
-          {/* Lobby Component */}
-          <Lobby
-            room={room}
-            players={players}
-            myPlayerId={myPlayer?.id ?? null}
-            isHost={isHost}
-            onStartGame={handleStartGame}
-            onLeaveRoom={handleLeaveRoom}
-            onUpdateSettings={updateSettings}
-            onKickPlayer={kickPlayer}
-            isLoading={isLoading}
-            error={error}
-          />
-        </main>
+            {/* Lobby Component */}
+            <Lobby
+              room={room}
+              players={players}
+              myPlayerId={myPlayer?.id ?? null}
+              isHost={isHost}
+              onStartGame={handleStartGame}
+              onLeaveRoom={handleLeaveRoom}
+              onUpdateSettings={updateSettings}
+              onKickPlayer={kickPlayer}
+              isLoading={isLoading}
+              error={error}
+            />
+          </main>
+        </PageTransition>
       )
     }
 
@@ -402,181 +413,189 @@ export default function MultiplayerRoomPage() {
         gameState.status === 'playing' && !currentBuzzer && !isBuzzing
 
       return (
-        <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
-          {/* Reconnection notification */}
-          <ReconnectionNotification
-            show={showReconnectedMessage}
-            onDismiss={clearReconnectionMessage}
-          />
+        <PageTransition>
+          <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8">
+            {/* Reconnection notification */}
+            <ReconnectionNotification
+              show={showReconnectedMessage}
+              onDismiss={clearReconnectionMessage}
+            />
 
-          {/* Host migration notification */}
-          <HostMigrationNotification
-            newHostNickname={newHostNickname}
-            onDismiss={clearNotification}
-          />
+            {/* Host migration notification */}
+            <HostMigrationNotification
+              newHostNickname={newHostNickname}
+              onDismiss={clearNotification}
+            />
 
-          {/* Header */}
-          <motion.div
-            className="mb-6 text-center"
-            initial="hidden"
-            animate="visible"
-            variants={fadeUpVariants}
-          >
-            <h1 className="bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent sm:text-3xl">
-              Partie en cours
-            </h1>
-            <p className="mt-1 text-sm text-purple-200">
-              Room: {room.code} | {players.length} joueur
-              {players.length > 1 ? 's' : ''}
-            </p>
-          </motion.div>
-
-          {/* Main game layout with sidebar on larger screens */}
-          <div className="flex w-full max-w-5xl flex-col gap-6 lg:flex-row lg:justify-center">
-            {/* Leaderboard (mobile: collapsible at top, desktop: sidebar) */}
+            {/* Header */}
             <motion.div
-              className="w-full lg:sticky lg:top-8 lg:w-72 lg:flex-shrink-0"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              className="mb-6 text-center"
+              initial="hidden"
+              animate="visible"
+              variants={fadeUpVariants}
             >
-              <Leaderboard
-                players={players}
-                myPlayerId={myPlayer?.id ?? null}
-                compact
-              />
+              <h1 className="bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-2xl font-extrabold text-transparent sm:text-3xl">
+                Partie en cours
+              </h1>
+              <p className="mt-1 text-sm text-purple-200">
+                Room: {room.code} | {players.length} joueur
+                {players.length > 1 ? 's' : ''}
+              </p>
             </motion.div>
 
-            {/* Main game content */}
-            <div className="flex w-full max-w-lg flex-col items-center gap-6">
-              {/* Audio Player */}
-              {gameState.currentSongId && (
-                <motion.div
-                  className="w-full"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <SyncedAudioPlayer
-                    songId={gameState.currentSongId}
-                    startedAt={gameState.currentSongStartedAt}
-                    isPlaying={
-                      gameState.status === 'playing' && !shouldPauseAudio
-                    }
-                    maxDuration={room.settings.clipDuration ?? 30}
-                    onEnded={handleAudioEnded}
-                  />
-                </motion.div>
-              )}
-
-              {/* Song cover with blur (reveal when appropriate) */}
-              {currentSong && (
-                <motion.div
-                  className="w-full"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <SongReveal
-                    song={currentSong}
-                    guessMode={room.settings.guessMode ?? 'both'}
-                    isRevealed={isRevealed}
-                  />
-                </motion.div>
-              )}
-
-              {/* Buzz indicator (shows who buzzed) */}
-              {currentBuzzer && (
-                <BuzzIndicator
-                  buzzes={currentBuzzes}
+            {/* Main game layout with sidebar on larger screens */}
+            <div className="flex w-full max-w-5xl flex-col gap-6 lg:flex-row lg:justify-center">
+              {/* Leaderboard (mobile: collapsible at top, desktop: sidebar) */}
+              <motion.div
+                className="w-full lg:sticky lg:top-8 lg:w-72 lg:flex-shrink-0"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Leaderboard
                   players={players}
-                  currentBuzzer={currentBuzzer}
                   myPlayerId={myPlayer?.id ?? null}
+                  compact
                 />
-              )}
+              </motion.div>
 
-              {/* Timer (when someone is answering) */}
-              {timerActive && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <Timer
-                    duration={room.settings.timerDuration ?? 5}
-                    remaining={timerRemaining}
-                    onTimeout={handleTimerEnd}
-                  />
-                </motion.div>
-              )}
-
-              {/* Buzzer button (for non-host or host when playing) */}
-              {canBuzz && (
-                <motion.div
-                  className="w-full"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <BuzzerButton
-                    disabled={!canBuzz || isBuzzing}
-                    onBuzz={handleBuzz}
-                  />
-                </motion.div>
-              )}
-
-              {/* Host Controls */}
-              {isHost && (
-                <motion.div
-                  className="w-full"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <Card variant="elevated" className="p-4">
-                    <HostControls
-                      gameStatus={gameState.status}
-                      isRevealed={isRevealed}
-                      hasBuzzer={currentBuzzer !== null}
-                      onValidate={handleValidate}
-                      onNextSong={handleNextSong}
-                      onReveal={handleReveal}
-                      onEndGame={handleEndGame}
-                      isLoading={isLoading}
+              {/* Main game content */}
+              <div className="flex w-full max-w-lg flex-col items-center gap-6">
+                {/* Audio Player */}
+                {gameState.currentSongId && (
+                  <motion.div
+                    className="w-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <SyncedAudioPlayer
+                      songId={gameState.currentSongId}
+                      startedAt={gameState.currentSongStartedAt}
+                      isPlaying={
+                        gameState.status === 'playing' && !shouldPauseAudio
+                      }
+                      maxDuration={room.settings.clipDuration ?? 30}
+                      onEnded={handleAudioEnded}
                     />
-                  </Card>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
 
-              {/* Leave button for non-hosts */}
-              {!isHost && (
-                <Button
-                  variant="secondary"
-                  onClick={handleLeaveRoom}
-                  className="mt-4"
-                >
-                  <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                  Quitter la partie
-                </Button>
-              )}
+                {/* Song cover with blur (reveal when appropriate) */}
+                {currentSong && (
+                  <motion.div
+                    className="w-full"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <SongReveal
+                      song={currentSong}
+                      guessMode={room.settings.guessMode ?? 'both'}
+                      isRevealed={isRevealed}
+                    />
+                  </motion.div>
+                )}
+
+                {/* Buzz indicator (shows who buzzed) */}
+                {currentBuzzer && (
+                  <BuzzIndicator
+                    buzzes={currentBuzzes}
+                    players={players}
+                    currentBuzzer={currentBuzzer}
+                    myPlayerId={myPlayer?.id ?? null}
+                  />
+                )}
+
+                {/* Timer (when someone is answering) */}
+                {timerActive && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <Timer
+                      duration={room.settings.timerDuration ?? 5}
+                      remaining={timerRemaining}
+                      onTimeout={handleTimerEnd}
+                    />
+                  </motion.div>
+                )}
+
+                {/* Buzzer button (for non-host or host when playing) */}
+                {canBuzz && (
+                  <motion.div
+                    className="w-full"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <BuzzerButton
+                      disabled={!canBuzz || isBuzzing}
+                      onBuzz={handleBuzz}
+                    />
+                  </motion.div>
+                )}
+
+                {/* Host Controls */}
+                {isHost && (
+                  <motion.div
+                    className="w-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <Card variant="elevated" className="p-4">
+                      <HostControls
+                        gameStatus={gameState.status}
+                        isRevealed={isRevealed}
+                        hasBuzzer={currentBuzzer !== null}
+                        onValidate={handleValidate}
+                        onNextSong={handleNextSong}
+                        onReveal={handleReveal}
+                        onEndGame={handleEndGame}
+                        isLoading={isLoading}
+                      />
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* Leave button for non-hosts */}
+                {!isHost && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleLeaveRoom}
+                    className="mt-4"
+                  >
+                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                    Quitter la partie
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </PageTransition>
       )
     }
 
     // Game ended - Show multiplayer recap
     if (room.status === 'ended') {
       return (
-        <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden">
-          <MultiplayerRecap
-            room={room}
-            players={players}
-            myPlayerId={myPlayer?.id ?? null}
-            isHost={isHost}
-            onNewGame={restartGame}
-            onLeave={handleLeaveRoom}
-          />
-        </main>
+        <PageTransition>
+          <main className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden">
+            <MultiplayerRecap
+              room={room}
+              players={players}
+              myPlayerId={myPlayer?.id ?? null}
+              isHost={isHost}
+              onNewGame={restartGame}
+              onLeave={handleLeaveRoom}
+            />
+          </main>
+        </PageTransition>
       )
     }
   }
 
   // Fallback - should not reach here
-  return <LoadingScreen message="Chargement..." />
+  return (
+    <PageTransition>
+      <LoadingScreen message="Chargement..." />
+    </PageTransition>
+  )
 }
