@@ -1231,3 +1231,10 @@ Status: COMPLETED
 Commit: a08290b
 Notes: Created decorative AudioVisualizer component with 10 animated vertical bars. Uses pre-computed bar configurations to avoid impure Math.random() calls during render. Bars animate between different heights during playback and freeze at 20% height when paused. Component positioned behind album cover with 15% opacity to avoid distraction. Respects prefers-reduced-motion preference (bars stay static). Modified SongReveal to accept optional isPlaying prop and integrate visualizer. Updated solo game page and multiplayer game page to pass isPlaying prop based on game state. Updated responsive tests to account for new component structure (z-10 class on cover).
 Files: src/components/game/AudioVisualizer.tsx (created), src/components/game/SongReveal.tsx (modified), src/app/game/page.tsx (modified), src/app/multiplayer/[code]/page.tsx (modified), src/test/responsive.test.tsx (modified)
+
+=== Issue 19.2: Implémenter le streak bonus avec animation ===
+Timestamp: 2026-01-23T03:05:00Z
+Status: COMPLETED
+Commit: a0e0096
+Notes: Implemented streak bonus feature that triggers a special celebration when players get 3+ consecutive correct answers. Created useStreak hook to track consecutive correct answers with threshold-based celebration trigger, no visible counter (surprise effect), and reset on incorrect answer or skip. Created StreakCelebration component with golden/rainbow confetti particles and special triumphant fanfare sound (different from normal correct sound). Sound generated via Web Audio API with ascending D major arpeggio and sparkle effect. Integrated into solo game (handleValidate, handleQuickScore) and multiplayer game (handleValidate for buzzer, handleReveal for skip). Respects prefers-reduced-motion preference (just plays sound, no visual effects). Deterministic particle positions avoid impure Math.random() during render.
+Files: src/hooks/useStreak.ts (created), src/components/game/StreakCelebration.tsx (created), src/app/game/page.tsx (modified), src/app/multiplayer/[code]/page.tsx (modified)

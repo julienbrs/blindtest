@@ -292,7 +292,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 ### Epic 19: Fun & Visual (docs/epics/19-fun-visual.md)
 
 - [x] 19.1 Créer le visualizer audio décoratif
-- [ ] 19.2 Implémenter le streak bonus avec animation
+- [x] 19.2 Implémenter le streak bonus avec animation
 - [ ] 19.3 Créer le podium animé de fin de partie
 
 ---
