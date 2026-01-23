@@ -3,6 +3,10 @@
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { TrophyIcon } from '@heroicons/react/24/solid'
 import type { Player } from '@/lib/types'
+import { LeaderboardSkeleton } from '@/components/ui/LeaderboardSkeleton'
+
+// Re-export for convenience
+export { LeaderboardSkeleton }
 
 /**
  * Medal colors for top 3 positions
@@ -162,6 +166,7 @@ interface LeaderboardProps {
   previousPositions?: Map<string, number>
   compact?: boolean
   className?: string
+  isLoading?: boolean
 }
 
 /**
@@ -186,8 +191,14 @@ export function Leaderboard({
   previousPositions,
   compact = false,
   className = '',
+  isLoading = false,
 }: LeaderboardProps) {
   const shouldReduceMotion = useReducedMotion()
+
+  // Show skeleton while loading with no players
+  if (isLoading && players.length === 0) {
+    return <LeaderboardSkeleton compact={compact} className={className} />
+  }
 
   // Sort players by score (descending), then by joinedAt (earlier first for ties)
   const sortedPlayers = [...players].sort((a, b) => {

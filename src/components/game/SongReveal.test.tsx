@@ -33,17 +33,24 @@ const mockSong: Song = {
 
 describe('SongReveal', () => {
   describe('loading state', () => {
-    it('shows loading message when song is null', () => {
-      render(<SongReveal song={null} isRevealed={false} guessMode="both" />)
+    it('shows skeleton loader when song is null', () => {
+      const { container } = render(
+        <SongReveal song={null} isRevealed={false} guessMode="both" />
+      )
 
-      expect(screen.getByText('Chargement...')).toBeInTheDocument()
+      // SongSkeleton renders animated pulse elements
+      const skeletonElements = container.querySelectorAll('.animate-pulse')
+      expect(skeletonElements.length).toBeGreaterThan(0)
     })
 
-    it('applies correct styling to loading container', () => {
-      render(<SongReveal song={null} isRevealed={false} guessMode="both" />)
+    it('applies glass-morphism styling to skeleton elements', () => {
+      const { container } = render(
+        <SongReveal song={null} isRevealed={false} guessMode="both" />
+      )
 
-      const container = screen.getByText('Chargement...').parentElement
-      expect(container).toHaveClass('bg-white/10', 'rounded-2xl')
+      // Skeleton has glass-morphism style: bg-white/10 and backdrop-blur-sm
+      const albumCoverSkeleton = container.querySelector('.h-48.w-48')
+      expect(albumCoverSkeleton).toHaveClass('bg-white/10', 'backdrop-blur-sm')
     })
   })
 

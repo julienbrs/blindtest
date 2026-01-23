@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { MusicalNoteIcon } from '@heroicons/react/24/solid'
 import type { Song, GuessMode } from '@/lib/types'
+import { SongSkeleton } from '@/components/ui/SongSkeleton'
 
 // Base64 1x1 purple blur placeholder for instant loading
 const PLACEHOLDER_BLUR =
@@ -16,11 +17,7 @@ interface SongRevealProps {
 
 export function SongReveal({ song, isRevealed, guessMode }: SongRevealProps) {
   if (!song) {
-    return (
-      <div className="flex h-48 w-48 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-sm landscape:h-36 landscape:w-36 sm:h-56 sm:w-56 md:h-64 md:w-64 landscape:md:h-48 landscape:md:w-48">
-        <p className="text-sm text-purple-300 sm:text-base">Chargement...</p>
-      </div>
-    )
+    return <SongSkeleton />
   }
 
   return (

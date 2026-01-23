@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/solid'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { PlayerListSkeleton } from '@/components/ui/PlayerListSkeleton'
 import { PlayerList } from './PlayerCard'
 import type { Room, Player, GameConfig, GuessMode } from '@/lib/types'
 
@@ -234,7 +235,9 @@ export function Lobby({
             />
           </div>
 
-          {players.length === 0 && (
+          {players.length === 0 && isLoading && <PlayerListSkeleton count={2} />}
+
+          {players.length === 0 && !isLoading && (
             <div className="py-8 text-center text-purple-300">
               En attente de joueurs...
             </div>
