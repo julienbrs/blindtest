@@ -1169,3 +1169,10 @@ Status: COMPLETED
 Commit: 942595e
 Notes: Created PageTransition component with fade animation (250ms duration, ease-out easing). Component uses Framer Motion's useReducedMotion hook to respect prefers-reduced-motion setting - when enabled, no animation is applied. Wrapped all 6 page files with PageTransition: homepage, play mode selection, solo config, game screen, multiplayer hub, and multiplayer room pages. Uses GPU-accelerated opacity property for smooth 60fps transitions. Component includes min-h-screen and flex layout for proper page structure.
 Files: src/components/ui/PageTransition.tsx (created), src/app/page.tsx, src/app/play/page.tsx, src/app/solo/page.tsx, src/app/game/page.tsx, src/app/multiplayer/page.tsx, src/app/multiplayer/[code]/page.tsx
+
+=== Issue 17.2: Ajouter les micro-interactions bounce sur boutons de jeu ===
+Timestamp: 2026-01-23T01:10:00Z
+Status: COMPLETED
+Commit: 66b952f
+Notes: Added bounce micro-interactions with spring physics (scale 0.95 → 1.05 → 1) to game buttons. BuzzerButton, GameControls (Correct/Incorrect/Suivant/Révéler), and HostControls buttons all have bounce effect on tap. Uses Framer Motion's useReducedMotion hook to respect user preference. Navigation buttons (Play/Pause, End Game) intentionally excluded per acceptance criteria.
+Files: src/components/game/BuzzerButton.tsx, src/components/game/GameControls.tsx, src/components/multiplayer/HostControls.tsx

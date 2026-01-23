@@ -273,7 +273,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 ### Epic 17: Performance & Polish (docs/epics/17-performance-polish.md)
 
 - [x] 17.1 Ajouter les transitions de page avec Framer Motion
-- [ ] 17.2 Ajouter les micro-interactions bounce sur boutons de jeu
+- [x] 17.2 Ajouter les micro-interactions bounce sur boutons de jeu
 - [ ] 17.3 Créer les skeleton loaders glass-morphism
 - [ ] 17.4 Implémenter le Service Worker pour caching
 - [ ] 17.5 Ajouter le pre-loading audio intelligent
