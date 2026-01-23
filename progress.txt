@@ -1224,3 +1224,10 @@ Status: COMPLETED
 Commit: ee9e43b
 Notes: Created game history feature showing all rounds played in the multiplayer end-game recap. Added RoundHistory type to track song info, buzz winner, answer correctness, and buzz time. Created GameHistory component with timeline-style display showing round number, song title/artist, who buzzed (with avatar), correct/incorrect result, and buzz time in seconds. Modified useMultiplayerGame hook to collect round history data during validate() and reveal() actions using a ref to track current song info. Added setCurrentRoundInfo function called when songs are fetched. History persists through the game and displays in MultiplayerRecap between stats and scoreboard sections. Animated entries with stagger effect, scrollable container for long games.
 Files: src/lib/types.ts (modified - added RoundHistory type), src/components/multiplayer/GameHistory.tsx (created), src/hooks/useMultiplayerGame.ts (modified - added history tracking), src/components/multiplayer/MultiplayerRecap.tsx (modified - integrated GameHistory), src/app/multiplayer/[code]/page.tsx (modified - wiring)
+
+=== Issue 19.1: Créer le visualizer audio décoratif ===
+Timestamp: 2026-01-23T03:00:00Z
+Status: COMPLETED
+Commit: a08290b
+Notes: Created decorative AudioVisualizer component with 10 animated vertical bars. Uses pre-computed bar configurations to avoid impure Math.random() calls during render. Bars animate between different heights during playback and freeze at 20% height when paused. Component positioned behind album cover with 15% opacity to avoid distraction. Respects prefers-reduced-motion preference (bars stay static). Modified SongReveal to accept optional isPlaying prop and integrate visualizer. Updated solo game page and multiplayer game page to pass isPlaying prop based on game state. Updated responsive tests to account for new component structure (z-10 class on cover).
+Files: src/components/game/AudioVisualizer.tsx (created), src/components/game/SongReveal.tsx (modified), src/app/game/page.tsx (modified), src/app/multiplayer/[code]/page.tsx (modified), src/test/responsive.test.tsx (modified)
