@@ -285,7 +285,7 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 - [x] 18.1 Créer le système d'avatars emoji
 - [x] 18.2 Afficher les avatars dans lobby, leaderboard et podium
 - [x] 18.3 Implémenter les reactions live en jeu
-- [ ] 18.4 Créer l'historique des réponses en fin de partie
+- [x] 18.4 Créer l'historique des réponses en fin de partie
 
 ---
 

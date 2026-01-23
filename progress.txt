@@ -1214,6 +1214,13 @@ Files: src/components/ui/PlayerAvatar.tsx (created), src/components/multiplayer/
 === Issue 18.3: Implémenter les reactions live en jeu ===
 Timestamp: 2026-01-23T02:45:00Z
 Status: COMPLETED
-Commit: pending
+Commit: 5baf384
 Notes: Implemented Twitch-style live emoji reactions for multiplayer games. Created src/lib/reactions.ts with 8 predefined reaction emojis (👏 🔥 😱 😂 🎉 ❤️ 💀 🤯). Created useReactions hook with Supabase Broadcast channel subscription, rate limiting (1 reaction/second), and auto-removal (3 seconds). ReactionPicker component displays horizontal bar of emoji buttons. ReactionOverlay component shows floating emojis rising from bottom of screen with random horizontal positions. Animations respect prefers-reduced-motion preference. Integrated into multiplayer game page during playing state - overlay renders above game content, picker below game controls.
 Files: src/lib/reactions.ts (created), src/hooks/useReactions.ts (created), src/components/multiplayer/ReactionPicker.tsx (created), src/components/multiplayer/ReactionOverlay.tsx (created), src/app/multiplayer/[code]/page.tsx (modified)
+
+=== Issue 18.4: Créer l'historique des réponses en fin de partie ===
+Timestamp: 2026-01-23T02:55:00Z
+Status: COMPLETED
+Commit: ee9e43b
+Notes: Created game history feature showing all rounds played in the multiplayer end-game recap. Added RoundHistory type to track song info, buzz winner, answer correctness, and buzz time. Created GameHistory component with timeline-style display showing round number, song title/artist, who buzzed (with avatar), correct/incorrect result, and buzz time in seconds. Modified useMultiplayerGame hook to collect round history data during validate() and reveal() actions using a ref to track current song info. Added setCurrentRoundInfo function called when songs are fetched. History persists through the game and displays in MultiplayerRecap between stats and scoreboard sections. Animated entries with stagger effect, scrollable container for long games.
+Files: src/lib/types.ts (modified - added RoundHistory type), src/components/multiplayer/GameHistory.tsx (created), src/hooks/useMultiplayerGame.ts (modified - added history tracking), src/components/multiplayer/MultiplayerRecap.tsx (modified - integrated GameHistory), src/app/multiplayer/[code]/page.tsx (modified - wiring)

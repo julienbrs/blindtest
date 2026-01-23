@@ -260,3 +260,23 @@ export interface RoomState {
   players: Player[] // All players in the room
   myPlayerId: string | null // The current user's player ID (from localStorage)
 }
+
+/**
+ * RoundHistory - Records details of a completed round for end-game recap
+ *
+ * Captures who buzzed, whether they answered correctly, and timing data
+ * for display in the game history timeline.
+ */
+export interface RoundHistory {
+  songId: string // ID of the song that was played
+  songTitle: string // Title of the song
+  songArtist: string // Artist of the song
+  buzzWinner: {
+    playerId: string // ID of the player who won the buzz
+    nickname: string // Nickname of the player
+    avatar: string | null // Emoji avatar of the player
+    buzzTime: number // Time in ms from song start to buzz
+  } | null // null if no one buzzed
+  wasCorrect: boolean // Whether the answer was correct (false if no buzz)
+  roundNumber: number // Round number (1-indexed)
+}

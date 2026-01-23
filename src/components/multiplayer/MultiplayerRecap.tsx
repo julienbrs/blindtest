@@ -11,7 +11,8 @@ import {
 } from '@heroicons/react/24/solid'
 import { Button } from '@/components/ui/Button'
 import { PlayerAvatar } from '@/components/ui/PlayerAvatar'
-import type { Player, Room } from '@/lib/types'
+import { GameHistory } from '@/components/multiplayer/GameHistory'
+import type { Player, Room, RoundHistory } from '@/lib/types'
 
 interface ConfettiParticle {
   id: number
@@ -173,6 +174,7 @@ interface MultiplayerRecapProps {
   players: Player[]
   myPlayerId: string | null
   isHost: boolean
+  roundHistory: RoundHistory[]
   onNewGame: () => Promise<boolean>
   onLeave: () => void
 }
@@ -193,6 +195,7 @@ export function MultiplayerRecap({
   players,
   myPlayerId,
   isHost,
+  roundHistory,
   onNewGame,
   onLeave,
 }: MultiplayerRecapProps) {
@@ -386,6 +389,18 @@ export function MultiplayerRecap({
             </div>
           </motion.div>
         </motion.div>
+
+        {/* Game History */}
+        {roundHistory.length > 0 && (
+          <motion.div
+            className="mb-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <GameHistory history={roundHistory} />
+          </motion.div>
+        )}
 
         {/* Full scoreboard */}
         <motion.div

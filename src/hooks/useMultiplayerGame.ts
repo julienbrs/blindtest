@@ -9,6 +9,7 @@ import type {
   Song,
   RoomStatus,
   GameConfig,
+  RoundHistory,
 } from '@/lib/types'
 import type {
   RealtimeChannel,
@@ -35,6 +36,7 @@ export interface MultiplayerGameState {
   currentSong: Song | null
   currentSongStartedAt: Date | null
   playedSongIds: string[]
+  roundHistory: RoundHistory[]
 }
 
 /**
@@ -113,8 +115,16 @@ export interface UseMultiplayerGameResult {
   shouldPauseAudio: boolean
   /** Whether the answer timer is active (buzzer is answering) */
   timerActive: boolean
+  /** History of all completed rounds */
+  roundHistory: RoundHistory[]
 
   // Actions
+  /** Set current round song info for history tracking */
+  setCurrentRoundInfo: (
+    songId: string,
+    songTitle: string,
+    songArtist: string
+  ) => void
   /** Buzz to answer (any player can buzz) */
   buzz: () => Promise<boolean>
   /** Validate the current answer (host only) */
@@ -175,6 +185,7 @@ export function useMultiplayerGame(
     currentSong: null,
     currentSongStartedAt: null,
     playedSongIds: [],
+    roundHistory: [],
   })
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
   const [currentBuzzes, setCurrentBuzzes] = useState<Buzz[]>([])
@@ -182,6 +193,14 @@ export function useMultiplayerGame(
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const isConfigured = isSupabaseConfigured()
+
+  // Track current round info for history (song details fetched during round)
+  const currentRoundInfoRef = useRef<{
+    songId: string
+    songTitle: string
+    songArtist: string
+    songStartedAt: Date | null
+  } | null>(null)
 
   // Sync players from props
   useEffect(() => {
@@ -197,6 +216,7 @@ export function useMultiplayerGame(
         currentSong: null,
         currentSongStartedAt: null,
         playedSongIds: [],
+        roundHistory: [],
       })
       return
     }
@@ -518,24 +538,48 @@ export function useMultiplayerGame(
           return false
         }
 
+        const winner = players.find((p) => p.id === winningBuzz.playerId)
+
         // If correct, increment player's score
-        if (correct) {
-          const winner = players.find((p) => p.id === winningBuzz.playerId)
-          if (winner) {
-            await supabase
-              .from('players')
-              .update({ score: winner.score + 1 })
-              .eq('id', winner.id)
-          }
+        if (correct && winner) {
+          await supabase
+            .from('players')
+            .update({ score: winner.score + 1 })
+            .eq('id', winner.id)
         }
 
-        // Update room to reveal state (clear current song to indicate round ended)
-        // We keep the currentSongId but the state transitions to reveal
-        // The host will then call nextSong to load a new song
-        setGameState((prev) => ({
-          ...prev,
-          status: 'reveal',
-        }))
+        // Calculate buzz time (ms from song start to buzz)
+        const songStartedAt = gameState.currentSongStartedAt
+        const buzzTime = songStartedAt
+          ? winningBuzz.buzzedAt.getTime() - songStartedAt.getTime()
+          : 0
+
+        // Update room to reveal state and record history
+        setGameState((prev) => {
+          // Build round history entry
+          const roundInfo = currentRoundInfoRef.current
+          const historyEntry: RoundHistory = {
+            songId: gameState.currentSongId ?? '',
+            songTitle: roundInfo?.songTitle ?? 'Unknown',
+            songArtist: roundInfo?.songArtist ?? 'Unknown',
+            buzzWinner: winner
+              ? {
+                  playerId: winner.id,
+                  nickname: winner.nickname,
+                  avatar: winner.avatar,
+                  buzzTime: Math.max(0, buzzTime),
+                }
+              : null,
+            wasCorrect: correct,
+            roundNumber: prev.roundHistory.length + 1,
+          }
+
+          return {
+            ...prev,
+            status: 'reveal',
+            roundHistory: [...prev.roundHistory, historyEntry],
+          }
+        })
 
         return true
       } catch (err) {
@@ -544,7 +588,7 @@ export function useMultiplayerGame(
         return false
       }
     },
-    [isConfigured, room, isHost, gameState.status, currentBuzzes, players]
+    [isConfigured, room, isHost, gameState.status, gameState.currentSongId, gameState.currentSongStartedAt, currentBuzzes, players]
   )
 
   /**
@@ -605,13 +649,36 @@ export function useMultiplayerGame(
 
     // Simply update local state to reveal
     // The answer reveal is a local UI change
-    setGameState((prev) => ({
-      ...prev,
-      status: 'reveal',
-    }))
+    // Only add history if we're coming from 'playing' (no buzz scenario)
+    // If from 'buzzed', history was already added in validate
+    setGameState((prev) => {
+      // Only add history entry if revealing without a buzz (skipped/timeout)
+      if (gameState.status === 'playing') {
+        const roundInfo = currentRoundInfoRef.current
+        const historyEntry: RoundHistory = {
+          songId: gameState.currentSongId ?? '',
+          songTitle: roundInfo?.songTitle ?? 'Unknown',
+          songArtist: roundInfo?.songArtist ?? 'Unknown',
+          buzzWinner: null, // No one buzzed
+          wasCorrect: false,
+          roundNumber: prev.roundHistory.length + 1,
+        }
+
+        return {
+          ...prev,
+          status: 'reveal',
+          roundHistory: [...prev.roundHistory, historyEntry],
+        }
+      }
+
+      return {
+        ...prev,
+        status: 'reveal',
+      }
+    })
 
     return true
-  }, [isConfigured, room, isHost, gameState.status])
+  }, [isConfigured, room, isHost, gameState.status, gameState.currentSongId])
 
   /**
    * End the game (host only)
@@ -654,6 +721,22 @@ export function useMultiplayerGame(
   // Timer is active when someone is buzzed and answering
   const timerActive = gameState.status === 'buzzed' && currentBuzzer !== null
 
+  /**
+   * Set current round song info for history tracking
+   * Called by the page when song details are fetched
+   */
+  const setCurrentRoundInfo = useCallback(
+    (songId: string, songTitle: string, songArtist: string) => {
+      currentRoundInfoRef.current = {
+        songId,
+        songTitle,
+        songArtist,
+        songStartedAt: gameState.currentSongStartedAt,
+      }
+    },
+    [gameState.currentSongStartedAt]
+  )
+
   return {
     gameState,
     players,
@@ -663,6 +746,8 @@ export function useMultiplayerGame(
     error,
     shouldPauseAudio,
     timerActive,
+    roundHistory: gameState.roundHistory,
+    setCurrentRoundInfo,
     buzz,
     validate,
     nextSong,

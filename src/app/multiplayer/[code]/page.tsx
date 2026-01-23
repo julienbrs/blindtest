@@ -75,6 +75,8 @@ export default function MultiplayerRoomPage() {
     currentBuzzes,
     shouldPauseAudio,
     timerActive,
+    roundHistory,
+    setCurrentRoundInfo,
     buzz,
     validate,
     nextSong,
@@ -166,6 +168,14 @@ export default function MultiplayerRoomPage() {
         if (response.ok) {
           const data = await response.json()
           setCurrentSong(data.song)
+          // Update round info for history tracking
+          if (data.song) {
+            setCurrentRoundInfo(
+              data.song.id,
+              data.song.title,
+              data.song.artist
+            )
+          }
         }
       } catch {
         // Ignore fetch errors
@@ -175,7 +185,7 @@ export default function MultiplayerRoomPage() {
     fetchSong()
     // Reset revealed state when song changes
     setIsRevealed(false)
-  }, [gameState.currentSongId])
+  }, [gameState.currentSongId, setCurrentRoundInfo])
 
   // Reset revealed state when game state changes to playing
   useEffect(() => {
@@ -641,6 +651,7 @@ export default function MultiplayerRoomPage() {
               players={players}
               myPlayerId={myPlayer?.id ?? null}
               isHost={isHost}
+              roundHistory={roundHistory}
               onNewGame={restartGame}
               onLeave={handleLeaveRoom}
             />
