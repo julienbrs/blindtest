@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import {
   CheckIcon,
@@ -11,6 +11,19 @@ import {
   StopIcon,
 } from '@heroicons/react/24/solid'
 import type { MultiplayerGameStatus } from '@/hooks/useMultiplayerGame'
+
+// Bounce animation variants for game buttons with spring physics
+const bounceVariants = {
+  tap: {
+    scale: [1, 0.95, 1.05, 1],
+    transition: {
+      duration: 0.3,
+      type: 'spring' as const,
+      stiffness: 400,
+      damping: 10,
+    },
+  },
+}
 
 interface HostControlsProps {
   /** Current game status */
@@ -72,6 +85,10 @@ export function HostControls({
   const [isLoadingNext, setIsLoadingNext] = useState(false)
   const [isRevealing, setIsRevealing] = useState(false)
   const [isEnding, setIsEnding] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
+
+  // Bounce animation config respecting reduced motion preference
+  const tapAnimation = shouldReduceMotion ? {} : bounceVariants.tap
 
   // Show validation buttons when someone has buzzed
   const showValidationButtons = gameStatus === 'buzzed' && hasBuzzer
@@ -157,38 +174,42 @@ export function HostControls({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
           >
-            <Button
-              onClick={() => handleValidate(true)}
-              variant="success"
-              size="lg"
-              disabled={anyLoading}
-              className="flex flex-1 items-center justify-center gap-2"
-            >
-              {isValidating ? (
-                <LoadingSpinner />
-              ) : (
-                <>
-                  <CheckIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span className="text-sm sm:text-base">Correct</span>
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={() => handleValidate(false)}
-              variant="danger"
-              size="lg"
-              disabled={anyLoading}
-              className="flex flex-1 items-center justify-center gap-2"
-            >
-              {isValidating ? (
-                <LoadingSpinner />
-              ) : (
-                <>
-                  <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span className="text-sm sm:text-base">Incorrect</span>
-                </>
-              )}
-            </Button>
+            <motion.div whileTap={tapAnimation} className="flex-1">
+              <Button
+                onClick={() => handleValidate(true)}
+                variant="success"
+                size="lg"
+                disabled={anyLoading}
+                className="flex w-full items-center justify-center gap-2"
+              >
+                {isValidating ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <CheckIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <span className="text-sm sm:text-base">Correct</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
+            <motion.div whileTap={tapAnimation} className="flex-1">
+              <Button
+                onClick={() => handleValidate(false)}
+                variant="danger"
+                size="lg"
+                disabled={anyLoading}
+                className="flex w-full items-center justify-center gap-2"
+              >
+                {isValidating ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <span className="text-sm sm:text-base">Incorrect</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -202,6 +223,7 @@ export function HostControls({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
+            whileTap={tapAnimation}
           >
             <Button
               onClick={handleNextSong}
@@ -233,6 +255,7 @@ export function HostControls({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
+            whileTap={tapAnimation}
           >
             <Button
               onClick={handleReveal}

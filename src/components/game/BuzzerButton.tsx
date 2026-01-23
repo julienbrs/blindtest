@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 interface BuzzerButtonProps {
   onBuzz: () => void
@@ -68,6 +68,20 @@ export function BuzzerButton({
 }: BuzzerButtonProps) {
   const [justBuzzed, setJustBuzzed] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
+  const shouldReduceMotion = useReducedMotion()
+
+  // Bounce animation for tap with spring physics
+  const bounceAnimation = shouldReduceMotion
+    ? {}
+    : {
+        scale: [1, 0.95, 1.05, 1],
+        transition: {
+          duration: 0.3,
+          type: 'spring' as const,
+          stiffness: 400,
+          damping: 10,
+        },
+      }
 
   // Clean up AudioContext on unmount
   useEffect(() => {
@@ -116,8 +130,8 @@ export function BuzzerButton({
       <motion.button
         onClick={handleClick}
         disabled={disabled}
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ scale: disabled ? 1 : 1.05 }}
+        whileTap={bounceAnimation}
+        whileHover={shouldReduceMotion ? {} : { scale: disabled ? 1 : 1.05 }}
         animate={
           justBuzzed
             ? {
