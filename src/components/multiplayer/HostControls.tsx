@@ -286,11 +286,6 @@ export function HostControls({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Status indicator */}
-      <div className="mt-2 text-center text-xs text-purple-400">
-        Etat: {getStatusLabel(gameStatus)}
-      </div>
     </motion.div>
   )
 }
@@ -321,19 +316,4 @@ function LoadingSpinner() {
       />
     </svg>
   )
-}
-
-/**
- * Get human-readable status label
- */
-function getStatusLabel(status: MultiplayerGameStatus): string {
-  const labels: Record<MultiplayerGameStatus, string> = {
-    waiting: 'En attente',
-    loading: 'Chargement...',
-    playing: 'En cours',
-    buzzed: 'Buzz!',
-    reveal: 'Revele',
-    ended: 'Termine',
-  }
-  return labels[status] ?? status
 }

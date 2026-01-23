@@ -270,6 +270,33 @@ Ralph doit utiliser deux approches complémentaires pour tester et corriger:
 
 ---
 
+### Epic 17: Performance & Polish (docs/epics/17-performance-polish.md)
+
+- [ ] 17.1 Ajouter les transitions de page avec Framer Motion
+- [ ] 17.2 Ajouter les micro-interactions bounce sur boutons de jeu
+- [ ] 17.3 Créer les skeleton loaders glass-morphism
+- [ ] 17.4 Implémenter le Service Worker pour caching
+- [ ] 17.5 Ajouter le pre-loading audio intelligent
+
+---
+
+### Epic 18: Social Features (docs/epics/18-social-features.md)
+
+- [ ] 18.1 Créer le système d'avatars emoji
+- [ ] 18.2 Afficher les avatars dans lobby, leaderboard et podium
+- [ ] 18.3 Implémenter les reactions live en jeu
+- [ ] 18.4 Créer l'historique des réponses en fin de partie
+
+---
+
+### Epic 19: Fun & Visual (docs/epics/19-fun-visual.md)
+
+- [ ] 19.1 Créer le visualizer audio décoratif
+- [ ] 19.2 Implémenter le streak bonus avec animation
+- [ ] 19.3 Créer le podium animé de fin de partie
+
+---
+
 ## Completion
 
 When all tasks are checked, output: `<promise>COMPLETE</promise>`

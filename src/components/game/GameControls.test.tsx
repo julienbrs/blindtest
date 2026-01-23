@@ -155,13 +155,6 @@ describe('GameControls', () => {
     })
   })
 
-  describe('Status indicator', () => {
-    it('displays current status', () => {
-      render(<GameControls {...defaultProps} status="buzzed" />)
-      expect(screen.getByText('État: buzzed')).toBeInTheDocument()
-    })
-  })
-
   describe('Replay button', () => {
     it('does not show replay button when status is idle', () => {
       render(

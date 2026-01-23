@@ -62,7 +62,7 @@ function ModeCard({
           <h2 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
             {title}
           </h2>
-          <p className="text-purple-200">{description}</p>
+          <p className="min-h-[3rem] text-purple-200">{description}</p>
         </button>
       </Card>
     </motion.div>

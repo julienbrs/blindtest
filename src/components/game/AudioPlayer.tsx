@@ -34,6 +34,8 @@ interface AudioPlayerProps {
   volume?: number
   /** Start position in seconds (for skipping intros or starting at random point) */
   startPosition?: number
+  /** If true, ignore maxDuration and play until the natural end of the song */
+  unlimitedPlayback?: boolean
 }
 
 export function AudioPlayer({
@@ -46,6 +48,7 @@ export function AudioPlayer({
   onReplayComplete,
   volume = 0.7,
   startPosition = 0,
+  unlimitedPlayback = false,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -64,12 +67,24 @@ export function AudioPlayer({
     onEnded()
   }, [onEnded])
 
+  // Track if clip end has been triggered (to avoid multiple calls)
+  const hasTriggeredClipEndRef = useRef(false)
+  // Track the song ID that clip detection is enabled for (to avoid race conditions)
+  const clipDetectionEnabledForSongRef = useRef<string | undefined>(undefined)
+
   // Load the song when songId changes
   useEffect(() => {
     if (songId && audioRef.current && songId !== prevSongIdRef.current) {
       audioRef.current.src = `/api/audio/${songId}`
       audioRef.current.load()
       prevSongIdRef.current = songId
+      hasTriggeredClipEndRef.current = false // Reset for new song
+      clipDetectionEnabledForSongRef.current = undefined // Disable clip detection until audio is ready
+    } else if (!songId && audioRef.current && prevSongIdRef.current) {
+      // Clear the source when songId becomes undefined to avoid "invalid URI" errors
+      audioRef.current.removeAttribute('src')
+      audioRef.current.load()
+      prevSongIdRef.current = undefined
     }
   }, [songId])
 
@@ -84,15 +99,40 @@ export function AudioPlayer({
     }
   }, [isPlaying, isLoaded])
 
-  // Limit playback duration - stop when clip duration is reached
-  // With start position offset, we stop at startPosition + maxDuration
+  // Limit playback duration - trigger reveal when clip duration is reached
+  // With start position offset, we trigger at startPosition + maxDuration
+  // Unless unlimitedPlayback is true (for reveal/discovery mode where music continues)
+  // Note: We don't pause here - the music continues during reveal
   useEffect(() => {
-    const clipEnd = startPosition + maxDuration
-    if (currentTime >= clipEnd) {
-      audioRef.current?.pause()
-      handleEnded()
+    // Skip if in unlimited playback mode (reveal state)
+    if (unlimitedPlayback) {
+      return
     }
-  }, [currentTime, maxDuration, startPosition, handleEnded])
+    // Skip if clip detection is not enabled for the current song
+    // This prevents false triggers during song transitions
+    if (clipDetectionEnabledForSongRef.current !== songId) {
+      return
+    }
+    // Guard against stale state values from debounced time updates
+    // Compare state currentTime with actual audio element currentTime
+    // If they differ significantly, the state is stale (from previous song)
+    const actualTime = audioRef.current?.currentTime
+    if (actualTime !== undefined && Math.abs(actualTime - currentTime) > 2) {
+      return
+    }
+    const clipEnd = startPosition + maxDuration
+    if (currentTime >= clipEnd && !hasTriggeredClipEndRef.current) {
+      hasTriggeredClipEndRef.current = true
+      handleEnded() // Triggers reveal without stopping music
+    }
+  }, [
+    currentTime,
+    maxDuration,
+    startPosition,
+    handleEnded,
+    unlimitedPlayback,
+    songId,
+  ])
 
   // Handle replay - reset audio to start position and start playing
   // Uses queueMicrotask to avoid setState-in-effect linting warning
@@ -130,6 +170,9 @@ export function AudioPlayer({
         setCurrentTime(startPosition)
       })
     }
+    // Enable clip detection now that audio is confirmed ready for this song
+    // This prevents race conditions during song transitions
+    clipDetectionEnabledForSongRef.current = songId
     // Notify parent that audio is ready to play, passing the song ID
     if (songId) {
       onReady?.(songId)
@@ -141,6 +184,8 @@ export function AudioPlayer({
     // Set currentTime to startPosition as that's where playback will begin
     setCurrentTime(startPosition)
     setIsLoaded(false)
+    // Disable clip detection until audio is ready (set in handleCanPlay)
+    clipDetectionEnabledForSongRef.current = undefined
   }
 
   const handleAudioEnded = () => {

@@ -118,9 +118,6 @@ export function GameControls({
           <PlayIcon className="ml-1 h-6 w-6 text-white sm:h-7 sm:w-7 md:h-8 md:w-8" />
         )}
       </button>
-
-      {/* Status indicator */}
-      <div className="text-xs text-purple-300 sm:text-sm">État: {status}</div>
     </footer>
   )
 }

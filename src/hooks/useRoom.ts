@@ -32,6 +32,7 @@ const defaultSettings: GameConfig = {
   clipDuration: 15,
   timerDuration: 5,
   noTimer: false,
+  revealDuration: 5,
 }
 
 /**

@@ -58,6 +58,7 @@ const mockConfig: GameConfig = {
   clipDuration: 20,
   timerDuration: 5,
   noTimer: false,
+  revealDuration: 5,
 }
 
 describe('gameReducer', () => {
@@ -421,11 +422,12 @@ describe('gameReducer', () => {
       })
       expect(result.current.state.status).toBe('reveal')
 
-      // Timer should not tick in reveal state
+      // Reveal countdown auto-advances to loading after revealDuration
       act(() => {
         vi.advanceTimersByTime(5000)
       })
-      expect(result.current.state.status).toBe('reveal')
+      // Discovery mode: auto-advances to loading for next song
+      expect(result.current.state.status).toBe('loading')
     })
   })
 
@@ -1371,7 +1373,7 @@ describe('gameReducer', () => {
       const { result } = renderHook(() => useGameState(mockConfig))
       act(() => {
         result.current.dispatch({ type: 'PLAY' })
-        result.current.dispatch({ type: 'CLIP_ENDED' })
+        result.current.dispatch({ type: 'CLIP_ENDED', revealDuration: 5 })
       })
       expect(result.current.state.playedSongIds).toEqual([])
     })
@@ -1493,6 +1495,7 @@ describe('gameReducer', () => {
       clipDuration: 20,
       timerDuration: 5,
       noTimer: true,
+      revealDuration: 5,
     }
 
     it('transitions from playing to buzzed (not timer)', () => {

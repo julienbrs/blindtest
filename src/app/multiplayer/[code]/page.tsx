@@ -432,7 +432,7 @@ export default function MultiplayerRoomPage() {
           </motion.div>
 
           {/* Main game layout with sidebar on larger screens */}
-          <div className="flex w-full max-w-5xl flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="flex w-full max-w-5xl flex-col gap-6 lg:flex-row lg:justify-center">
             {/* Leaderboard (mobile: collapsible at top, desktop: sidebar) */}
             <motion.div
               className="w-full lg:sticky lg:top-8 lg:w-72 lg:flex-shrink-0"
@@ -448,7 +448,7 @@ export default function MultiplayerRoomPage() {
             </motion.div>
 
             {/* Main game content */}
-            <div className="flex w-full max-w-lg flex-1 flex-col items-center gap-6 lg:mx-auto">
+            <div className="flex w-full max-w-lg flex-col items-center gap-6">
               {/* Audio Player */}
               {gameState.currentSongId && (
                 <motion.div
