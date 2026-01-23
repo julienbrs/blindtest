@@ -1176,3 +1176,10 @@ Status: COMPLETED
 Commit: 66b952f
 Notes: Added bounce micro-interactions with spring physics (scale 0.95 → 1.05 → 1) to game buttons. BuzzerButton, GameControls (Correct/Incorrect/Suivant/Révéler), and HostControls buttons all have bounce effect on tap. Uses Framer Motion's useReducedMotion hook to respect user preference. Navigation buttons (Play/Pause, End Game) intentionally excluded per acceptance criteria.
 Files: src/components/game/BuzzerButton.tsx, src/components/game/GameControls.tsx, src/components/multiplayer/HostControls.tsx
+
+=== Issue 17.3: Créer les skeleton loaders glass-morphism ===
+Timestamp: 2026-01-23T01:15:00Z
+Status: COMPLETED
+Commit: 16818f4
+Notes: Created glass-morphism skeleton loader components for all major loading states. Base Skeleton component uses bg-white/10 + backdrop-blur-sm for glass effect with animate-pulse animation. SongSkeleton matches SongReveal layout with responsive album cover placeholder and info text skeletons. PlayerListSkeleton shows configurable number of player cards with online indicator and nickname placeholders, first card has host badge skeleton. LeaderboardSkeleton matches Leaderboard component with trophy header, position indicators (medals for top 3), player info, and score skeletons. All skeletons respect prefers-reduced-motion via existing globals.css animation rules. Integrated into SongReveal (loading state), Lobby (empty player list while loading), and Leaderboard (isLoading prop). Comprehensive test coverage with 11 unit tests.
+Files: src/components/ui/Skeleton.tsx, src/components/ui/SongSkeleton.tsx, src/components/ui/PlayerListSkeleton.tsx, src/components/ui/LeaderboardSkeleton.tsx, src/components/ui/Skeleton.test.tsx, src/components/game/SongReveal.tsx, src/components/multiplayer/Lobby.tsx, src/components/multiplayer/Leaderboard.tsx
