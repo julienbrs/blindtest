@@ -908,10 +908,10 @@ function GameContent() {
       </AnimatePresence>
 
       {/* Main content area - Portrait: vertical stack, Landscape/Desktop: two columns */}
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row landscape:justify-center sm:gap-6 lg:flex-row lg:justify-center lg:gap-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row landscape:justify-center sm:gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-8">
         {/* Left column (Portrait: full width, Landscape/Desktop: left side) */}
         {/* Contains: Cover image + Audio player */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 landscape:gap-2 sm:gap-4 lg:gap-6">
+        <div className="flex flex-col items-center justify-center gap-3 landscape:flex-1 landscape:gap-2 sm:gap-4 lg:flex-1 lg:gap-6">
           {/* Pochette / Révélation */}
           <SongReveal
             song={game.state.currentSong}
@@ -944,7 +944,7 @@ function GameContent() {
 
         {/* Right column (Portrait: bottom area, Landscape/Desktop: right side) */}
         {/* Contains: Discovery mode controls */}
-        <div className="flex flex-col items-center justify-center gap-4 landscape:w-64 landscape:flex-shrink-0 sm:gap-6 lg:w-80 lg:flex-shrink-0">
+        <div className="flex flex-col items-center justify-center gap-4 landscape:flex-1 sm:gap-6 lg:flex-1">
           <AnimatePresence mode="wait">
             {/* Loading indicator */}
             {game.state.status === 'loading' && (

@@ -248,8 +248,7 @@ describe('Orientation: Game Page Layout', () => {
     // Verify the main content area has orientation classes
     expect(gamePage).toContain('portrait:flex-col')
     expect(gamePage).toContain('landscape:flex-row')
-    expect(gamePage).toContain('landscape:w-64')
-    expect(gamePage).toContain('landscape:flex-shrink-0')
+    expect(gamePage).toContain('landscape:flex-1')
     expect(gamePage).toContain('landscape:gap-2')
   })
 })

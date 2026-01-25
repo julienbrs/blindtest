@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useEffect, useState } from 'react'
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react'
 import { createAudioContext } from './useAudioUnlock'
 
 /**
@@ -487,16 +487,21 @@ export function useSoundEffects(): SoundEffects {
     setVolumeState(Math.max(0, Math.min(1, v)))
   }, [])
 
-  return {
-    buzz,
-    correct,
-    incorrect,
-    timeout,
-    tick,
-    reveal,
-    setMuted,
-    setVolume,
-    isMuted,
-    volume,
-  }
+  // Memoize the return object to prevent infinite re-render loops
+  // when this hook is used as a dependency in other hooks/effects
+  return useMemo(
+    () => ({
+      buzz,
+      correct,
+      incorrect,
+      timeout,
+      tick,
+      reveal,
+      setMuted,
+      setVolume,
+      isMuted,
+      volume,
+    }),
+    [buzz, correct, incorrect, timeout, tick, reveal, setMuted, setVolume, isMuted, volume]
+  )
 }

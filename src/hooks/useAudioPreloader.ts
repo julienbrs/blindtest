@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useMemo } from 'react'
 import type { Song } from '@/lib/types'
 
 /**
@@ -208,11 +208,16 @@ export function useAudioPreloader(
     }
   }, [clearPreloaded])
 
-  return {
-    preloadNext,
-    getPreloaded,
-    consumePreloaded,
-    clearPreloaded,
-    isPrefetching: isPrefetchingRef.current,
-  }
+  // Memoize the return object to prevent infinite re-render loops
+  // when this hook is used as a dependency in other hooks/effects
+  return useMemo(
+    () => ({
+      preloadNext,
+      getPreloaded,
+      consumePreloaded,
+      clearPreloaded,
+      isPrefetching: isPrefetchingRef.current,
+    }),
+    [preloadNext, getPreloaded, consumePreloaded, clearPreloaded]
+  )
 }
