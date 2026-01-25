@@ -20,6 +20,7 @@
     "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.91.0",
     "@tsparticles/react": "^3.0.0",
+    "@tsparticles/engine": "^3.9.1",
     "@tsparticles/slim": "^3.9.1",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
