@@ -1,5 +1,6 @@
 'use client'
 
+import { motion, useReducedMotion } from 'framer-motion'
 import type { GameStatus } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import {
@@ -11,6 +12,19 @@ import {
   EyeIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/solid'
+
+// Bounce animation variants for game buttons with tween physics
+// Note: Spring animations only support 2 keyframes, so we use tween for multi-keyframe animations
+const bounceVariants = {
+  tap: {
+    scale: [1, 0.95, 1.05, 1],
+    transition: {
+      duration: 0.3,
+      type: 'tween' as const,
+      ease: 'easeInOut' as const,
+    },
+  },
+}
 
 interface GameControlsProps {
   status: GameStatus
@@ -33,6 +47,7 @@ export function GameControls({
   onPause,
   onReplay,
 }: GameControlsProps) {
+  const shouldReduceMotion = useReducedMotion()
   const isPlaying = status === 'playing'
   const showValidationButtons = status === 'buzzed' || status === 'timer'
   const showNextButton = status === 'reveal'
@@ -41,19 +56,24 @@ export function GameControls({
     !isRevealed
   const showReplayButton = status === 'reveal' && onReplay
 
+  // Bounce animation config respecting reduced motion preference
+  const tapAnimation = shouldReduceMotion ? {} : bounceVariants.tap
+
   return (
     <footer className="mt-4 flex flex-col items-center gap-4 sm:mt-6">
       {/* Next song button - visible only in reveal state */}
       {showNextButton && (
-        <Button
-          onClick={onNext}
-          variant="primary"
-          size="lg"
-          className="flex w-full items-center justify-center gap-2"
-        >
-          <span className="text-sm sm:text-base">Chanson suivante</span>
-          <ArrowRightIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-        </Button>
+        <motion.div whileTap={tapAnimation} className="w-full">
+          <Button
+            onClick={onNext}
+            variant="primary"
+            size="lg"
+            className="flex w-full items-center justify-center gap-2"
+          >
+            <span className="text-sm sm:text-base">Chanson suivante</span>
+            <ArrowRightIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+          </Button>
+        </motion.div>
       )}
 
       {/* Replay button - visible in reveal state to replay the same song */}
@@ -72,38 +92,44 @@ export function GameControls({
       {/* Validation buttons - visible after buzz */}
       {showValidationButtons && (
         <div className="flex w-full gap-4">
-          <Button
-            onClick={() => onValidate(true)}
-            variant="success"
-            size="lg"
-            className="flex flex-1 items-center justify-center gap-1 sm:gap-2"
-          >
-            <CheckIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-sm sm:text-base">Correct</span>
-          </Button>
-          <Button
-            onClick={() => onValidate(false)}
-            variant="danger"
-            size="lg"
-            className="flex flex-1 items-center justify-center gap-1 sm:gap-2"
-          >
-            <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-sm sm:text-base">Incorrect</span>
-          </Button>
+          <motion.div whileTap={tapAnimation} className="flex-1">
+            <Button
+              onClick={() => onValidate(true)}
+              variant="success"
+              size="lg"
+              className="flex w-full items-center justify-center gap-1 sm:gap-2"
+            >
+              <CheckIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-sm sm:text-base">Correct</span>
+            </Button>
+          </motion.div>
+          <motion.div whileTap={tapAnimation} className="flex-1">
+            <Button
+              onClick={() => onValidate(false)}
+              variant="danger"
+              size="lg"
+              className="flex w-full items-center justify-center gap-1 sm:gap-2"
+            >
+              <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-sm sm:text-base">Incorrect</span>
+            </Button>
+          </motion.div>
         </div>
       )}
 
       {/* Reveal button - visible during playing/buzzed/timer when not yet revealed */}
       {showRevealButton && (
-        <Button
-          onClick={onReveal}
-          variant="secondary"
-          size="sm"
-          className="flex items-center gap-1 sm:gap-2"
-        >
-          <EyeIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="text-xs sm:text-sm">Révéler la réponse</span>
-        </Button>
+        <motion.div whileTap={tapAnimation}>
+          <Button
+            onClick={onReveal}
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-1 sm:gap-2"
+          >
+            <EyeIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-xs sm:text-sm">Révéler la réponse</span>
+          </Button>
+        </motion.div>
       )}
 
       {/* Play/Pause button - always visible for MJ control */}

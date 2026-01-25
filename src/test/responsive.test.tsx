@@ -378,8 +378,8 @@ describe('Responsive Layout Tests', () => {
           <SongReveal song={mockSong} isRevealed={false} guessMode="both" />
         )
 
-        // Cover container should have responsive sizing
-        const coverContainer = container.querySelector('.relative')
+        // Cover container with z-10 should have responsive sizing
+        const coverContainer = container.querySelector('.z-10')
         expect(coverContainer?.className).toMatch(/h-48/)
         expect(coverContainer?.className).toMatch(/w-48/)
         expect(coverContainer?.className).toMatch(/sm:h-56/)
@@ -517,7 +517,7 @@ describe('Responsive Layout Tests', () => {
             <SongReveal song={mockSong} isRevealed={true} guessMode="both" />
           )
 
-          const coverContainer = container.querySelector('.relative')
+          const coverContainer = container.querySelector('.z-10')
           expect(coverContainer?.className).toMatch(/h-48.*w-48/)
         })
       }

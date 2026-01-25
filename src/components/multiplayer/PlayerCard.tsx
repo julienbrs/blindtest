@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { StarIcon, XMarkIcon } from '@heroicons/react/24/solid'
+import { PlayerAvatar } from '@/components/ui/PlayerAvatar'
 import type { Player } from '@/lib/types'
 
 interface PlayerCardProps {
@@ -56,15 +57,21 @@ export function PlayerCard({
       }`}
     >
       <div className="flex items-center gap-3">
-        {/* Online/Offline indicator */}
+        {/* Avatar with online indicator */}
         <div className="relative">
+          <PlayerAvatar
+            avatar={player.avatar}
+            nickname={player.nickname}
+            size="md"
+          />
+          {/* Online indicator badge */}
           <div
-            className={`h-3 w-3 rounded-full ${
+            className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-purple-900/50 ${
               player.isOnline ? 'bg-green-500' : 'bg-gray-500'
             }`}
           />
           {player.isOnline && (
-            <div className="absolute inset-0 h-3 w-3 animate-ping rounded-full bg-green-500 opacity-50" />
+            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 animate-ping rounded-full bg-green-500 opacity-50" />
           )}
         </div>
 

@@ -23,6 +23,7 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
+import { useAudioPreloader } from '@/hooks/useAudioPreloader'
 import { useCorrectAnswerCelebration } from '@/hooks/useCorrectAnswerCelebration'
 import { useWrongAnswerEffect } from '@/hooks/useWrongAnswerEffect'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
@@ -30,6 +31,7 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAudioUnlock } from '@/hooks/useAudioUnlock'
 import { useAudioSupport } from '@/hooks/useAudioSupport'
 import { usePageVisibility } from '@/hooks/usePageVisibility'
+import { useStreak } from '@/hooks/useStreak'
 import { fetchWithRetry, NetworkError, getStartPosition } from '@/lib/utils'
 import { AudioPlayer } from '@/components/game/AudioPlayer'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
@@ -43,7 +45,9 @@ import { IncorrectAnswerFlash } from '@/components/game/IncorrectAnswerFlash'
 import { NetworkErrorToast } from '@/components/game/NetworkErrorToast'
 import { BrowserUnsupportedError } from '@/components/game/BrowserUnsupportedError'
 import { PausedOverlay } from '@/components/game/PausedOverlay'
+import { StreakCelebration } from '@/components/game/StreakCelebration'
 import { Button } from '@/components/ui/Button'
+import { PageTransition } from '@/components/ui/PageTransition'
 import type { GameConfig, GuessMode, Song, StartPosition } from '@/lib/types'
 
 // Animation variants for game state transitions
@@ -137,10 +141,14 @@ function GameContent() {
     cleanup: cleanupShake,
   } = useWrongAnswerEffect({ onPlaySound: sfx.incorrect })
 
-  // Preloading state for the next song
-  const [nextSong, setNextSong] = useState<Song | null>(null)
-  const preloadedAudioRef = useRef<HTMLAudioElement | null>(null)
-  const isPrefetchingRef = useRef(false)
+  // Streak tracking for consecutive correct answers (surprise celebration at 3+)
+  const {
+    showCelebration: showStreakCelebration,
+    recordCorrect: recordStreakCorrect,
+    recordIncorrect: recordStreakIncorrect,
+    recordSkip: recordStreakSkip,
+    reset: resetStreak,
+  } = useStreak({ threshold: 3 })
 
   // Parse config from URL parameters - memoized to prevent unnecessary re-renders
   // Timer value of '0' from GameConfigForm means no timer mode
@@ -223,6 +231,9 @@ function GameContent() {
     return params.toString()
   }, [libraryFilters, playlistSongIds])
 
+  // Audio preloader hook for intelligent preloading
+  const audioPreloader = useAudioPreloader({ filterQueryString })
+
   const game = useGameState(config)
 
   // Load SFX muted state from localStorage on mount
@@ -299,55 +310,6 @@ function GameContent() {
     []
   )
 
-  // Prefetch the next song during REVEAL state
-  const prefetchNextSong = useCallback(
-    async (excludeIds: string[]) => {
-      if (isPrefetchingRef.current) return
-      isPrefetchingRef.current = true
-
-      // Build URL with exclude and filter params
-      const params = new URLSearchParams()
-      if (excludeIds.length > 0) {
-        params.set('exclude', excludeIds.join(','))
-      }
-      if (filterQueryString) {
-        // Append filter params
-        const filterParams = new URLSearchParams(filterQueryString)
-        filterParams.forEach((value, key) => params.set(key, value))
-      }
-      const url = `/api/songs/random?${params.toString()}`
-
-      try {
-        // Use fetchWithRetry with 2 retries for prefetch (non-critical)
-        const res = await fetchWithRetry(url, {}, 2, 10000)
-
-        if (!res.ok) {
-          // No more songs available - will be handled when transitioning to next song
-          isPrefetchingRef.current = false
-          return
-        }
-
-        const data = (await res.json()) as { song: Song }
-        if (data.song) {
-          setNextSong(data.song)
-          // Preload the audio
-          if (preloadedAudioRef.current) {
-            preloadedAudioRef.current.pause()
-            preloadedAudioRef.current.src = ''
-          }
-          const audio = new Audio(`/api/audio/${data.song.id}`)
-          audio.preload = 'auto'
-          preloadedAudioRef.current = audio
-        }
-      } catch {
-        // Silently fail - will load normally when needed
-      } finally {
-        isPrefetchingRef.current = false
-      }
-    },
-    [filterQueryString]
-  )
-
   // Check if an audio file is accessible via HEAD request
   const checkAudioFileAccessible = useCallback(
     async (songId: string, signal?: AbortSignal): Promise<boolean> => {
@@ -372,11 +334,7 @@ function GameContent() {
   // If the audio file is not accessible, auto-skip and try another song
   // Uses fetchWithRetry for network resilience with timeout and retry
   const loadRandomSong = useCallback(
-    async (
-      excludeIds: string[],
-      preloadedSong: Song | null,
-      signal?: AbortSignal
-    ) => {
+    async (excludeIds: string[], signal?: AbortSignal) => {
       // Check if aborted before starting
       if (signal?.aborted) {
         return
@@ -385,19 +343,19 @@ function GameContent() {
       // Clear any previous network error
       setNetworkError({ show: false })
 
-      // If we have a preloaded song, verify it's still accessible
-      if (preloadedSong) {
+      // Check if we have a preloaded song from the hook
+      const preloaded = audioPreloader.consumePreloaded()
+      if (preloaded) {
         try {
           const isAccessible = await checkAudioFileAccessible(
-            preloadedSong.id,
+            preloaded.song.id,
             signal
           )
           // Check abort after async operation
           if (signal?.aborted) return
 
           if (isAccessible) {
-            game.actions.loadSong(preloadedSong)
-            setNextSong(null)
+            game.actions.loadSong(preloaded.song)
             return
           }
         } catch (error) {
@@ -408,10 +366,11 @@ function GameContent() {
         }
         // Preloaded song is not accessible, add to exclude list and load normally
         console.warn(
-          `Audio file for preloaded song "${preloadedSong.title}" not accessible, skipping...`
+          `Audio file for preloaded song "${preloaded.song.title}" not accessible, skipping...`
         )
-        excludeIds = [...excludeIds, preloadedSong.id]
-        setNextSong(null)
+        excludeIds = [...excludeIds, preloaded.song.id]
+        // Clear the preloaded audio since it's not usable
+        audioPreloader.clearPreloaded()
       }
 
       // Build URL with exclude and filter params
@@ -463,7 +422,8 @@ function GameContent() {
               `Audio file for song "${data.song.title}" not accessible, skipping...`
             )
             // Recursively call to get another song with updated exclude list
-            await loadRandomSong([...excludeIds, data.song.id], null, signal)
+            // eslint-disable-next-line react-hooks/immutability
+            await loadRandomSong([...excludeIds, data.song.id], signal)
             return
           }
           game.actions.loadSong(data.song)
@@ -490,13 +450,13 @@ function GameContent() {
 
         // Store retry callback
         retryCallbackRef.current = () => {
-          void loadRandomSong(excludeIds, null)
+          void loadRandomSong(excludeIds)
         }
 
         setNetworkError({ show: true, message })
       }
     },
-    [game.actions, checkAudioFileAccessible, filterQueryString]
+    [game.actions, checkAudioFileAccessible, filterQueryString, audioPreloader]
   )
 
   // Handle network error retry
@@ -547,61 +507,50 @@ function GameContent() {
 
     // Capture values for the async function
     const playedIds = game.state.playedSongIds
-    const preloadedSong = nextSong
 
     // Reset the audioReady state for the new song
     setAudioReadyForSongId(null)
 
     // Load a new random song (excluding already played songs), using preloaded if available
-    void loadRandomSong(playedIds, preloadedSong, abortController.signal)
+    void loadRandomSong(playedIds, abortController.signal)
 
     // Cleanup: abort the operation when effect is cleaned up (component unmount or deps change)
     return () => {
       abortController.abort()
       isLoadingSongRef.current = false
     }
-  }, [
-    game.state.status,
-    game.state.currentSong,
-    game.state.playedSongIds,
-    loadRandomSong,
-    nextSong,
-  ])
+  }, [game.state.status, game.state.currentSong, game.state.playedSongIds, loadRandomSong])
 
-  // Prefetch next song during REVEAL state
+  // Prefetch next song during REVEAL state using the audio preloader hook
   useEffect(() => {
     if (
       game.state.status === 'reveal' &&
-      !nextSong &&
-      !isPrefetchingRef.current
+      !audioPreloader.getPreloaded() &&
+      !audioPreloader.isPrefetching
     ) {
       // Build exclude list: already played songs + current song
       const excludeIds = [
         ...game.state.playedSongIds,
         game.state.currentSong?.id,
       ].filter((id): id is string => Boolean(id))
-      void prefetchNextSong(excludeIds)
+      void audioPreloader.preloadNext(excludeIds)
     }
   }, [
     game.state.status,
     game.state.playedSongIds,
     game.state.currentSong,
-    nextSong,
-    prefetchNextSong,
+    audioPreloader,
   ])
 
   // Cleanup preloaded audio and celebration on unmount
   useEffect(() => {
     return () => {
-      if (preloadedAudioRef.current) {
-        preloadedAudioRef.current.pause()
-        preloadedAudioRef.current.src = ''
-        preloadedAudioRef.current = null
-      }
+      audioPreloader.clearPreloaded()
       cleanupCelebration()
       cleanupShake()
+      resetStreak()
     }
-  }, [cleanupCelebration, cleanupShake])
+  }, [audioPreloader, cleanupCelebration, cleanupShake, resetStreak])
 
   // Calculate start position when a new song is loaded
   // This ensures the start position is calculated once per song
@@ -694,6 +643,8 @@ function GameContent() {
       await unlockAudio()
 
       if (correct) {
+        // Track streak for consecutive correct answers
+        recordStreakCorrect()
         // Trigger confetti and green flash
         celebrate()
         setShowCorrectFlash(true)
@@ -702,6 +653,8 @@ function GameContent() {
           setShowCorrectFlash(false)
         }, 500)
       } else {
+        // Reset streak on incorrect answer
+        recordStreakIncorrect()
         // Trigger shake and red flash for incorrect answer
         triggerShake()
         setShowIncorrectFlash(true)
@@ -712,7 +665,7 @@ function GameContent() {
       }
       game.actions.validate(correct)
     },
-    [celebrate, triggerShake, game.actions, unlockAudio]
+    [celebrate, triggerShake, game.actions, unlockAudio, recordStreakCorrect, recordStreakIncorrect]
   )
 
   // Handle "Écouter la suite" - user wants to hear the rest of the song
@@ -726,13 +679,18 @@ function GameContent() {
     async (knew: boolean) => {
       await unlockAudio()
       if (knew) {
+        // Track streak for consecutive correct answers
+        recordStreakCorrect()
         celebrate()
         setShowCorrectFlash(true)
         setTimeout(() => setShowCorrectFlash(false), 500)
+      } else {
+        // Reset streak on "didn't know" (similar to skip/reveal without answer)
+        recordStreakSkip()
       }
       game.actions.quickScore(knew)
     },
-    [unlockAudio, game.actions, celebrate]
+    [unlockAudio, game.actions, celebrate, recordStreakCorrect, recordStreakSkip]
   )
 
   // Handle audio ended - decides whether to call clipEnded or songEnded based on state
@@ -775,29 +733,37 @@ function GameContent() {
   // Show loading screen while checking audio support
   if (isCheckingAudio) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
-      </div>
+      <PageTransition>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent" />
+        </div>
+      </PageTransition>
     )
   }
 
   // Show error screen if browser doesn't support audio
   if (!isAudioSupported) {
-    return <BrowserUnsupportedError />
+    return (
+      <PageTransition>
+        <BrowserUnsupportedError />
+      </PageTransition>
+    )
   }
 
   // Show recap screen when game is ended
   if (game.state.status === 'ended') {
     return (
-      <motion.div key="game-recap" {...getAnimationProps(fadeScale)}>
-        <GameRecap
-          score={game.state.score}
-          songsPlayed={game.state.songsPlayed}
-          onNewGame={handleNewGame}
-          onHome={handleHome}
-          allSongsPlayed={allSongsPlayed}
-        />
-      </motion.div>
+      <PageTransition>
+        <motion.div key="game-recap" {...getAnimationProps(fadeScale)}>
+          <GameRecap
+            score={game.state.score}
+            songsPlayed={game.state.songsPlayed}
+            onNewGame={handleNewGame}
+            onHome={handleHome}
+            allSongsPlayed={allSongsPlayed}
+          />
+        </motion.div>
+      </PageTransition>
     )
   }
 
@@ -807,10 +773,11 @@ function GameContent() {
     : {}
 
   return (
-    <motion.main
-      className="flex min-h-screen w-full flex-col overflow-x-hidden p-3 sm:p-4 lg:p-6"
-      animate={shouldReduceMotion ? {} : shakeAnimation}
-    >
+    <PageTransition>
+      <motion.main
+        className="flex min-h-screen w-full flex-col overflow-x-hidden p-3 sm:p-4 lg:p-6"
+        animate={shouldReduceMotion ? {} : shakeAnimation}
+      >
       {/* Header avec score - Responsive layout */}
       <header className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4 lg:mb-6">
         <ScoreDisplay
@@ -941,15 +908,18 @@ function GameContent() {
       </AnimatePresence>
 
       {/* Main content area - Portrait: vertical stack, Landscape/Desktop: two columns */}
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row landscape:justify-center sm:gap-6 lg:flex-row lg:justify-center lg:gap-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row landscape:justify-center sm:gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-8">
         {/* Left column (Portrait: full width, Landscape/Desktop: left side) */}
         {/* Contains: Cover image + Audio player */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 landscape:gap-2 sm:gap-4 lg:gap-6">
+        <div className="flex flex-col items-center justify-center gap-3 landscape:flex-1 landscape:gap-2 sm:gap-4 lg:flex-1 lg:gap-6">
           {/* Pochette / Révélation */}
           <SongReveal
             song={game.state.currentSong}
             isRevealed={game.state.isRevealed}
             guessMode={config.guessMode}
+            isPlaying={
+              game.state.status === 'playing' || game.state.status === 'reveal'
+            }
           />
 
           {/* Lecteur audio */}
@@ -974,7 +944,7 @@ function GameContent() {
 
         {/* Right column (Portrait: bottom area, Landscape/Desktop: right side) */}
         {/* Contains: Discovery mode controls */}
-        <div className="flex flex-col items-center justify-center gap-4 landscape:w-64 landscape:flex-shrink-0 sm:gap-6 lg:w-80 lg:flex-shrink-0">
+        <div className="flex flex-col items-center justify-center gap-4 landscape:flex-1 sm:gap-6 lg:flex-1">
           <AnimatePresence mode="wait">
             {/* Loading indicator */}
             {game.state.status === 'loading' && (
@@ -1113,6 +1083,13 @@ function GameContent() {
       {/* Red flash overlay for incorrect answers */}
       <IncorrectAnswerFlash show={showIncorrectFlash} />
 
+      {/* Streak celebration overlay (3+ consecutive correct answers) */}
+      <StreakCelebration
+        show={showStreakCelebration}
+        isMuted={sfx.isMuted}
+        volume={sfx.volume}
+      />
+
       {/* Network error toast with retry option */}
       <NetworkErrorToast
         show={networkError.show}
@@ -1126,7 +1103,8 @@ function GameContent() {
         show={wasPausedByVisibility}
         onResume={handleVisibilityResume}
       />
-    </motion.main>
+      </motion.main>
+    </PageTransition>
   )
 }
 

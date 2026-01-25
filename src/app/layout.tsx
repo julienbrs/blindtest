@@ -4,6 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { ThemedLayout } from '@/components/layout/ThemedLayout'
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className="min-h-screen text-white font-sans antialiased">
         <ThemeProvider>
           <ToastProvider>
+            <ServiceWorkerRegistration />
             <ThemedLayout>{children}</ThemedLayout>
           </ToastProvider>
         </ThemeProvider>

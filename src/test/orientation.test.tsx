@@ -223,11 +223,12 @@ describe('Orientation: SongReveal', () => {
       <SongReveal song={null} isRevealed={false} guessMode="both" />
     )
 
-    // Find the loading placeholder
-    const loadingContainer = container.querySelector('.flex.h-48')
+    // SongSkeleton is now used for loading state, which renders its own skeleton
+    // Find the skeleton album cover placeholder which has the landscape classes
+    const skeletonCover = container.querySelector('.h-48.w-48')
 
-    expect(loadingContainer?.className).toContain('landscape:h-36')
-    expect(loadingContainer?.className).toContain('landscape:w-36')
+    expect(skeletonCover?.className).toContain('landscape:h-36')
+    expect(skeletonCover?.className).toContain('landscape:w-36')
   })
 })
 
@@ -247,8 +248,7 @@ describe('Orientation: Game Page Layout', () => {
     // Verify the main content area has orientation classes
     expect(gamePage).toContain('portrait:flex-col')
     expect(gamePage).toContain('landscape:flex-row')
-    expect(gamePage).toContain('landscape:w-64')
-    expect(gamePage).toContain('landscape:flex-shrink-0')
+    expect(gamePage).toContain('landscape:flex-1')
     expect(gamePage).toContain('landscape:gap-2')
   })
 })

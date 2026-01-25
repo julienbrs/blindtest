@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { CreateRoomForm } from '@/components/multiplayer/CreateRoomForm'
 import { JoinRoomForm } from '@/components/multiplayer/JoinRoomForm'
 import { UserGroupIcon } from '@heroicons/react/24/solid'
+import { PageTransition } from '@/components/ui/PageTransition'
 
 export default function MultiplayerPage() {
   const router = useRouter()
@@ -35,12 +36,13 @@ export default function MultiplayerPage() {
   }
 
   return (
-    <motion.main
-      className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <PageTransition>
+      <motion.main
+        className="flex min-h-screen w-full flex-1 flex-col items-center overflow-x-hidden p-4 pt-8 lg:p-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
       {/* Back button */}
       <motion.div
         className="mb-6 w-full max-w-md"
@@ -116,6 +118,7 @@ export default function MultiplayerPage() {
           <JoinRoomForm />
         </motion.div>
       </div>
-    </motion.main>
+      </motion.main>
+    </PageTransition>
   )
 }

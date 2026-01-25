@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 interface BuzzerButtonProps {
   onBuzz: () => void
@@ -68,6 +68,19 @@ export function BuzzerButton({
 }: BuzzerButtonProps) {
   const [justBuzzed, setJustBuzzed] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
+  const shouldReduceMotion = useReducedMotion()
+
+  // Bounce animation for tap with tween physics (spring only supports 2 keyframes)
+  const bounceAnimation = shouldReduceMotion
+    ? {}
+    : {
+        scale: [1, 0.95, 1.05, 1],
+        transition: {
+          duration: 0.3,
+          type: 'tween' as const,
+          ease: 'easeInOut' as const,
+        },
+      }
 
   // Clean up AudioContext on unmount
   useEffect(() => {
@@ -102,47 +115,49 @@ export function BuzzerButton({
   }, [disabled, onBuzz, onPlaySound])
 
   return (
-    <div className="relative">
-      {/* Shockwave effect */}
-      {justBuzzed && (
-        <motion.div
-          className="absolute inset-0 rounded-full border-4 border-red-400"
-          initial={{ scale: 1, opacity: 0.8 }}
-          animate={{ scale: 2, opacity: 0 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-        />
-      )}
+    <div className="flex items-center justify-center">
+      <div className="relative">
+        {/* Shockwave effect */}
+        {justBuzzed && (
+          <motion.div
+            className="absolute inset-0 rounded-full border-4 border-red-400"
+            initial={{ scale: 1, opacity: 0.8 }}
+            animate={{ scale: 2, opacity: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          />
+        )}
 
-      <motion.button
-        onClick={handleClick}
-        disabled={disabled}
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ scale: disabled ? 1 : 1.05 }}
-        animate={
-          justBuzzed
-            ? {
-                boxShadow: [
-                  '0 0 60px rgba(239,68,68,0.5)',
-                  '0 0 100px rgba(239,68,68,0.9)',
-                  '0 0 60px rgba(239,68,68,0.5)',
-                ],
-              }
-            : { boxShadow: '0 0 60px rgba(239,68,68,0.5)' }
-        }
-        transition={{ duration: 0.15 }}
-        className={`
-          relative
-          h-32 w-32 landscape:h-24 landscape:w-24 sm:h-40 sm:w-40 md:h-48 md:w-48 landscape:md:h-32 landscape:md:w-32
-          rounded-full
-          border-4 border-red-400
-          bg-gradient-to-br from-red-500 to-red-700
-          text-xl font-bold text-white landscape:text-lg sm:text-2xl
-          focus:outline-none focus:ring-4 focus:ring-red-400/50
-          disabled:cursor-not-allowed disabled:opacity-50
-        `}
-      >
-        BUZZ!
-      </motion.button>
+        <motion.button
+          onClick={handleClick}
+          disabled={disabled}
+          whileTap={bounceAnimation}
+          whileHover={shouldReduceMotion ? {} : { scale: disabled ? 1 : 1.05 }}
+          animate={
+            justBuzzed
+              ? {
+                  boxShadow: [
+                    '0 0 60px rgba(239,68,68,0.5)',
+                    '0 0 100px rgba(239,68,68,0.9)',
+                    '0 0 60px rgba(239,68,68,0.5)',
+                  ],
+                }
+              : { boxShadow: '0 0 60px rgba(239,68,68,0.5)' }
+          }
+          transition={{ duration: 0.15 }}
+          className={`
+            relative
+            h-32 w-32 landscape:h-24 landscape:w-24 sm:h-40 sm:w-40 md:h-48 md:w-48 landscape:md:h-32 landscape:md:w-32
+            rounded-full
+            border-4 border-red-400
+            bg-gradient-to-br from-red-500 to-red-700
+            text-xl font-bold text-white landscape:text-lg sm:text-2xl
+            focus:outline-none focus:ring-4 focus:ring-red-400/50
+            disabled:cursor-not-allowed disabled:opacity-50
+          `}
+        >
+          BUZZ!
+        </motion.button>
+      </div>
     </div>
   )
 }

@@ -10,6 +10,7 @@ import {
   SpeakerWaveIcon,
 } from '@heroicons/react/24/solid'
 import { Card } from '@/components/ui/Card'
+import { PageTransition } from '@/components/ui/PageTransition'
 
 interface ModeCardProps {
   title: string
@@ -100,12 +101,13 @@ export default function PlayPage() {
   }
 
   return (
-    <motion.main
-      className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4 lg:p-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <PageTransition>
+      <motion.main
+        className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-x-hidden p-4 lg:p-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
       {/* Logo / Title */}
       <motion.div
         className="mb-6 text-center sm:mb-8"
@@ -161,6 +163,7 @@ export default function PlayPage() {
           testId="multiplayer-button"
         />
       </div>
-    </motion.main>
+      </motion.main>
+    </PageTransition>
   )
 }

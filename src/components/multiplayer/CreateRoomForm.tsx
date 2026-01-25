@@ -1,11 +1,18 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { AvatarPicker } from './AvatarPicker'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import { GameConfig } from '@/lib/types'
+import {
+  type Avatar,
+  getSavedAvatar,
+  saveAvatar,
+  AVATARS,
+} from '@/lib/avatars'
 
 const PLAYER_ID_KEY = 'blindtest_player_id'
 const MAX_NICKNAME_LENGTH = 20
@@ -51,8 +58,20 @@ interface CreateRoomFormProps {
 export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
   const router = useRouter()
   const [nickname, setNickname] = useState('')
+  const [avatar, setAvatar] = useState<Avatar | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Load saved avatar on mount
+  useEffect(() => {
+    const saved = getSavedAvatar()
+    if (saved) {
+      setAvatar(saved)
+    } else {
+      // Default to first avatar if none saved
+      setAvatar(AVATARS[0])
+    }
+  }, [])
 
   const handleNicknameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +90,11 @@ export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
 
       if (!trimmedNickname) {
         setError('Veuillez entrer un pseudo')
+        return
+      }
+
+      if (!avatar) {
+        setError('Veuillez choisir un avatar')
         return
       }
 
@@ -139,6 +163,7 @@ export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
           .insert({
             room_id: room.id,
             nickname: trimmedNickname,
+            avatar: avatar,
             score: 0,
             is_host: true,
           })
@@ -169,6 +194,9 @@ export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
         // Store player ID in localStorage for reconnection
         localStorage.setItem(PLAYER_ID_KEY, player.id)
 
+        // Save avatar choice for future use
+        saveAvatar(avatar)
+
         // Redirect to the room lobby
         router.push(`/multiplayer/${code}`)
       } catch (err) {
@@ -178,7 +206,7 @@ export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
         setIsLoading(false)
       }
     },
-    [nickname, router]
+    [nickname, avatar, router]
   )
 
   return (
@@ -206,6 +234,12 @@ export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
           </span>
         </div>
 
+        <AvatarPicker
+          value={avatar}
+          onChange={setAvatar}
+          takenAvatars={[]} // No other players when creating a room
+        />
+
         {error && (
           <div className="rounded-lg bg-red-500/20 px-4 py-2 text-sm text-red-300">
             {error}
@@ -216,7 +250,7 @@ export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
           type="submit"
           variant="primary"
           fullWidth
-          disabled={isLoading || !nickname.trim()}
+          disabled={isLoading || !nickname.trim() || !avatar}
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
