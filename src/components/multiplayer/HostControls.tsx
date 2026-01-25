@@ -9,18 +9,19 @@ import {
   ArrowRightIcon,
   EyeIcon,
   StopIcon,
+  PlayIcon,
 } from '@heroicons/react/24/solid'
 import type { MultiplayerGameStatus } from '@/hooks/useMultiplayerGame'
 
-// Bounce animation variants for game buttons with spring physics
+// Bounce animation variants for game buttons with tween physics
+// Note: Spring animations only support 2 keyframes, so we use tween for multi-keyframe animations
 const bounceVariants = {
   tap: {
     scale: [1, 0.95, 1.05, 1],
     transition: {
       duration: 0.3,
-      type: 'spring' as const,
-      stiffness: 400,
-      damping: 10,
+      type: 'tween' as const,
+      ease: 'easeInOut' as const,
     },
   },
 }
@@ -42,6 +43,14 @@ interface HostControlsProps {
   onEndGame: () => Promise<boolean>
   /** Optional loading state */
   isLoading?: boolean
+  /** Whether the host is listening to the rest of the song */
+  isListeningToRest?: boolean
+  /** Countdown seconds before auto-advance (0 = ready to advance) */
+  revealCountdown?: number
+  /** Callback to start listening to rest of song */
+  onListenToRest?: () => void
+  /** Whether timer has expired (for visual indicator) */
+  timerExpired?: boolean
 }
 
 /**
@@ -80,6 +89,10 @@ export function HostControls({
   onReveal,
   onEndGame,
   isLoading = false,
+  isListeningToRest = false,
+  revealCountdown = 0,
+  onListenToRest,
+  timerExpired = false,
 }: HostControlsProps) {
   const [isValidating, setIsValidating] = useState(false)
   const [isLoadingNext, setIsLoadingNext] = useState(false)
@@ -93,8 +106,14 @@ export function HostControls({
   // Show validation buttons when someone has buzzed
   const showValidationButtons = gameStatus === 'buzzed' && hasBuzzer
 
-  // Show next song button after reveal OR when loading (to load first song)
-  const showNextButton = gameStatus === 'reveal' || gameStatus === 'loading'
+  // Show countdown + listen to rest during reveal (when NOT already listening)
+  const showCountdownSection =
+    gameStatus === 'reveal' && !isListeningToRest && revealCountdown > 0
+
+  // Show next song button: when loading, OR during reveal while listening to rest
+  const showNextButton =
+    gameStatus === 'loading' ||
+    (gameStatus === 'reveal' && isListeningToRest)
 
   // Show reveal button during playing or buzzed states (if not already revealed)
   const showRevealButton =
@@ -163,6 +182,23 @@ export function HostControls({
         </span>
       </div>
 
+      {/* Timer expired indicator */}
+      <AnimatePresence mode="wait">
+        {timerExpired && showValidationButtons && (
+          <motion.div
+            key="timer-expired"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-2 rounded-lg bg-orange-500/20 px-4 py-2 text-center"
+          >
+            <span className="text-sm font-medium text-orange-400">
+              Temps écoulé - En attente de validation
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Validation buttons - visible when someone buzzed */}
       <AnimatePresence mode="wait">
         {showValidationButtons && (
@@ -210,6 +246,79 @@ export function HostControls({
                 )}
               </Button>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Countdown + Listen to rest - visible during reveal (before auto-advance) */}
+      <AnimatePresence mode="wait">
+        {showCountdownSection && (
+          <motion.div
+            key="countdown-section"
+            className="flex w-full items-center justify-center gap-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Circular countdown indicator */}
+            <div className="relative h-12 w-12 flex-shrink-0">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                {/* Background circle */}
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="3"
+                />
+                {/* Progress circle */}
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  stroke="url(#countdown-gradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(revealCountdown / 3) * 100.53} 100.53`}
+                  className="transition-all duration-1000"
+                />
+                <defs>
+                  <linearGradient
+                    id="countdown-gradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                  >
+                    <stop offset="0%" stopColor="#ec4899" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white">
+                {revealCountdown}
+              </span>
+            </div>
+
+            {/* Listen to rest button */}
+            {onListenToRest && (
+              <motion.div whileTap={tapAnimation} className="flex-1">
+                <Button
+                  onClick={onListenToRest}
+                  variant="secondary"
+                  size="lg"
+                  disabled={anyLoading}
+                  fullWidth
+                  className="flex items-center justify-center gap-2"
+                >
+                  <PlayIcon className="h-5 w-5" />
+                  <span className="text-sm sm:text-base">Écouter la suite</span>
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

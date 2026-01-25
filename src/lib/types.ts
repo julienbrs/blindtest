@@ -247,6 +247,7 @@ export interface Buzz {
   songId: string // ID of the song being played
   buzzedAt: Date // Server timestamp of the buzz
   isWinner: boolean // Whether this buzz was first (wins the round)
+  wasIncorrect?: boolean // If true, this player answered incorrectly (client-side only)
 }
 
 /**

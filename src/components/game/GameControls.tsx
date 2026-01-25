@@ -13,15 +13,15 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/solid'
 
-// Bounce animation variants for game buttons with spring physics
+// Bounce animation variants for game buttons with tween physics
+// Note: Spring animations only support 2 keyframes, so we use tween for multi-keyframe animations
 const bounceVariants = {
   tap: {
     scale: [1, 0.95, 1.05, 1],
     transition: {
       duration: 0.3,
-      type: 'spring' as const,
-      stiffness: 400,
-      damping: 10,
+      type: 'tween' as const,
+      ease: 'easeInOut' as const,
     },
   },
 }

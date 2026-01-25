@@ -38,6 +38,8 @@ interface SyncedAudioPlayerProps {
   volume?: number
   /** Start position in seconds within the song */
   startPosition?: number
+  /** When true, plays full song beyond clip duration (for "listen to rest" feature) */
+  unlimitedPlayback?: boolean
 }
 
 /**
@@ -84,6 +86,7 @@ export function SyncedAudioPlayer({
   onReady,
   volume = 0.7,
   startPosition = 0,
+  unlimitedPlayback = false,
 }: SyncedAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -92,6 +95,8 @@ export function SyncedAudioPlayer({
   const prevSongIdRef = useRef<string | null>(null)
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasEndedRef = useRef(false)
+  // Store the audio position when pausing (for resume without re-sync)
+  const pausedAtPositionRef = useRef<number | null>(null)
 
   // Apply volume changes in real-time
   useEffect(() => {
@@ -113,6 +118,7 @@ export function SyncedAudioPlayer({
     if (songId && audioRef.current && songId !== prevSongIdRef.current) {
       // Reset state for new song
       hasEndedRef.current = false
+      pausedAtPositionRef.current = null // Clear paused position for new song
       /* eslint-disable react-hooks/set-state-in-effect -- Reset state when song changes is required */
       setIsLoaded(false)
       setIsSyncing(false)
@@ -135,6 +141,7 @@ export function SyncedAudioPlayer({
   useEffect(() => {
     if (!songId) {
       prevSongIdRef.current = null
+      pausedAtPositionRef.current = null // Clear paused position
       /* eslint-disable react-hooks/set-state-in-effect -- Reset state when song is cleared is required */
       setIsLoaded(false)
       setIsSyncing(false)
@@ -166,7 +173,16 @@ export function SyncedAudioPlayer({
       const audio = audioRef.current
       if (!audio) return
 
-      // Calculate offset in milliseconds
+      // Check if we're resuming from a pause (have a stored position)
+      if (pausedAtPositionRef.current !== null) {
+        // Resume from the stored position instead of recalculating
+        audio.play().catch(console.error)
+        pausedAtPositionRef.current = null
+        setIsSyncing(false)
+        return
+      }
+
+      // Full sync: Calculate offset in milliseconds
       const now = Date.now()
       const startTime = startedAt.getTime()
       const offsetMs = now - startTime
@@ -188,8 +204,8 @@ export function SyncedAudioPlayer({
           }
           setIsSyncing(false)
         }, waitMs)
-      } else if (clipPositionSec >= maxDuration) {
-        // Clip already ended
+      } else if (clipPositionSec >= maxDuration && !unlimitedPlayback) {
+        // Clip already ended (but not if unlimited playback is enabled)
         setIsSyncing(false)
         handleEnded()
       } else {
@@ -222,11 +238,13 @@ export function SyncedAudioPlayer({
     handleEnded,
   ])
 
-  // Handle pause
+  // Handle pause - store current position for resume
   useEffect(() => {
     if (!audioRef.current || !isLoaded) return
 
     if (!isPlaying) {
+      // Store the current position before pausing (for resume without re-sync)
+      pausedAtPositionRef.current = audioRef.current.currentTime
       audioRef.current.pause()
       // Clear sync timeout if we're pausing
       if (syncTimeoutRef.current) {
@@ -239,13 +257,15 @@ export function SyncedAudioPlayer({
   }, [isPlaying, isLoaded])
 
   // Limit playback duration - stop when clip duration is reached
+  // Skip this check if unlimitedPlayback is enabled (let song play to natural end)
   useEffect(() => {
+    if (unlimitedPlayback) return
     const clipEnd = startPosition + maxDuration
     if (currentTime >= clipEnd && !hasEndedRef.current) {
       audioRef.current?.pause()
       handleEnded()
     }
-  }, [currentTime, maxDuration, startPosition, handleEnded])
+  }, [currentTime, maxDuration, startPosition, handleEnded, unlimitedPlayback])
 
   // Cleanup on unmount
   useEffect(() => {

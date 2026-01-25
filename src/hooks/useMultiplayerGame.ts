@@ -111,12 +111,18 @@ export interface UseMultiplayerGameResult {
   isConfigured: boolean
   /** Error message if any */
   error: string | null
-  /** Whether audio should be paused (someone buzzed) */
+  /** Whether audio should be paused (someone buzzed) - DEPRECATED: use shouldReduceVolume */
   shouldPauseAudio: boolean
+  /** Whether audio volume should be reduced (someone buzzed and is answering) */
+  shouldReduceVolume: boolean
   /** Whether the answer timer is active (buzzer is answering) */
   timerActive: boolean
   /** History of all completed rounds */
   roundHistory: RoundHistory[]
+  /** Whether the host is listening to the rest of the song */
+  isListeningToRest: boolean
+  /** Set whether listening to rest of song */
+  setIsListeningToRest: (value: boolean) => void
 
   // Actions
   /** Set current round song info for history tracking */
@@ -190,6 +196,7 @@ export function useMultiplayerGame(
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
   const [currentBuzzes, setCurrentBuzzes] = useState<Buzz[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [isListeningToRest, setIsListeningToRest] = useState(false)
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const isConfigured = isSupabaseConfigured()
@@ -376,9 +383,30 @@ export function useMultiplayerGame(
             payload.new as Record<string, unknown>
           )
 
-          setCurrentBuzzes((prev) =>
-            prev.map((b) => (b.id === updatedBuzz.id ? updatedBuzz : b))
-          )
+          setCurrentBuzzes((prev) => {
+            const newBuzzes = prev.map((b) =>
+              b.id === updatedBuzz.id ? updatedBuzz : b
+            )
+
+            // Check if there's still a winner after this update
+            const hasWinner = newBuzzes.some((b) => b.isWinner)
+
+            // If no winner exists anymore (incorrect answer), go back to playing
+            if (!hasWinner && !updatedBuzz.isWinner) {
+              setGameState((prevState) => {
+                // Only revert to playing if we were in buzzed state
+                if (prevState.status === 'buzzed') {
+                  return {
+                    ...prevState,
+                    status: 'playing',
+                  }
+                }
+                return prevState
+              })
+            }
+
+            return newBuzzes
+          })
 
           // If this buzz became winner, update game state
           if (updatedBuzz.isWinner) {
@@ -431,6 +459,15 @@ export function useMultiplayerGame(
 
     if (!gameState.currentSongId) {
       setError('Pas de chanson en cours')
+      return false
+    }
+
+    // Check if this player already answered incorrectly this round
+    const alreadyBuzzedIncorrect = currentBuzzes.some(
+      (b) => b.playerId === myPlayerId && b.wasIncorrect
+    )
+    if (alreadyBuzzedIncorrect) {
+      setError('Vous avez déjà répondu incorrectement')
       return false
     }
 
@@ -511,6 +548,7 @@ export function useMultiplayerGame(
     myPlayerId,
     gameState.status,
     gameState.currentSongId,
+    currentBuzzes,
   ])
 
   /**
@@ -540,46 +578,70 @@ export function useMultiplayerGame(
 
         const winner = players.find((p) => p.id === winningBuzz.playerId)
 
-        // If correct, increment player's score
-        if (correct && winner) {
-          await supabase
-            .from('players')
-            .update({ score: winner.score + 1 })
-            .eq('id', winner.id)
-        }
-
         // Calculate buzz time (ms from song start to buzz)
         const songStartedAt = gameState.currentSongStartedAt
         const buzzTime = songStartedAt
           ? winningBuzz.buzzedAt.getTime() - songStartedAt.getTime()
           : 0
 
-        // Update room to reveal state and record history
-        setGameState((prev) => {
-          // Build round history entry
-          const roundInfo = currentRoundInfoRef.current
-          const historyEntry: RoundHistory = {
-            songId: gameState.currentSongId ?? '',
-            songTitle: roundInfo?.songTitle ?? 'Unknown',
-            songArtist: roundInfo?.songArtist ?? 'Unknown',
-            buzzWinner: winner
-              ? {
-                  playerId: winner.id,
-                  nickname: winner.nickname,
-                  avatar: winner.avatar,
-                  buzzTime: Math.max(0, buzzTime),
-                }
-              : null,
-            wasCorrect: correct,
-            roundNumber: prev.roundHistory.length + 1,
+        if (correct) {
+          // CORRECT ANSWER: increment score and go to reveal state
+          if (winner) {
+            await supabase
+              .from('players')
+              .update({ score: winner.score + 1 })
+              .eq('id', winner.id)
           }
 
-          return {
+          // Update room to reveal state and record history
+          setGameState((prev) => {
+            // Build round history entry
+            const roundInfo = currentRoundInfoRef.current
+            const historyEntry: RoundHistory = {
+              songId: gameState.currentSongId ?? '',
+              songTitle: roundInfo?.songTitle ?? 'Unknown',
+              songArtist: roundInfo?.songArtist ?? 'Unknown',
+              buzzWinner: winner
+                ? {
+                    playerId: winner.id,
+                    nickname: winner.nickname,
+                    avatar: winner.avatar,
+                    buzzTime: Math.max(0, buzzTime),
+                  }
+                : null,
+              wasCorrect: true,
+              roundNumber: prev.roundHistory.length + 1,
+            }
+
+            return {
+              ...prev,
+              status: 'reveal',
+              roundHistory: [...prev.roundHistory, historyEntry],
+            }
+          })
+        } else {
+          // INCORRECT ANSWER: go back to playing state, others can buzz
+          // Update the database to clear the winner - this triggers realtime for all clients
+          await supabase
+            .from('buzzes')
+            .update({ is_winner: false })
+            .eq('id', winningBuzz.id)
+
+          // Mark this buzz as incorrect locally so the same player can't buzz again
+          setCurrentBuzzes((prev) =>
+            prev.map((b) =>
+              b.id === winningBuzz.id
+                ? { ...b, isWinner: false, wasIncorrect: true }
+                : b
+            )
+          )
+
+          // Return to playing state locally (other clients will update via realtime)
+          setGameState((prev) => ({
             ...prev,
-            status: 'reveal',
-            roundHistory: [...prev.roundHistory, historyEntry],
-          }
-        })
+            status: 'playing',
+          }))
+        }
 
         return true
       } catch (err) {
@@ -715,7 +777,12 @@ export function useMultiplayerGame(
   }, [isConfigured, room, isHost])
 
   // Determine if audio should be paused (someone has buzzed and is answering)
+  // DEPRECATED: Use shouldReduceVolume instead - audio continues at lower volume
   const shouldPauseAudio =
+    gameState.status === 'buzzed' && currentBuzzer !== null
+
+  // Determine if audio volume should be reduced (someone buzzed and is answering)
+  const shouldReduceVolume =
     gameState.status === 'buzzed' && currentBuzzer !== null
 
   // Timer is active when someone is buzzed and answering
@@ -745,8 +812,11 @@ export function useMultiplayerGame(
     isConfigured,
     error,
     shouldPauseAudio,
+    shouldReduceVolume,
     timerActive,
     roundHistory: gameState.roundHistory,
+    isListeningToRest,
+    setIsListeningToRest,
     setCurrentRoundInfo,
     buzz,
     validate,

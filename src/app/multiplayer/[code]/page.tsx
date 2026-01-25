@@ -30,6 +30,7 @@ import { useAudioPreloader } from '@/hooks/useAudioPreloader'
 import { useReactions } from '@/hooks/useReactions'
 import { useStreak } from '@/hooks/useStreak'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
+import { useAudioUnlock } from '@/hooks/useAudioUnlock'
 import { ReactionPicker } from '@/components/multiplayer/ReactionPicker'
 import { ReactionOverlay } from '@/components/multiplayer/ReactionOverlay'
 import { StreakCelebration } from '@/components/game/StreakCelebration'
@@ -77,8 +78,11 @@ export default function MultiplayerRoomPage() {
     currentBuzzer,
     currentBuzzes,
     shouldPauseAudio,
+    shouldReduceVolume,
     timerActive,
     roundHistory,
+    isListeningToRest,
+    setIsListeningToRest,
     setCurrentRoundInfo,
     buzz,
     validate,
@@ -130,6 +134,9 @@ export default function MultiplayerRoomPage() {
     recordSkip: recordStreakSkip,
   } = useStreak({ threshold: 3 })
 
+  // Audio unlock for iOS Safari and browsers with autoplay restrictions
+  const { unlockAudio } = useAudioUnlock()
+
   const [isReconnecting, setIsReconnecting] = useState(true)
   const [reconnectFailed, setReconnectFailed] = useState(false)
   const [showReconnectedMessage, setShowReconnectedMessage] = useState(false)
@@ -137,6 +144,7 @@ export default function MultiplayerRoomPage() {
   const [isRevealed, setIsRevealed] = useState(false)
   const [isBuzzing, setIsBuzzing] = useState(false)
   const [timerRemaining, setTimerRemaining] = useState(0)
+  const [revealCountdown, setRevealCountdown] = useState(0)
 
   // Try to reconnect on mount
   useEffect(() => {
@@ -190,9 +198,16 @@ export default function MultiplayerRoomPage() {
               data.song.artist
             )
           }
+        } else {
+          console.error(
+            `Failed to fetch song ${gameState.currentSongId}: ${response.status}`
+          )
         }
-      } catch {
-        // Ignore fetch errors
+      } catch (error) {
+        console.error(
+          `Error fetching song ${gameState.currentSongId}:`,
+          error
+        )
       }
     }
 
@@ -253,19 +268,55 @@ export default function MultiplayerRoomPage() {
     return () => clearInterval(timer)
   }, [timerActive, timerRemaining])
 
+  // Auto-advance countdown after correct answer (host only)
+  // Starts 3-second countdown when entering reveal state, unless listening to rest
+  useEffect(() => {
+    if (gameState.status !== 'reveal' || !isHost || isListeningToRest) {
+      setRevealCountdown(0)
+      return
+    }
+
+    // Start 3-second countdown
+    setRevealCountdown(3)
+
+    const timer = setInterval(() => {
+      setRevealCountdown((prev) => {
+        if (prev <= 1) {
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [gameState.status, isHost, isListeningToRest])
+
   const handleLeaveRoom = useCallback(async () => {
     await leaveRoom()
     router.push('/multiplayer')
   }, [leaveRoom, router])
 
   const handleStartGame = useCallback(async () => {
+    // Unlock audio on interaction (iOS Safari) - critical for host's audio playback
+    await unlockAudio()
     const success = await startGame()
     if (success) {
-      // Game will start - the room status change will be received via realtime
-      // Future: redirect to game screen or show game UI
+      // Auto-load the first song when game starts
+      // Fetch a random song and start it immediately
+      try {
+        const response = await fetch('/api/songs/random')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.song) {
+            await nextSong(data.song.id)
+          }
+        }
+      } catch {
+        // Ignore fetch errors - host can still click "Next Song" manually
+      }
     }
     return success
-  }, [startGame])
+  }, [startGame, unlockAudio, nextSong])
 
   const handleBack = useCallback(() => {
     router.push('/multiplayer')
@@ -275,14 +326,19 @@ export default function MultiplayerRoomPage() {
     if (isBuzzing) return
     setIsBuzzing(true)
     try {
+      // Unlock audio on first interaction (critical for iOS Safari and autoplay restrictions)
+      await unlockAudio()
       await buzz()
     } finally {
       setIsBuzzing(false)
     }
-  }, [buzz, isBuzzing])
+  }, [buzz, isBuzzing, unlockAudio])
 
   const handleValidate = useCallback(
     async (correct: boolean) => {
+      // Unlock audio on interaction (iOS Safari)
+      await unlockAudio()
+
       // Track streak for the player who buzzed (if it's me)
       const buzzerIsMe = currentBuzzer?.id === myPlayer?.id
       if (buzzerIsMe) {
@@ -299,10 +355,15 @@ export default function MultiplayerRoomPage() {
       }
       return success
     },
-    [validate, currentBuzzer, myPlayer, recordStreakCorrect, recordStreakIncorrect]
+    [validate, currentBuzzer, myPlayer, recordStreakCorrect, recordStreakIncorrect, unlockAudio]
   )
 
   const handleNextSong = useCallback(async () => {
+    // Unlock audio on interaction (iOS Safari)
+    await unlockAudio()
+    // Reset listening state when moving to next song
+    setIsListeningToRest(false)
+
     // Try to use preloaded song first for instant transition
     const preloaded = audioPreloader.consumePreloaded()
     if (preloaded) {
@@ -328,9 +389,35 @@ export default function MultiplayerRoomPage() {
     } catch {
       // Ignore fetch errors
     }
-  }, [nextSong, gameState.playedSongIds, audioPreloader])
+  }, [nextSong, gameState.playedSongIds, audioPreloader, setIsListeningToRest, unlockAudio])
+
+  // Auto-advance when countdown reaches 0 (host only, during reveal, not listening to rest)
+  useEffect(() => {
+    if (
+      revealCountdown === 0 &&
+      gameState.status === 'reveal' &&
+      isHost &&
+      !isListeningToRest
+    ) {
+      // Small delay to ensure countdown visually shows 0 before advancing
+      const timeout = setTimeout(() => {
+        handleNextSong()
+      }, 100)
+      return () => clearTimeout(timeout)
+    }
+  }, [revealCountdown, gameState.status, isHost, isListeningToRest, handleNextSong])
+
+  // Handler for "listen to rest of song" button
+  const handleListenToRest = useCallback(async () => {
+    // Unlock audio on interaction (iOS Safari)
+    await unlockAudio()
+    setIsListeningToRest(true)
+    setRevealCountdown(0) // Cancel auto-advance
+  }, [setIsListeningToRest, unlockAudio])
 
   const handleReveal = useCallback(async () => {
+    // Unlock audio on interaction (iOS Safari)
+    await unlockAudio()
     // Revealing without buzz/answer resets streak (skip)
     recordStreakSkip()
     const success = await reveal()
@@ -338,21 +425,35 @@ export default function MultiplayerRoomPage() {
       setIsRevealed(true)
     }
     return success
-  }, [reveal, recordStreakSkip])
+  }, [reveal, recordStreakSkip, unlockAudio])
 
   const handleEndGame = useCallback(async () => {
+    // Unlock audio on interaction (iOS Safari)
+    await unlockAudio()
     return await endGame()
-  }, [endGame])
+  }, [endGame, unlockAudio])
 
   const handleTimerEnd = useCallback(() => {
-    // Timer ended, reveal the answer
-    setIsRevealed(true)
-    handleReveal()
-  }, [handleReveal])
+    // Timer ended but host can still validate - just show visual indicator
+    // Don't auto-reveal anymore, host decides if correct or incorrect
+  }, [])
 
   const handleAudioEnded = useCallback(() => {
-    // Audio clip ended - could auto-reveal or wait for manual reveal
-  }, [])
+    if (isListeningToRest) {
+      // Full song ended while listening to rest, auto-advance
+      setIsListeningToRest(false)
+      handleNextSong()
+    } else if (gameState.status === 'playing') {
+      // Clip ended during playing state (no one buzzed)
+      // Reveal the answer for all clients
+      setIsRevealed(true)
+
+      // Host triggers full reveal action (updates game state, history, starts countdown)
+      if (isHost) {
+        handleReveal()
+      }
+    }
+  }, [isListeningToRest, setIsListeningToRest, handleNextSong, gameState.status, isHost, handleReveal])
 
   const fadeUpVariants = shouldReduceMotion
     ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
@@ -426,9 +527,10 @@ export default function MultiplayerRoomPage() {
                 variant="secondary"
                 onClick={() => router.push('/play')}
                 fullWidth
+                className="flex items-center justify-center"
               >
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Retour a l&apos;accueil
+                Retour à l&apos;accueil
               </Button>
             </div>
           </Card>
@@ -490,8 +592,17 @@ export default function MultiplayerRoomPage() {
 
     // Game in progress
     if (room.status === 'playing') {
+      // Check if this player already answered incorrectly this round
+      const hasAnsweredIncorrectly = currentBuzzes.some(
+        (b) => b.playerId === myPlayer?.id && b.wasIncorrect
+      )
+
       const canBuzz =
-        gameState.status === 'playing' && !currentBuzzer && !isBuzzing
+        gameState.status === 'playing' &&
+        !currentBuzzer &&
+        !isBuzzing &&
+        !isRevealed &&
+        !hasAnsweredIncorrectly
 
       return (
         <PageTransition>
@@ -563,9 +674,14 @@ export default function MultiplayerRoomPage() {
                       songId={gameState.currentSongId}
                       startedAt={gameState.currentSongStartedAt}
                       isPlaying={
-                        gameState.status === 'playing' && !shouldPauseAudio
+                        (gameState.status === 'playing' ||
+                          gameState.status === 'buzzed' ||
+                          gameState.status === 'reveal') &&
+                        !shouldPauseAudio
                       }
                       maxDuration={room.settings.clipDuration ?? 30}
+                      volume={0.5}
+                      unlimitedPlayback={isListeningToRest || gameState.status === 'reveal'}
                       onEnded={handleAudioEnded}
                     />
                   </motion.div>
@@ -627,6 +743,21 @@ export default function MultiplayerRoomPage() {
                   </motion.div>
                 )}
 
+                {/* Show message when player answered incorrectly */}
+                {hasAnsweredIncorrectly && gameState.status === 'playing' && !isRevealed && (
+                  <motion.div
+                    className="w-full"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <div className="rounded-xl bg-red-500/20 border border-red-500/30 p-4 text-center">
+                      <p className="text-red-300 font-medium">
+                        Mauvaise réponse ! Attendez la prochaine chanson.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Host Controls */}
                 {isHost && (
                   <motion.div
@@ -644,6 +775,10 @@ export default function MultiplayerRoomPage() {
                         onReveal={handleReveal}
                         onEndGame={handleEndGame}
                         isLoading={isLoading}
+                        isListeningToRest={isListeningToRest}
+                        revealCountdown={revealCountdown}
+                        onListenToRest={handleListenToRest}
+                        timerExpired={timerRemaining === 0 && timerActive}
                       />
                     </Card>
                   </motion.div>
