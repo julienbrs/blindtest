@@ -22,6 +22,7 @@ import { MultiplayerRecap } from '@/components/multiplayer/MultiplayerRecap'
 import { BuzzerButton } from '@/components/game/BuzzerButton'
 import { SongReveal } from '@/components/game/SongReveal'
 import { Timer } from '@/components/game/Timer'
+import { PausedOverlay } from '@/components/game/PausedOverlay'
 import { useRoom } from '@/hooks/useRoom'
 import { usePresence } from '@/hooks/usePresence'
 import { useHostMigration } from '@/hooks/useHostMigration'
@@ -83,12 +84,15 @@ export default function MultiplayerRoomPage() {
     roundHistory,
     isListeningToRest,
     setIsListeningToRest,
+    isPaused,
     setCurrentRoundInfo,
     buzz,
     validate,
     nextSong,
     reveal,
     endGame,
+    pause,
+    resume,
   } = useMultiplayerGame({
     room,
     players,
@@ -192,11 +196,7 @@ export default function MultiplayerRoomPage() {
           setCurrentSong(data.song)
           // Update round info for history tracking
           if (data.song) {
-            setCurrentRoundInfo(
-              data.song.id,
-              data.song.title,
-              data.song.artist
-            )
+            setCurrentRoundInfo(data.song.id, data.song.title, data.song.artist)
           }
         } else {
           console.error(
@@ -204,10 +204,7 @@ export default function MultiplayerRoomPage() {
           )
         }
       } catch (error) {
-        console.error(
-          `Error fetching song ${gameState.currentSongId}:`,
-          error
-        )
+        console.error(`Error fetching song ${gameState.currentSongId}:`, error)
       }
     }
 
@@ -355,7 +352,14 @@ export default function MultiplayerRoomPage() {
       }
       return success
     },
-    [validate, currentBuzzer, myPlayer, recordStreakCorrect, recordStreakIncorrect, unlockAudio]
+    [
+      validate,
+      currentBuzzer,
+      myPlayer,
+      recordStreakCorrect,
+      recordStreakIncorrect,
+      unlockAudio,
+    ]
   )
 
   const handleNextSong = useCallback(async () => {
@@ -389,7 +393,13 @@ export default function MultiplayerRoomPage() {
     } catch {
       // Ignore fetch errors
     }
-  }, [nextSong, gameState.playedSongIds, audioPreloader, setIsListeningToRest, unlockAudio])
+  }, [
+    nextSong,
+    gameState.playedSongIds,
+    audioPreloader,
+    setIsListeningToRest,
+    unlockAudio,
+  ])
 
   // Auto-advance when countdown reaches 0 (host only, during reveal, not listening to rest)
   useEffect(() => {
@@ -405,7 +415,13 @@ export default function MultiplayerRoomPage() {
       }, 100)
       return () => clearTimeout(timeout)
     }
-  }, [revealCountdown, gameState.status, isHost, isListeningToRest, handleNextSong])
+  }, [
+    revealCountdown,
+    gameState.status,
+    isHost,
+    isListeningToRest,
+    handleNextSong,
+  ])
 
   // Handler for "listen to rest of song" button
   const handleListenToRest = useCallback(async () => {
@@ -453,7 +469,14 @@ export default function MultiplayerRoomPage() {
         handleReveal()
       }
     }
-  }, [isListeningToRest, setIsListeningToRest, handleNextSong, gameState.status, isHost, handleReveal])
+  }, [
+    isListeningToRest,
+    setIsListeningToRest,
+    handleNextSong,
+    gameState.status,
+    isHost,
+    handleReveal,
+  ])
 
   const fadeUpVariants = shouldReduceMotion
     ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
@@ -511,30 +534,32 @@ export default function MultiplayerRoomPage() {
             initial="hidden"
             animate="visible"
             variants={fadeUpVariants}
-        >
-          <Card variant="elevated" className="p-6 text-center">
-            <ExclamationTriangleIcon className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
-            <h2 className="mb-2 text-xl font-bold text-white">Acces refuse</h2>
-            <p className="mb-6 text-purple-200">
-              Vous n&apos;etes pas dans cette room ou elle n&apos;existe pas.
-              Veuillez rejoindre la room avec le code.
-            </p>
-            <div className="flex flex-col gap-3">
-              <Button variant="primary" onClick={handleBack} fullWidth>
-                Rejoindre une room
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => router.push('/play')}
-                fullWidth
-                className="flex items-center justify-center"
-              >
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Retour à l&apos;accueil
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
+          >
+            <Card variant="elevated" className="p-6 text-center">
+              <ExclamationTriangleIcon className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
+              <h2 className="mb-2 text-xl font-bold text-white">
+                Acces refuse
+              </h2>
+              <p className="mb-6 text-purple-200">
+                Vous n&apos;etes pas dans cette room ou elle n&apos;existe pas.
+                Veuillez rejoindre la room avec le code.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Button variant="primary" onClick={handleBack} fullWidth>
+                  Rejoindre une room
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => router.push('/play')}
+                  fullWidth
+                  className="flex items-center justify-center"
+                >
+                  <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                  Retour à l&apos;accueil
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
         </main>
       </PageTransition>
     )
@@ -677,11 +702,14 @@ export default function MultiplayerRoomPage() {
                         (gameState.status === 'playing' ||
                           gameState.status === 'buzzed' ||
                           gameState.status === 'reveal') &&
-                        !shouldPauseAudio
+                        !shouldPauseAudio &&
+                        !isPaused
                       }
                       maxDuration={room.settings.clipDuration ?? 30}
                       volume={0.5}
-                      unlimitedPlayback={isListeningToRest || gameState.status === 'reveal'}
+                      unlimitedPlayback={
+                        isListeningToRest || gameState.status === 'reveal'
+                      }
                       onEnded={handleAudioEnded}
                     />
                   </motion.div>
@@ -744,19 +772,21 @@ export default function MultiplayerRoomPage() {
                 )}
 
                 {/* Show message when player answered incorrectly */}
-                {hasAnsweredIncorrectly && gameState.status === 'playing' && !isRevealed && (
-                  <motion.div
-                    className="w-full"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                  >
-                    <div className="rounded-xl bg-red-500/20 border border-red-500/30 p-4 text-center">
-                      <p className="text-red-300 font-medium">
-                        Mauvaise réponse ! Attendez la prochaine chanson.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
+                {hasAnsweredIncorrectly &&
+                  gameState.status === 'playing' &&
+                  !isRevealed && (
+                    <motion.div
+                      className="w-full"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <div className="rounded-xl bg-red-500/20 border border-red-500/30 p-4 text-center">
+                        <p className="text-red-300 font-medium">
+                          Mauvaise réponse ! Attendez la prochaine chanson.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
 
                 {/* Host Controls */}
                 {isHost && (
@@ -779,6 +809,9 @@ export default function MultiplayerRoomPage() {
                         revealCountdown={revealCountdown}
                         onListenToRest={handleListenToRest}
                         timerExpired={timerRemaining === 0 && timerActive}
+                        isPaused={isPaused}
+                        onPause={pause}
+                        onResume={resume}
                       />
                     </Card>
                   </motion.div>
@@ -807,6 +840,12 @@ export default function MultiplayerRoomPage() {
                 </motion.div>
               </div>
             </div>
+
+            {/* Paused overlay - shown for all players when host pauses */}
+            <PausedOverlay
+              show={isPaused}
+              onResume={isHost ? resume : undefined}
+            />
           </main>
         </PageTransition>
       )

@@ -10,6 +10,7 @@ import {
   EyeIcon,
   StopIcon,
   PlayIcon,
+  PauseIcon,
 } from '@heroicons/react/24/solid'
 import type { MultiplayerGameStatus } from '@/hooks/useMultiplayerGame'
 
@@ -51,6 +52,12 @@ interface HostControlsProps {
   onListenToRest?: () => void
   /** Whether timer has expired (for visual indicator) */
   timerExpired?: boolean
+  /** Whether the game is currently paused */
+  isPaused?: boolean
+  /** Callback to pause the game */
+  onPause?: () => void
+  /** Callback to resume the game */
+  onResume?: () => void
 }
 
 /**
@@ -93,6 +100,9 @@ export function HostControls({
   revealCountdown = 0,
   onListenToRest,
   timerExpired = false,
+  isPaused = false,
+  onPause,
+  onResume,
 }: HostControlsProps) {
   const [isValidating, setIsValidating] = useState(false)
   const [isLoadingNext, setIsLoadingNext] = useState(false)
@@ -112,8 +122,7 @@ export function HostControls({
 
   // Show next song button: when loading, OR during reveal while listening to rest
   const showNextButton =
-    gameStatus === 'loading' ||
-    (gameStatus === 'reveal' && isListeningToRest)
+    gameStatus === 'loading' || (gameStatus === 'reveal' && isListeningToRest)
 
   // Show reveal button during playing or buzzed states (if not already revealed)
   const showRevealButton =
@@ -181,6 +190,46 @@ export function HostControls({
           Controles Hote
         </span>
       </div>
+
+      {/* Pause/Resume button - visible during playing or buzzed states */}
+      <AnimatePresence mode="wait">
+        {(gameStatus === 'playing' ||
+          gameStatus === 'buzzed' ||
+          gameStatus === 'paused') &&
+          onPause &&
+          onResume && (
+            <motion.div
+              key="pause-button"
+              className="mb-4"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+              whileTap={tapAnimation}
+            >
+              <Button
+                onClick={isPaused ? onResume : onPause}
+                variant={isPaused ? 'primary' : 'secondary'}
+                size="lg"
+                disabled={anyLoading}
+                fullWidth
+                className="flex items-center justify-center gap-2"
+              >
+                {isPaused ? (
+                  <>
+                    <PlayIcon className="h-5 w-5" />
+                    <span className="text-sm sm:text-base">Reprendre</span>
+                  </>
+                ) : (
+                  <>
+                    <PauseIcon className="h-5 w-5" />
+                    <span className="text-sm sm:text-base">Pause</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          )}
+      </AnimatePresence>
 
       {/* Timer expired indicator */}
       <AnimatePresence mode="wait">

@@ -51,7 +51,7 @@ export interface GameState {
   playedSongIds: string[] // IDs des chansons déjà jouées
   timerRemaining: number // Secondes restantes sur le timer
   isRevealed: boolean // Si la réponse est révélée
-  previousStatus: 'playing' | 'timer' | 'buzzed' | null // État avant pause (pour resume)
+  previousStatus: 'playing' | 'timer' | 'buzzed' | 'countdown' | null // État avant pause (pour resume)
   revealCountdown: number // Secondes avant passage auto à la chanson suivante (mode découverte)
   isListeningToRest: boolean // Si l'utilisateur écoute le reste de la chanson
 }
@@ -121,7 +121,8 @@ export type GameStatus =
   | 'playing' // Musique en lecture
   | 'buzzed' // Quelqu'un a buzzé (transitoire)
   | 'timer' // Timer en cours
-  | 'paused' // Jeu en pause (perte de focus)
+  | 'countdown' // Countdown avant révélation (après "Je sais !")
+  | 'paused' // Jeu en pause (perte de focus ou manuel)
   | 'reveal' // Réponse révélée
   | 'ended' // Partie terminée
 
@@ -153,7 +154,10 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'LOAD_SONG'; song: Song }
   | { type: 'PLAY' }
-  | { type: 'PAUSE'; previousStatus: 'playing' | 'timer' | 'buzzed' }
+  | {
+      type: 'PAUSE'
+      previousStatus: 'playing' | 'timer' | 'buzzed' | 'countdown'
+    }
   | { type: 'RESUME' }
   | { type: 'BUZZ'; timerDuration: number; noTimer: boolean }
   | { type: 'TICK_TIMER' }
@@ -168,6 +172,8 @@ export type GameAction =
   | { type: 'LISTEN_TO_REST' } // Écouter le reste de la chanson
   | { type: 'QUICK_SCORE'; knew: boolean } // Score rapide pendant reveal
   | { type: 'SONG_ENDED'; revealDuration: number } // Fin de la chanson complète
+  | { type: 'START_COUNTDOWN'; countdownDuration: number } // Démarrer le countdown avant reveal (après "Je sais !")
+  | { type: 'TICK_COUNTDOWN'; revealDuration: number } // Décrémenter le countdown
 
 // ============================================
 // Types pour les playlists personnalisées

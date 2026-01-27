@@ -33,11 +33,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, status: 'playing', previousStatus: null }
 
     case 'PAUSE':
-      // Only pause from playing, timer, or buzzed states
+      // Only pause from playing, timer, buzzed, or countdown states
       if (
         state.status !== 'playing' &&
         state.status !== 'timer' &&
-        state.status !== 'buzzed'
+        state.status !== 'buzzed' &&
+        state.status !== 'countdown'
       )
         return state
       return {
@@ -195,6 +196,35 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isListeningToRest: false,
       }
 
+    case 'START_COUNTDOWN':
+      // Start countdown before reveal (after "Je sais !")
+      if (state.status !== 'playing') return state
+      return {
+        ...state,
+        status: 'countdown',
+        revealCountdown: action.countdownDuration,
+      }
+
+    case 'TICK_COUNTDOWN':
+      // Decrement countdown, transition to reveal when done
+      if (state.status !== 'countdown') return state
+      const countdownRemaining = state.revealCountdown - 1
+      if (countdownRemaining <= 0) {
+        // Countdown finished, reveal the answer with full reveal duration
+        return {
+          ...state,
+          status: 'reveal',
+          isRevealed: true,
+          songsPlayed: state.songsPlayed + 1,
+          playedSongIds: state.currentSong
+            ? [...state.playedSongIds, state.currentSong.id]
+            : state.playedSongIds,
+          revealCountdown: action.revealDuration,
+          isListeningToRest: false,
+        }
+      }
+      return { ...state, revealCountdown: countdownRemaining }
+
     default:
       return state
   }
@@ -206,7 +236,9 @@ interface UseGameStateReturn {
     startGame: () => void
     loadSong: (song: Song) => void
     play: () => void
-    pause: (previousStatus: 'playing' | 'timer' | 'buzzed') => void
+    pause: (
+      previousStatus: 'playing' | 'timer' | 'buzzed' | 'countdown'
+    ) => void
     resume: () => void
     buzz: () => void
     validate: (correct: boolean) => void
@@ -219,6 +251,7 @@ interface UseGameStateReturn {
     listenToRest: () => void
     quickScore: (knew: boolean) => void
     songEnded: () => void
+    startCountdown: () => void
   }
   dispatch: React.Dispatch<GameAction>
 }
@@ -253,6 +286,20 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
     return () => clearInterval(interval)
   }, [state.status, state.isListeningToRest, config.revealDuration])
 
+  // "Je sais !" countdown effect (countdown before reveal)
+  useEffect(() => {
+    if (state.status !== 'countdown') return
+
+    const interval = setInterval(() => {
+      dispatch({
+        type: 'TICK_COUNTDOWN',
+        revealDuration: config.revealDuration,
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [state.status, config.revealDuration])
+
   // Memoized actions
   const startGame = useCallback(() => dispatch({ type: 'START_GAME' }), [])
 
@@ -264,7 +311,7 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
   const play = useCallback(() => dispatch({ type: 'PLAY' }), [])
 
   const pause = useCallback(
-    (previousStatus: 'playing' | 'timer' | 'buzzed') =>
+    (previousStatus: 'playing' | 'timer' | 'buzzed' | 'countdown') =>
       dispatch({ type: 'PAUSE', previousStatus }),
     []
   )
@@ -323,6 +370,11 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
     dispatch({ type: 'SONG_ENDED', revealDuration: config.revealDuration })
   }, [config.revealDuration])
 
+  const startCountdown = useCallback(() => {
+    // Start 5-second countdown before reveal (after "Je sais !")
+    dispatch({ type: 'START_COUNTDOWN', countdownDuration: 5 })
+  }, [])
+
   // Memoize the actions object to prevent unnecessary re-renders
   // Individual actions are already memoized, but the object itself must be stable
   const actions = useMemo(
@@ -343,6 +395,7 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
       listenToRest,
       quickScore,
       songEnded,
+      startCountdown,
     }),
     [
       startGame,
@@ -361,6 +414,7 @@ export function useGameState(config: GameConfig): UseGameStateReturn {
       listenToRest,
       quickScore,
       songEnded,
+      startCountdown,
     ]
   )
 
