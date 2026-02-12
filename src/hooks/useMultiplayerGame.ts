@@ -24,6 +24,7 @@ export type MultiplayerGameStatus =
   | 'loading' // Loading a new song
   | 'playing' // Song is playing, players can buzz
   | 'buzzed' // Someone buzzed, waiting for validation
+  | 'paused' // Game is paused (host only can pause)
   | 'reveal' // Answer revealed
   | 'ended' // Game ended
 
@@ -123,6 +124,8 @@ export interface UseMultiplayerGameResult {
   isListeningToRest: boolean
   /** Set whether listening to rest of song */
   setIsListeningToRest: (value: boolean) => void
+  /** Whether the game is paused (by host) */
+  isPaused: boolean
 
   // Actions
   /** Set current round song info for history tracking */
@@ -141,6 +144,10 @@ export interface UseMultiplayerGameResult {
   reveal: () => Promise<boolean>
   /** End the game (host only) */
   endGame: () => Promise<boolean>
+  /** Pause the game (host only) */
+  pause: () => void
+  /** Resume the game (host only) */
+  resume: () => void
 }
 
 /**
@@ -197,6 +204,9 @@ export function useMultiplayerGame(
   const [currentBuzzes, setCurrentBuzzes] = useState<Buzz[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isListeningToRest, setIsListeningToRest] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [previousStatusBeforePause, setPreviousStatusBeforePause] =
+    useState<MultiplayerGameStatus | null>(null)
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const isConfigured = isSupabaseConfigured()
@@ -650,7 +660,16 @@ export function useMultiplayerGame(
         return false
       }
     },
-    [isConfigured, room, isHost, gameState.status, gameState.currentSongId, gameState.currentSongStartedAt, currentBuzzes, players]
+    [
+      isConfigured,
+      room,
+      isHost,
+      gameState.status,
+      gameState.currentSongId,
+      gameState.currentSongStartedAt,
+      currentBuzzes,
+      players,
+    ]
   )
 
   /**
@@ -776,6 +795,39 @@ export function useMultiplayerGame(
     }
   }, [isConfigured, room, isHost])
 
+  /**
+   * Pause the game (host only)
+   * Saves the current status and transitions to paused state
+   */
+  const pause = useCallback(() => {
+    if (!isHost) return
+
+    const currentStatus = gameState.status
+    if (currentStatus === 'playing' || currentStatus === 'buzzed') {
+      setPreviousStatusBeforePause(currentStatus)
+      setIsPaused(true)
+      setGameState((prev) => ({
+        ...prev,
+        status: 'paused',
+      }))
+    }
+  }, [isHost, gameState.status])
+
+  /**
+   * Resume the game (host only)
+   * Restores the previous status before pause
+   */
+  const resume = useCallback(() => {
+    if (!isHost || !isPaused || !previousStatusBeforePause) return
+
+    setIsPaused(false)
+    setGameState((prev) => ({
+      ...prev,
+      status: previousStatusBeforePause,
+    }))
+    setPreviousStatusBeforePause(null)
+  }, [isHost, isPaused, previousStatusBeforePause])
+
   // Determine if audio should be paused (someone has buzzed and is answering)
   // DEPRECATED: Use shouldReduceVolume instead - audio continues at lower volume
   const shouldPauseAudio =
@@ -817,11 +869,14 @@ export function useMultiplayerGame(
     roundHistory: gameState.roundHistory,
     isListeningToRest,
     setIsListeningToRest,
+    isPaused,
     setCurrentRoundInfo,
     buzz,
     validate,
     nextSong,
     reveal,
     endGame,
+    pause,
+    resume,
   }
 }

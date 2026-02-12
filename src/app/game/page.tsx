@@ -21,6 +21,7 @@ import {
   CheckIcon,
   ArrowRightIcon,
   PlayIcon,
+  PauseIcon,
 } from '@heroicons/react/24/solid'
 import { useGameState } from '@/hooks/useGameState'
 import { useAudioPreloader } from '@/hooks/useAudioPreloader'
@@ -110,6 +111,12 @@ function GameContent() {
   const retryCallbackRef = useRef<(() => void) | null>(null)
   // Track if game was paused due to page visibility change (tab switch)
   const [wasPausedByVisibility, setWasPausedByVisibility] = useState(false)
+  // Track if game was paused by user clicking pause button
+  const [isPausedByUser, setIsPausedByUser] = useState(false)
+  // Track which quick score button was selected during reveal
+  const [quickScoreSelection, setQuickScoreSelection] = useState<
+    'knew' | 'notFound' | null
+  >(null)
   // Calculated start position in seconds for current song
   const [audioStartPosition, setAudioStartPosition] = useState(0)
 
@@ -290,6 +297,26 @@ function GameContent() {
   const handleVisibilityResume = useCallback(() => {
     setWasPausedByVisibility(false)
     // Resume the game to the previous state
+    game.actions.resume()
+  }, [game.actions])
+
+  // Handle user-initiated pause
+  const handleUserPause = useCallback(() => {
+    const currentStatus = game.state.status
+    if (
+      currentStatus === 'playing' ||
+      currentStatus === 'timer' ||
+      currentStatus === 'buzzed' ||
+      currentStatus === 'countdown'
+    ) {
+      setIsPausedByUser(true)
+      game.actions.pause(currentStatus)
+    }
+  }, [game.state.status, game.actions])
+
+  // Handle user-initiated resume
+  const handleUserResume = useCallback(() => {
+    setIsPausedByUser(false)
     game.actions.resume()
   }, [game.actions])
 
@@ -519,7 +546,12 @@ function GameContent() {
       abortController.abort()
       isLoadingSongRef.current = false
     }
-  }, [game.state.status, game.state.currentSong, game.state.playedSongIds, loadRandomSong])
+  }, [
+    game.state.status,
+    game.state.currentSong,
+    game.state.playedSongIds,
+    loadRandomSong,
+  ])
 
   // Prefetch next song during REVEAL state using the audio preloader hook
   useEffect(() => {
@@ -584,6 +616,13 @@ function GameContent() {
     game.actions,
   ])
 
+  // Reset quick score selection when leaving reveal state (auto-advance, song ended, etc.)
+  useEffect(() => {
+    if (game.state.status !== 'reveal') {
+      setQuickScoreSelection(null)
+    }
+  }, [game.state.status])
+
   // Callback when audio is ready to play - receives songId from AudioPlayer
   const handleAudioReady = useCallback((songId: string) => {
     setAudioReadyForSongId(songId)
@@ -623,6 +662,8 @@ function GameContent() {
   // Handle next song action with audio unlock for iOS Safari
   const handleNextSong = useCallback(async () => {
     await unlockAudio()
+    // Reset quick score selection for the next song
+    setQuickScoreSelection(null)
     game.actions.nextSong()
   }, [unlockAudio, game.actions])
 
@@ -665,7 +706,14 @@ function GameContent() {
       }
       game.actions.validate(correct)
     },
-    [celebrate, triggerShake, game.actions, unlockAudio, recordStreakCorrect, recordStreakIncorrect]
+    [
+      celebrate,
+      triggerShake,
+      game.actions,
+      unlockAudio,
+      recordStreakCorrect,
+      recordStreakIncorrect,
+    ]
   )
 
   // Handle "Écouter la suite" - user wants to hear the rest of the song
@@ -677,7 +725,12 @@ function GameContent() {
   // Handle quick score during reveal (optional scoring that doesn't block auto-advance)
   const handleQuickScore = useCallback(
     async (knew: boolean) => {
+      // Prevent double-clicking
+      if (quickScoreSelection !== null) return
+
       await unlockAudio()
+      // Track selection for visual feedback
+      setQuickScoreSelection(knew ? 'knew' : 'notFound')
       if (knew) {
         // Track streak for consecutive correct answers
         recordStreakCorrect()
@@ -690,7 +743,14 @@ function GameContent() {
       }
       game.actions.quickScore(knew)
     },
-    [unlockAudio, game.actions, celebrate, recordStreakCorrect, recordStreakSkip]
+    [
+      unlockAudio,
+      game.actions,
+      celebrate,
+      recordStreakCorrect,
+      recordStreakSkip,
+      quickScoreSelection,
+    ]
   )
 
   // Handle audio ended - decides whether to call clipEnded or songEnded based on state
@@ -778,331 +838,417 @@ function GameContent() {
         className="flex min-h-screen w-full flex-col overflow-x-hidden p-3 sm:p-4 lg:p-6"
         animate={shouldReduceMotion ? {} : shakeAnimation}
       >
-      {/* Header avec score - Responsive layout */}
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4 lg:mb-6">
-        <ScoreDisplay
-          score={game.state.score}
-          songsPlayed={game.state.songsPlayed}
-        />
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          {/* Music Volume Slider - Hidden on very small screens, compact on mobile */}
-          <div
-            className="hidden min-h-[44px] items-center gap-2 rounded-lg bg-white/10 px-3 py-2 sm:flex"
-            data-testid="music-volume-control"
-          >
-            <MusicalNoteIcon
-              className="h-4 w-4 text-purple-300"
-              aria-hidden="true"
-            />
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.1}
-              value={musicVolume}
-              onChange={handleMusicVolumeChange}
-              className="h-6 w-16 cursor-pointer accent-purple-500 sm:w-20 md:w-24"
-              aria-label="Volume de la musique"
-              data-testid="music-volume-slider"
-            />
-            <span
-              className="w-8 text-xs text-purple-300"
-              data-testid="music-volume-percentage"
+        {/* Header avec score - Responsive layout */}
+        <header className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4 lg:mb-6">
+          <ScoreDisplay
+            score={game.state.score}
+            songsPlayed={game.state.songsPlayed}
+          />
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            {/* Music Volume Slider - Hidden on very small screens, compact on mobile */}
+            <div
+              className="hidden min-h-[44px] items-center gap-2 rounded-lg bg-white/10 px-3 py-2 sm:flex"
+              data-testid="music-volume-control"
             >
-              {Math.round(musicVolume * 100)}%
-            </span>
-          </div>
-          {/* SFX Mute Toggle Button */}
-          <Button
-            onClick={handleToggleSfxMute}
-            variant="secondary"
-            size="sm"
-            className="flex items-center gap-1 sm:gap-2"
-            aria-label={
-              sfx.isMuted
-                ? 'Activer les effets sonores'
-                : 'Couper les effets sonores'
-            }
-            data-testid="sfx-mute-toggle"
-          >
-            {sfx.isMuted ? (
-              <SpeakerXMarkIcon className="h-4 w-4" />
-            ) : (
-              <SpeakerWaveIcon className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">SFX</span>
-          </Button>
-          {/* Fullscreen Toggle Button - only show if supported */}
-          {isFullscreenSupported && (
+              <MusicalNoteIcon
+                className="h-4 w-4 text-purple-300"
+                aria-hidden="true"
+              />
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.1}
+                value={musicVolume}
+                onChange={handleMusicVolumeChange}
+                className="h-6 w-16 cursor-pointer accent-purple-500 sm:w-20 md:w-24"
+                aria-label="Volume de la musique"
+                data-testid="music-volume-slider"
+              />
+              <span
+                className="w-8 text-xs text-purple-300"
+                data-testid="music-volume-percentage"
+              >
+                {Math.round(musicVolume * 100)}%
+              </span>
+            </div>
+            {/* SFX Mute Toggle Button */}
             <Button
-              onClick={toggleFullscreen}
+              onClick={handleToggleSfxMute}
               variant="secondary"
               size="sm"
               className="flex items-center gap-1 sm:gap-2"
               aria-label={
-                isFullscreen
-                  ? 'Quitter le mode plein écran'
-                  : 'Passer en mode plein écran'
+                sfx.isMuted
+                  ? 'Activer les effets sonores'
+                  : 'Couper les effets sonores'
               }
-              data-testid="fullscreen-toggle"
+              data-testid="sfx-mute-toggle"
             >
-              {isFullscreen ? (
-                <ArrowsPointingInIcon className="h-4 w-4" />
+              {sfx.isMuted ? (
+                <SpeakerXMarkIcon className="h-4 w-4" />
               ) : (
-                <ArrowsPointingOutIcon className="h-4 w-4" />
+                <SpeakerWaveIcon className="h-4 w-4" />
               )}
+              <span className="hidden sm:inline">SFX</span>
             </Button>
-          )}
-          <Button
-            onClick={() => setShowQuitConfirm(true)}
-            variant="secondary"
-            size="sm"
-            className="flex items-center gap-1 sm:gap-2"
-          >
-            <ArrowRightOnRectangleIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Quitter</span>
-          </Button>
-        </div>
-      </header>
-
-      {/* Quit confirmation modal */}
-      <AnimatePresence>
-        {showQuitConfirm && (
-          <motion.div
-            key="quit-modal-overlay"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            {...getAnimationProps(fadeIn, quickTransition)}
-          >
-            <motion.div
-              key="quit-modal-content"
-              className="mx-4 max-w-sm rounded-xl bg-purple-900 p-6"
-              {...getAnimationProps(fadeScale)}
-            >
-              <h3 className="mb-4 text-xl font-bold">Quitter la partie ?</h3>
-              <p className="mb-6 text-purple-200">
-                Votre score ne sera pas sauvegardé.
-              </p>
-              <div className="flex gap-4">
-                <Button
-                  onClick={() => setShowQuitConfirm(false)}
-                  variant="secondary"
-                  size="md"
-                  className="flex min-w-[44px] flex-1 items-center justify-center gap-2"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                  Annuler
-                </Button>
-                <Button
-                  onClick={() => router.push('/')}
-                  variant="danger"
-                  size="md"
-                  className="flex min-w-[44px] flex-1 items-center justify-center gap-2"
-                >
-                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                  Quitter
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main content area - Portrait: vertical stack, Landscape/Desktop: two columns */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row landscape:justify-center sm:gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-8">
-        {/* Left column (Portrait: full width, Landscape/Desktop: left side) */}
-        {/* Contains: Cover image + Audio player */}
-        <div className="flex flex-col items-center justify-center gap-3 landscape:flex-1 landscape:gap-2 sm:gap-4 lg:flex-1 lg:gap-6">
-          {/* Pochette / Révélation */}
-          <SongReveal
-            song={game.state.currentSong}
-            isRevealed={game.state.isRevealed}
-            guessMode={config.guessMode}
-            isPlaying={
-              game.state.status === 'playing' || game.state.status === 'reveal'
-            }
-          />
-
-          {/* Lecteur audio */}
-          <div className="w-full max-w-xs px-2 sm:max-w-sm sm:px-0 md:max-w-md">
-            <AudioPlayer
-              songId={game.state.currentSong?.id}
-              isPlaying={
-                game.state.status === 'playing' ||
-                game.state.status === 'reveal'
-              }
-              maxDuration={config.clipDuration}
-              onEnded={handleAudioEnded}
-              onReady={handleAudioReady}
-              shouldReplay={shouldReplay}
-              onReplayComplete={handleReplayComplete}
-              volume={musicVolume}
-              startPosition={audioStartPosition}
-              unlimitedPlayback={game.state.status === 'reveal'}
-            />
-          </div>
-        </div>
-
-        {/* Right column (Portrait: bottom area, Landscape/Desktop: right side) */}
-        {/* Contains: Discovery mode controls */}
-        <div className="flex flex-col items-center justify-center gap-4 landscape:flex-1 sm:gap-6 lg:flex-1">
-          <AnimatePresence mode="wait">
-            {/* Loading indicator */}
-            {game.state.status === 'loading' && (
-              <motion.div
-                key="loading"
-                className="flex flex-col items-center justify-center gap-3"
-                {...getAnimationProps(fadeIn, quickTransition)}
+            {/* Fullscreen Toggle Button - only show if supported */}
+            {isFullscreenSupported && (
+              <Button
+                onClick={toggleFullscreen}
+                variant="secondary"
+                size="sm"
+                className="flex items-center gap-1 sm:gap-2"
+                aria-label={
+                  isFullscreen
+                    ? 'Quitter le mode plein écran'
+                    : 'Passer en mode plein écran'
+                }
+                data-testid="fullscreen-toggle"
               >
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent sm:h-12 sm:w-12" />
-                <p className="text-sm text-purple-300 sm:text-base">
-                  Chargement...
-                </p>
-              </motion.div>
+                {isFullscreen ? (
+                  <ArrowsPointingInIcon className="h-4 w-4" />
+                ) : (
+                  <ArrowsPointingOutIcon className="h-4 w-4" />
+                )}
+              </Button>
             )}
+            {/* Pause Button - visible during playing, countdown, timer, or buzzed states */}
+            {(game.state.status === 'playing' ||
+              game.state.status === 'countdown' ||
+              game.state.status === 'timer' ||
+              game.state.status === 'buzzed') && (
+              <Button
+                onClick={handleUserPause}
+                variant="secondary"
+                size="sm"
+                className="flex items-center gap-1 sm:gap-2"
+                aria-label="Mettre en pause"
+                data-testid="pause-button"
+              >
+                <PauseIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Pause</span>
+              </Button>
+            )}
+            <Button
+              onClick={() => setShowQuitConfirm(true)}
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-1 sm:gap-2"
+            >
+              <ArrowRightOnRectangleIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Quitter</span>
+            </Button>
+          </div>
+        </header>
 
-            {/* Reveal countdown + Quick scoring + Controls */}
-            {game.state.status === 'reveal' && (
+        {/* Quit confirmation modal */}
+        <AnimatePresence>
+          {showQuitConfirm && (
+            <motion.div
+              key="quit-modal-overlay"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+              {...getAnimationProps(fadeIn, quickTransition)}
+            >
               <motion.div
-                key="reveal-controls"
-                className="flex w-full flex-col items-center gap-4"
+                key="quit-modal-content"
+                className="mx-4 max-w-sm rounded-xl bg-purple-900 p-6"
                 {...getAnimationProps(fadeScale)}
               >
-                {/* Countdown circle (only when not listening to rest) */}
-                {!game.state.isListeningToRest && (
-                  <div className="relative flex h-16 w-16 items-center justify-center">
+                <h3 className="mb-4 text-xl font-bold">Quitter la partie ?</h3>
+                <p className="mb-6 text-purple-200">
+                  Votre score ne sera pas sauvegardé.
+                </p>
+                <div className="flex gap-4">
+                  <Button
+                    onClick={() => setShowQuitConfirm(false)}
+                    variant="secondary"
+                    size="md"
+                    className="flex min-w-[44px] flex-1 items-center justify-center gap-2"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/')}
+                    variant="danger"
+                    size="md"
+                    className="flex min-w-[44px] flex-1 items-center justify-center gap-2"
+                  >
+                    <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                    Quitter
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main content area - Portrait: vertical stack, Landscape/Desktop: two columns */}
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 portrait:flex-col landscape:flex-row landscape:justify-center sm:gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-8">
+          {/* Left column (Portrait: full width, Landscape/Desktop: left side) */}
+          {/* Contains: Cover image + Audio player */}
+          <div className="flex flex-col items-center justify-center gap-3 landscape:flex-1 landscape:gap-2 sm:gap-4 lg:flex-1 lg:gap-6">
+            {/* Pochette / Révélation */}
+            <SongReveal
+              song={game.state.currentSong}
+              isRevealed={game.state.isRevealed}
+              guessMode={config.guessMode}
+              isPlaying={
+                game.state.status === 'playing' ||
+                game.state.status === 'countdown' ||
+                game.state.status === 'reveal'
+              }
+            />
+
+            {/* Lecteur audio */}
+            <div className="w-full max-w-xs px-2 sm:max-w-sm sm:px-0 md:max-w-md">
+              <AudioPlayer
+                songId={game.state.currentSong?.id}
+                isPlaying={
+                  game.state.status === 'playing' ||
+                  game.state.status === 'countdown' ||
+                  game.state.status === 'reveal'
+                }
+                maxDuration={config.clipDuration}
+                onEnded={handleAudioEnded}
+                onReady={handleAudioReady}
+                shouldReplay={shouldReplay}
+                onReplayComplete={handleReplayComplete}
+                volume={musicVolume}
+                startPosition={audioStartPosition}
+                unlimitedPlayback={game.state.status === 'reveal'}
+              />
+            </div>
+          </div>
+
+          {/* Right column (Portrait: bottom area, Landscape/Desktop: right side) */}
+          {/* Contains: Discovery mode controls */}
+          <div className="flex flex-col items-center justify-center gap-4 landscape:flex-1 sm:gap-6 lg:flex-1">
+            <AnimatePresence mode="wait">
+              {/* Loading indicator */}
+              {game.state.status === 'loading' && (
+                <motion.div
+                  key="loading"
+                  className="flex flex-col items-center justify-center gap-3"
+                  {...getAnimationProps(fadeIn, quickTransition)}
+                >
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-400 border-t-transparent sm:h-12 sm:w-12" />
+                  <p className="text-sm text-purple-300 sm:text-base">
+                    Chargement...
+                  </p>
+                </motion.div>
+              )}
+
+              {/* Reveal countdown + Quick scoring + Controls */}
+              {game.state.status === 'reveal' && (
+                <motion.div
+                  key="reveal-controls"
+                  className="flex w-full flex-col items-center gap-4"
+                  {...getAnimationProps(fadeScale)}
+                >
+                  {/* Countdown circle (only when not listening to rest) */}
+                  {!game.state.isListeningToRest && (
+                    <div className="relative flex h-16 w-16 items-center justify-center">
+                      <svg className="h-full w-full -rotate-90">
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="4"
+                        />
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="#f97316"
+                          strokeWidth="4"
+                          strokeDasharray={2 * Math.PI * 28}
+                          strokeDashoffset={
+                            2 *
+                            Math.PI *
+                            28 *
+                            (1 -
+                              game.state.revealCountdown /
+                                config.revealDuration)
+                          }
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
+                      </svg>
+                      <span className="absolute text-xl font-bold text-white">
+                        {game.state.revealCountdown}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Quick scoring buttons */}
+                  <div className="flex w-full max-w-xs gap-3">
+                    <Button
+                      onClick={() => handleQuickScore(true)}
+                      variant="success"
+                      size="md"
+                      disabled={quickScoreSelection !== null}
+                      className={`flex flex-1 items-center justify-center gap-2 ${
+                        quickScoreSelection === 'knew'
+                          ? 'ring-4 ring-green-400 ring-offset-2 ring-offset-purple-900'
+                          : quickScoreSelection === 'notFound'
+                            ? 'opacity-40'
+                            : ''
+                      }`}
+                    >
+                      <CheckIcon className="h-5 w-5" />
+                      <span className="text-sm">Je savais</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleQuickScore(false)}
+                      variant="danger"
+                      size="md"
+                      disabled={quickScoreSelection !== null}
+                      className={`flex flex-1 items-center justify-center gap-2 ${
+                        quickScoreSelection === 'notFound'
+                          ? 'ring-4 ring-red-400 ring-offset-2 ring-offset-purple-900'
+                          : quickScoreSelection === 'knew'
+                            ? 'opacity-40'
+                            : ''
+                      }`}
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                      <span className="text-sm">Pas trouvé</span>
+                    </Button>
+                  </div>
+
+                  {/* Listen to rest / Skip to next button */}
+                  {!game.state.isListeningToRest ? (
+                    <Button
+                      onClick={handleListenToRest}
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <PlayIcon className="h-4 w-4" />
+                      <span className="text-xs">Écouter la suite</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleNextSong}
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowRightIcon className="h-4 w-4" />
+                      <span className="text-xs">Chanson suivante</span>
+                    </Button>
+                  )}
+                </motion.div>
+              )}
+
+              {/* Playing state - "Je sais !" button to start countdown */}
+              {game.state.status === 'playing' && (
+                <motion.div
+                  key="playing-controls"
+                  className="flex flex-col items-center gap-4"
+                  {...getAnimationProps(fadeIn, quickTransition)}
+                >
+                  <div className="flex items-center gap-2 text-purple-300">
+                    <div className="h-3 w-3 animate-pulse rounded-full bg-green-500" />
+                    <span className="text-sm">En écoute...</span>
+                  </div>
+                  <Button
+                    onClick={() => game.actions.startCountdown()}
+                    variant="primary"
+                    size="lg"
+                    className="flex items-center gap-2"
+                  >
+                    <CheckIcon className="h-5 w-5" />
+                    <span>Je sais !</span>
+                  </Button>
+                </motion.div>
+              )}
+
+              {/* Countdown state - 5 second countdown before reveal */}
+              {game.state.status === 'countdown' && (
+                <motion.div
+                  key="countdown-controls"
+                  className="flex flex-col items-center gap-4"
+                  {...getAnimationProps(fadeScale)}
+                >
+                  <div className="flex items-center gap-2 text-purple-300">
+                    <div className="h-3 w-3 animate-pulse rounded-full bg-orange-500" />
+                    <span className="text-sm">Préparez-vous...</span>
+                  </div>
+                  {/* Countdown circle */}
+                  <div className="relative flex h-24 w-24 items-center justify-center">
                     <svg className="h-full w-full -rotate-90">
                       <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
+                        cx="48"
+                        cy="48"
+                        r="42"
                         fill="none"
                         stroke="rgba(255,255,255,0.2)"
-                        strokeWidth="4"
+                        strokeWidth="6"
                       />
                       <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
+                        cx="48"
+                        cy="48"
+                        r="42"
                         fill="none"
                         stroke="#f97316"
-                        strokeWidth="4"
-                        strokeDasharray={2 * Math.PI * 28}
+                        strokeWidth="6"
+                        strokeDasharray={2 * Math.PI * 42}
                         strokeDashoffset={
                           2 *
                           Math.PI *
-                          28 *
-                          (1 -
-                            game.state.revealCountdown / config.revealDuration)
+                          42 *
+                          (1 - game.state.revealCountdown / 5)
                         }
                         strokeLinecap="round"
                         className="transition-all duration-1000"
                       />
                     </svg>
-                    <span className="absolute text-xl font-bold text-white">
+                    <span className="absolute text-3xl font-bold text-white">
                       {game.state.revealCountdown}
                     </span>
                   </div>
-                )}
-
-                {/* Quick scoring buttons */}
-                <div className="flex w-full max-w-xs gap-3">
-                  <Button
-                    onClick={() => handleQuickScore(true)}
-                    variant="success"
-                    size="md"
-                    className="flex flex-1 items-center justify-center gap-2"
-                  >
-                    <CheckIcon className="h-5 w-5" />
-                    <span className="text-sm">Je savais</span>
-                  </Button>
-                  <Button
-                    onClick={() => handleQuickScore(false)}
-                    variant="danger"
-                    size="md"
-                    className="flex flex-1 items-center justify-center gap-2"
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                    <span className="text-sm">Pas trouvé</span>
-                  </Button>
-                </div>
-
-                {/* Listen to rest / Skip to next button */}
-                {!game.state.isListeningToRest ? (
-                  <Button
-                    onClick={handleListenToRest}
-                    variant="secondary"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <PlayIcon className="h-4 w-4" />
-                    <span className="text-xs">Écouter la suite</span>
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNextSong}
-                    variant="secondary"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowRightIcon className="h-4 w-4" />
-                    <span className="text-xs">Chanson suivante</span>
-                  </Button>
-                )}
-              </motion.div>
-            )}
-
-            {/* Playing state - "Je sais !" button to reveal early */}
-            {game.state.status === 'playing' && (
-              <motion.div
-                key="playing-controls"
-                className="flex flex-col items-center gap-4"
-                {...getAnimationProps(fadeIn, quickTransition)}
-              >
-                <div className="flex items-center gap-2 text-purple-300">
-                  <div className="h-3 w-3 animate-pulse rounded-full bg-green-500" />
-                  <span className="text-sm">En écoute...</span>
-                </div>
-                <Button
-                  onClick={() => game.actions.clipEnded()}
-                  variant="primary"
-                  size="lg"
-                  className="flex items-center gap-2"
-                >
-                  <CheckIcon className="h-5 w-5" />
-                  <span>Je sais !</span>
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <p className="text-sm text-purple-200">
+                    Révélation dans {game.state.revealCountdown} seconde
+                    {game.state.revealCountdown > 1 ? 's' : ''}...
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
 
-      {/* Green flash overlay for correct answers */}
-      <CorrectAnswerFlash show={showCorrectFlash} />
+        {/* Green flash overlay for correct answers */}
+        <CorrectAnswerFlash show={showCorrectFlash} />
 
-      {/* Red flash overlay for incorrect answers */}
-      <IncorrectAnswerFlash show={showIncorrectFlash} />
+        {/* Red flash overlay for incorrect answers */}
+        <IncorrectAnswerFlash show={showIncorrectFlash} />
 
-      {/* Streak celebration overlay (3+ consecutive correct answers) */}
-      <StreakCelebration
-        show={showStreakCelebration}
-        isMuted={sfx.isMuted}
-        volume={sfx.volume}
-      />
+        {/* Streak celebration overlay (3+ consecutive correct answers) */}
+        <StreakCelebration
+          show={showStreakCelebration}
+          isMuted={sfx.isMuted}
+          volume={sfx.volume}
+        />
 
-      {/* Network error toast with retry option */}
-      <NetworkErrorToast
-        show={networkError.show}
-        message={networkError.message}
-        onRetry={handleNetworkRetry}
-        onDismiss={handleNetworkDismiss}
-      />
+        {/* Network error toast with retry option */}
+        <NetworkErrorToast
+          show={networkError.show}
+          message={networkError.message}
+          onRetry={handleNetworkRetry}
+          onDismiss={handleNetworkDismiss}
+        />
 
-      {/* Paused overlay when user switches tabs */}
-      <PausedOverlay
-        show={wasPausedByVisibility}
-        onResume={handleVisibilityResume}
-      />
+        {/* Paused overlay when user switches tabs or clicks pause */}
+        <PausedOverlay
+          show={wasPausedByVisibility || isPausedByUser}
+          onResume={isPausedByUser ? handleUserResume : handleVisibilityResume}
+        />
       </motion.main>
     </PageTransition>
   )

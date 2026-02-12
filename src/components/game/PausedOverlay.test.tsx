@@ -38,14 +38,26 @@ describe('PausedOverlay', () => {
     expect(screen.getByText('Partie en pause')).toBeInTheDocument()
   })
 
-  it('should display explanation message', () => {
+  it('should display explanation message when onResume is provided', () => {
     render(<PausedOverlay show={true} onResume={() => {}} />)
 
     expect(
-      screen.getByText(
-        "La partie a été mise en pause car vous avez quitté l'onglet."
-      )
+      screen.getByText('La partie a été mise en pause.')
     ).toBeInTheDocument()
+  })
+
+  it('should display host paused message when onResume is not provided', () => {
+    render(<PausedOverlay show={true} />)
+
+    expect(
+      screen.getByText("L'hôte a mis la partie en pause.")
+    ).toBeInTheDocument()
+  })
+
+  it('should not show resume button when onResume is not provided', () => {
+    render(<PausedOverlay show={true} />)
+
+    expect(screen.queryByTestId('resume-button')).not.toBeInTheDocument()
   })
 
   it('should render resume button', () => {

@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/Button'
 interface PausedOverlayProps {
   /** Whether to show the overlay */
   show: boolean
-  /** Callback when resume is clicked */
-  onResume: () => void
+  /** Callback when resume is clicked (optional - if not provided, resume button is hidden) */
+  onResume?: () => void
 }
 
 /**
@@ -49,16 +49,20 @@ export function PausedOverlay({ show, onResume }: PausedOverlayProps) {
               Partie en pause
             </h2>
             <p className="mb-6 text-purple-200">
-              La partie a été mise en pause car vous avez quitté l&apos;onglet.
+              {onResume
+                ? 'La partie a été mise en pause.'
+                : "L'hôte a mis la partie en pause."}
             </p>
-            <Button
-              onClick={onResume}
-              variant="primary"
-              size="lg"
-              data-testid="resume-button"
-            >
-              Reprendre
-            </Button>
+            {onResume && (
+              <Button
+                onClick={onResume}
+                variant="primary"
+                size="lg"
+                data-testid="resume-button"
+              >
+                Reprendre
+              </Button>
+            )}
           </motion.div>
         </motion.div>
       )}
