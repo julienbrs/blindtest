@@ -21,6 +21,7 @@ const mockConfig: GameConfig = {
   timerDuration: 5,
   noTimer: false,
   revealDuration: 5,
+  playlistId: null,
 }
 
 describe('useGameState', () => {
@@ -1207,6 +1208,7 @@ describe('useGameState', () => {
       timerDuration: 5,
       noTimer: true,
       revealDuration: 5,
+      playlistId: null,
     }
 
     it('transitions from playing to buzzed (not timer) when noTimer is true', () => {

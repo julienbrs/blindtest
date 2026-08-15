@@ -19,6 +19,7 @@ import { GET as GETRandom } from '../songs/random/route'
 import { GET as GETSongById } from '../songs/[id]/route'
 import { NextRequest } from 'next/server'
 import type { Song } from '@/lib/types'
+import { getPlaylistById } from '@/lib/playlistScanner'
 
 // Mock the audioScanner module
 vi.mock('@/lib/audioScanner', () => ({
@@ -48,6 +49,10 @@ vi.mock('@/lib/audioScanner', () => ({
       },
     ])
   ),
+}))
+
+vi.mock('@/lib/playlistScanner', () => ({
+  getPlaylistById: vi.fn(),
 }))
 
 // Mock the logger
@@ -130,13 +135,21 @@ describe('API /api/songs/random', () => {
     const response = await GETRandom(request)
     const data = await response.json()
 
-    expect(response.status).toBe(404)
-    expect(data.error).toBe('Toutes les chansons ont été jouées')
+    expect(response.status).toBe(409)
+    expect(data.code).toBe('SELECTION_EXHAUSTED')
   })
 
-  it('GET avec include devrait limiter aux chansons spécifiées', async () => {
+  it('GET avec playlist devrait limiter aux chansons résolues par le serveur', async () => {
+    vi.mocked(getPlaylistById).mockResolvedValueOnce({
+      id: 'm3u_test',
+      name: 'Test',
+      relativePath: 'test.m3u',
+      songIds: ['abc123def456'],
+      songCount: 1,
+      missingSongCount: 0,
+    })
     const request = new NextRequest(
-      'http://localhost/api/songs/random?include=abc123def456'
+      'http://localhost/api/songs/random?playlist=m3u_test'
     )
     const response = await GETRandom(request)
     const data = await response.json()

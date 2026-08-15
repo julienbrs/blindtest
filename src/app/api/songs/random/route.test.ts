@@ -1,12 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from './route'
 import * as audioScanner from '@/lib/audioScanner'
+import * as playlistScanner from '@/lib/playlistScanner'
 import type { Song } from '@/lib/types'
 import { NextRequest } from 'next/server'
 
 // Mock the audioScanner module
 vi.mock('@/lib/audioScanner', () => ({
   getSongsCache: vi.fn(),
+}))
+
+vi.mock('@/lib/playlistScanner', () => ({
+  getPlaylistById: vi.fn(),
 }))
 
 // Helper to create a NextRequest with optional query params
@@ -96,7 +101,7 @@ describe('GET /api/songs/random', () => {
     expect(data.song.title).toBe('Hotel California')
   })
 
-  it('returns 404 when all songs are excluded', async () => {
+  it('returns a distinct exhausted-selection error when all songs are excluded', async () => {
     vi.mocked(audioScanner.getSongsCache).mockResolvedValue(mockSongs)
 
     // Exclude all songs
@@ -105,8 +110,8 @@ describe('GET /api/songs/random', () => {
     )
     const data = await response.json()
 
-    expect(response.status).toBe(404)
-    expect(data.error).toBe('Toutes les chansons ont été jouées')
+    expect(response.status).toBe(409)
+    expect(data.code).toBe('SELECTION_EXHAUSTED')
   })
 
   it('handles empty exclude parameter', async () => {
@@ -117,6 +122,77 @@ describe('GET /api/songs/random', () => {
 
     expect(response.status).toBe(200)
     expect(data.song).toBeDefined()
+  })
+
+  it('limits selection to the server-side playlist and still applies exclusions', async () => {
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue(mockSongs)
+    vi.mocked(playlistScanner.getPlaylistById).mockResolvedValue({
+      id: 'm3u_test',
+      name: 'Test',
+      relativePath: 'test.m3u',
+      songIds: ['abc123def456', 'def456ghi789'],
+      songCount: 2,
+      missingSongCount: 1,
+    })
+
+    const response = await GET(
+      createRequest({
+        playlist: 'm3u_test',
+        exclude: 'abc123def456',
+        artists: 'Led Zeppelin',
+      })
+    )
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.song.id).toBe('def456ghi789')
+  })
+
+  it('returns PLAYLIST_NOT_FOUND for an unknown playlist', async () => {
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue(mockSongs)
+    vi.mocked(playlistScanner.getPlaylistById).mockResolvedValue(null)
+
+    const response = await GET(createRequest({ playlist: 'unknown' }))
+    expect(response.status).toBe(404)
+    expect(await response.json()).toMatchObject({
+      code: 'PLAYLIST_NOT_FOUND',
+    })
+  })
+
+  it('returns PLAYLIST_EMPTY for a playlist without valid songs', async () => {
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue(mockSongs)
+    vi.mocked(playlistScanner.getPlaylistById).mockResolvedValue({
+      id: 'empty',
+      name: 'Empty',
+      relativePath: 'empty.m3u',
+      songIds: [],
+      songCount: 0,
+      missingSongCount: 2,
+    })
+
+    const response = await GET(createRequest({ playlist: 'empty' }))
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ code: 'PLAYLIST_EMPTY' })
+  })
+
+  it('returns SELECTION_EXHAUSTED when every playlist song is excluded', async () => {
+    vi.mocked(audioScanner.getSongsCache).mockResolvedValue(mockSongs)
+    vi.mocked(playlistScanner.getPlaylistById).mockResolvedValue({
+      id: 'short',
+      name: 'Short',
+      relativePath: 'short.m3u',
+      songIds: ['abc123def456'],
+      songCount: 1,
+      missingSongCount: 0,
+    })
+
+    const response = await GET(
+      createRequest({ playlist: 'short', exclude: 'abc123def456' })
+    )
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      code: 'SELECTION_EXHAUSTED',
+    })
   })
 
   it('returns complete song metadata', async () => {

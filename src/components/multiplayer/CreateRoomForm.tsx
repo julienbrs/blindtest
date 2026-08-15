@@ -6,13 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { AvatarPicker } from './AvatarPicker'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
-import { GameConfig } from '@/lib/types'
-import {
-  type Avatar,
-  getSavedAvatar,
-  saveAvatar,
-  AVATARS,
-} from '@/lib/avatars'
+import { DEFAULT_MULTIPLAYER_GAME_CONFIG } from '@/lib/gameConfig'
+import { type Avatar, getSavedAvatar, saveAvatar, AVATARS } from '@/lib/avatars'
 
 const PLAYER_ID_KEY = 'blindtest_player_id'
 const MAX_NICKNAME_LENGTH = 20
@@ -28,17 +23,6 @@ function generateRoomCode(): string {
     code += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   return code
-}
-
-/**
- * Default game settings for a new room
- */
-const defaultSettings: GameConfig = {
-  guessMode: 'both',
-  clipDuration: 15,
-  timerDuration: 5,
-  noTimer: false,
-  revealDuration: 5,
 }
 
 interface CreateRoomFormProps {
@@ -142,8 +126,9 @@ export function CreateRoomForm({ className = '' }: CreateRoomFormProps) {
             code,
             host_id: crypto.randomUUID(), // Temporary, will be updated with player ID
             status: 'waiting',
-            settings: defaultSettings,
+            settings: DEFAULT_MULTIPLAYER_GAME_CONFIG,
             current_song_id: null,
+            played_song_ids: [],
             current_song_started_at: null,
           })
           .select()

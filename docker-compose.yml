@@ -9,11 +9,12 @@ services:
       - NODE_ENV=production
       - AUDIO_FOLDER_PATH=/music
     volumes:
-      - /path/to/your/music:/music:ro
+      - /mnt/Plex_Media/Music/Blindtest:/music:ro
     restart: unless-stopped
     healthcheck:
       test:
         ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
+      start_period: 180s
       retries: 3

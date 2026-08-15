@@ -14,6 +14,8 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { PlayerListSkeleton } from '@/components/ui/PlayerListSkeleton'
+import { PlaylistSelector } from '@/components/game/PlaylistSelector'
+import { usePlaylistCatalog } from '@/hooks/usePlaylistCatalog'
 import { PlayerList } from './PlayerCard'
 import type { Room, Player, GameConfig, GuessMode } from '@/lib/types'
 
@@ -77,8 +79,20 @@ export function Lobby({
   const [showSettings, setShowSettings] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
+  const {
+    playlists,
+    isLoading: arePlaylistsLoading,
+    isLoaded: arePlaylistsLoaded,
+    error: playlistsError,
+  } = usePlaylistCatalog()
+  const selectedPlaylist = playlists.find(
+    (playlist) => playlist.id === room.settings.playlistId
+  )
+  const isPlaylistPlayable =
+    room.settings.playlistId === null ||
+    (arePlaylistsLoaded && Boolean(selectedPlaylist?.songCount))
 
-  const canStart = isHost && players.length >= 2
+  const canStart = isHost && players.length >= 2 && isPlaylistPlayable
 
   const containerVariants = shouldReduceMotion
     ? { hidden: {}, visible: {} }
@@ -153,6 +167,13 @@ export function Lobby({
   const handleTimerDurationChange = useCallback(
     async (duration: number) => {
       await onUpdateSettings({ timerDuration: duration })
+    },
+    [onUpdateSettings]
+  )
+
+  const handlePlaylistChange = useCallback(
+    async (playlistId: string | null) => {
+      await onUpdateSettings({ playlistId })
     },
     [onUpdateSettings]
   )
@@ -235,7 +256,9 @@ export function Lobby({
             />
           </div>
 
-          {players.length === 0 && isLoading && <PlayerListSkeleton count={2} />}
+          {players.length === 0 && isLoading && (
+            <PlayerListSkeleton count={2} />
+          )}
 
           {players.length === 0 && !isLoading && (
             <div className="py-8 text-center text-purple-300">
@@ -270,10 +293,26 @@ export function Lobby({
 
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                showSettings ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                showSettings
+                  ? 'max-h-[1200px] opacity-100'
+                  : 'max-h-0 opacity-0'
               }`}
             >
               <div className="space-y-6 border-t border-white/10 p-6 pt-4">
+                {/* Playlist */}
+                <div>
+                  <h3 className="mb-3 text-sm font-medium text-purple-200">
+                    Playlist
+                  </h3>
+                  <PlaylistSelector
+                    playlists={playlists}
+                    selectedPlaylistId={room.settings.playlistId}
+                    onSelect={handlePlaylistChange}
+                    isLoading={arePlaylistsLoading}
+                    error={playlistsError}
+                  />
+                </div>
+
                 {/* Guess Mode */}
                 <div>
                   <h3 className="mb-3 text-sm font-medium text-purple-200">
@@ -377,6 +416,27 @@ export function Lobby({
                 </div>
               </div>
             </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Les autres joueurs voient le choix sans pouvoir le modifier. */}
+      {!isHost && (
+        <motion.div
+          variants={fadeUpVariants}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Card variant="default" className="p-6">
+            <h2 className="mb-3 text-lg font-semibold text-white">
+              Playlist choisie par l'hôte
+            </h2>
+            <PlaylistSelector
+              playlists={playlists}
+              selectedPlaylistId={room.settings.playlistId}
+              isLoading={arePlaylistsLoading}
+              error={playlistsError}
+              readOnly
+            />
           </Card>
         </motion.div>
       )}

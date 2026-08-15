@@ -2,22 +2,49 @@ import { NextResponse } from 'next/server'
 import {
   getSongsCache,
   getCacheInfo,
-  isCacheInitialized,
+  getAudioFolderPath,
+  scanAudioFolder,
 } from '@/lib/audioScanner'
 import { logError } from '@/lib/logger'
 
 export async function GET() {
   try {
-    const cacheInfo = getCacheInfo()
+    const audioPath = getAudioFolderPath()
+    if (!audioPath) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          timestamp: new Date().toISOString(),
+          error: 'Bibliothèque audio non configurée',
+        },
+        { status: 503 }
+      )
+    }
 
-    // Get songs count - only if cache is initialized to avoid blocking
-    let songsCount = 0
-    if (isCacheInitialized()) {
-      const songs = await getSongsCache()
-      songsCount = songs.length
-    } else {
-      // Cache not initialized yet, still return healthy status
-      songsCount = cacheInfo.count
+    // Vérifie le montage à chaque appel, même si le cache métadonnées existe.
+    const audioFiles = await scanAudioFolder(audioPath)
+    if (audioFiles.length === 0) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          timestamp: new Date().toISOString(),
+          error: 'Bibliothèque audio absente, illisible ou vide',
+        },
+        { status: 503 }
+      )
+    }
+
+    const songs = await getSongsCache()
+    const cacheInfo = getCacheInfo()
+    if (songs.length === 0) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          timestamp: new Date().toISOString(),
+          error: 'Aucun morceau audio exploitable',
+        },
+        { status: 503 }
+      )
     }
 
     return NextResponse.json({
@@ -25,7 +52,8 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       library: {
-        songsCount,
+        songsCount: songs.length,
+        audioFilesCount: audioFiles.length,
         lastScan: cacheInfo.lastScan,
       },
       memory: {
@@ -41,7 +69,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 503 }
     )
   }
 }

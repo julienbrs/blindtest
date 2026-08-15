@@ -29,6 +29,7 @@ export interface Database {
           status: string
           settings: Json
           current_song_id: string | null
+          played_song_ids: string[]
           current_song_started_at: string | null
           created_at: string
         }
@@ -39,6 +40,7 @@ export interface Database {
           status?: string
           settings?: Json
           current_song_id?: string | null
+          played_song_ids?: string[]
           current_song_started_at?: string | null
           created_at?: string
         }
@@ -49,6 +51,7 @@ export interface Database {
           status?: string
           settings?: Json
           current_song_id?: string | null
+          played_song_ids?: string[]
           current_song_started_at?: string | null
           created_at?: string
         }
