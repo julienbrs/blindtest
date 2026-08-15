@@ -26,6 +26,7 @@ export interface GameConfig {
   timerDuration: number // Temps pour répondre après buzz
   noTimer: boolean // Si true, pas de timer - validation manuelle uniquement
   revealDuration: number // Durée d'affichage de la révélation avant auto-advance (mode découverte)
+  playlistId: string | null // Playlist M3U sélectionnée, ou toute la bibliothèque
 }
 
 export type GuessMode = 'title' | 'artist' | 'both'
@@ -146,6 +147,17 @@ export interface RandomSongResponse {
   song: Song
 }
 
+export type SongSelectionErrorCode =
+  | 'LIBRARY_EMPTY'
+  | 'PLAYLIST_NOT_FOUND'
+  | 'PLAYLIST_EMPTY'
+  | 'SELECTION_EXHAUSTED'
+
+export interface SongSelectionErrorResponse {
+  error: string
+  code: SongSelectionErrorCode
+}
+
 // ============================================
 // Types pour les actions du jeu
 // ============================================
@@ -176,21 +188,14 @@ export type GameAction =
   | { type: 'TICK_COUNTDOWN'; revealDuration: number } // Décrémenter le countdown
 
 // ============================================
-// Types pour les playlists personnalisées
+// Types pour les playlists M3U/M3U8
 // ============================================
 
-/**
- * Playlist - A custom collection of songs for themed games
- *
- * Playlists allow users to create curated subsets of their music library
- * for specific game sessions (e.g., "80s Hits", "Party Mix", "Rock Classics")
- */
-export interface Playlist {
-  id: string // Unique identifier (generated UUID)
-  name: string // Display name of the playlist
-  songIds: string[] // Array of song IDs included in this playlist
-  createdAt: number // Unix timestamp when created
-  updatedAt?: number // Unix timestamp when last modified
+export interface PlaylistSummary {
+  id: string // Identifiant stable dérivé du chemin relatif du fichier M3U
+  name: string // Nom #PLAYLIST, ou nom du fichier
+  songCount: number // Nombre de morceaux valides dans la bibliothèque
+  missingSongCount: number // Nombre de morceaux référencés mais introuvables
 }
 
 // ============================================
@@ -219,6 +224,7 @@ export interface Room {
   status: RoomStatus // Current room status
   settings: GameConfig // Game configuration (guessMode, clipDuration, timerDuration, noTimer)
   currentSongId: string | null // ID of the song currently being played
+  playedSongIds: string[] // IDs persistés des chansons déjà jouées
   currentSongStartedAt: Date | null // Timestamp when current song started (for sync)
   createdAt: Date // When the room was created
 }

@@ -141,6 +141,7 @@ const createMockRoom = (overrides: Partial<Room> = {}): Room => ({
     noTimer: false,
   } as GameConfig,
   currentSongId: 'song-123',
+  playedSongIds: [],
   currentSongStartedAt: new Date(),
   createdAt: new Date(),
   ...overrides,
@@ -534,7 +535,37 @@ describe('useMultiplayerGame', () => {
 
       expect(success).toBe(true)
       expect(mockSupabase.from).toHaveBeenCalledWith('rooms')
-      expect(mockSupabase._mocks.mockUpdate).toHaveBeenCalled()
+      expect(mockSupabase._mocks.mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          current_song_id: 'new-song-id',
+          played_song_ids: ['song-123'],
+        })
+      )
+    })
+
+    it('preserves persisted exclusions after reconnection or host migration', async () => {
+      const room = createMockRoom({
+        currentSongId: 'song-current',
+        playedSongIds: ['song-old-1', 'song-old-2'],
+      })
+
+      const options: UseMultiplayerGameOptions = {
+        room,
+        players: [],
+        myPlayerId: 'player-host',
+        isHost: true,
+      }
+      const { result } = renderHook(() => useMultiplayerGame(options))
+
+      await act(async () => {
+        await result.current.nextSong('song-next')
+      })
+
+      expect(mockSupabase._mocks.mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          played_song_ids: ['song-old-1', 'song-old-2', 'song-current'],
+        })
+      )
     })
 
     it('should clear current buzzes when loading next song', async () => {

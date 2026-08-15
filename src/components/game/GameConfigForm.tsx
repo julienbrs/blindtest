@@ -19,8 +19,8 @@ import {
   defaultFilters,
   type LibraryFiltersState,
 } from './LibraryFilters'
-import { PlaylistManager } from './PlaylistManager'
-import { usePlaylists } from '@/hooks/usePlaylists'
+import { PlaylistSelector } from './PlaylistSelector'
+import { usePlaylistCatalog } from '@/hooks/usePlaylistCatalog'
 
 const STORAGE_KEY = 'blindtest_config'
 const FILTERS_STORAGE_KEY = 'blindtest_filters'
@@ -151,7 +151,12 @@ const modes: { value: GuessMode; label: string; description: string }[] = [
 export function GameConfigForm() {
   const router = useRouter()
   const { isDark, toggle: toggleTheme } = useTheme()
-  const { getPlaylist } = usePlaylists()
+  const {
+    playlists,
+    isLoading: arePlaylistsLoading,
+    isLoaded: arePlaylistsLoaded,
+    error: playlistsError,
+  } = usePlaylistCatalog()
   const [guessMode, setGuessMode] = useState<GuessMode>('both')
   const [clipDuration, setClipDuration] = useState(20)
   const [timerDuration, setTimerDuration] = useState(5)
@@ -167,7 +172,16 @@ export function GameConfigForm() {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null
   )
-  const [showPlaylistManager, setShowPlaylistManager] = useState(false)
+  const selectedPlaylist = playlists.find(
+    (playlist) => playlist.id === selectedPlaylistId
+  )
+  const isSelectedPlaylistInvalid = Boolean(
+    arePlaylistsLoaded &&
+    selectedPlaylistId &&
+    (!selectedPlaylist || selectedPlaylist.songCount === 0)
+  )
+  const activePlaylistId = isSelectedPlaylistInvalid ? null : selectedPlaylistId
+  const activePlaylist = activePlaylistId ? selectedPlaylist : undefined
 
   // Load saved config on mount (client-side only)
   // This is a legitimate use case for setState in useEffect - hydrating state from localStorage
@@ -198,19 +212,18 @@ export function GameConfigForm() {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        // If a playlist is selected, use the playlist song count
-        if (selectedPlaylistId) {
-          const playlist = getPlaylist(selectedPlaylistId)
-          if (playlist) {
-            setFilteredCount(playlist.songIds.length)
+        // If a playlist is selected, use the server-side catalog count.
+        if (activePlaylistId) {
+          if (activePlaylist) {
+            setFilteredCount(activePlaylist.songCount)
             // Fetch total count from library
             const res = await fetch('/api/songs')
             if (res.ok) {
               const data = await res.json()
               setTotalCount(data.total || 0)
             }
-            return
           }
+          return
         }
 
         // Build filter query params
@@ -236,7 +249,7 @@ export function GameConfigForm() {
       }
     }
     fetchCounts()
-  }, [filters, selectedPlaylistId, getPlaylist])
+  }, [filters, activePlaylistId, activePlaylist])
 
   // Save config to localStorage whenever it changes (after mount)
   const saveConfig = useCallback((config: SavedConfig) => {
@@ -337,15 +350,30 @@ export function GameConfigForm() {
     [hasMounted]
   )
 
+  // A saved ID is trusted only after it has been validated against the server.
+  useEffect(() => {
+    if (!hasMounted || !isSelectedPlaylistInvalid) return
+    localStorage.removeItem(PLAYLIST_SELECTION_KEY)
+  }, [hasMounted, isSelectedPlaylistInvalid])
+
   const validateForm = async (): Promise<boolean> => {
     // If a playlist is selected, validate it has songs
-    if (selectedPlaylistId) {
-      const playlist = getPlaylist(selectedPlaylistId)
-      if (!playlist) {
+    if (activePlaylistId) {
+      if (arePlaylistsLoading) {
+        setValidationError(
+          'Le catalogue de playlists est en cours de chargement.'
+        )
+        return false
+      }
+      if (playlistsError) {
+        setValidationError('Impossible de vérifier la playlist sélectionnée.')
+        return false
+      }
+      if (!activePlaylist) {
         setValidationError("La playlist sélectionnée n'existe plus.")
         return false
       }
-      if (playlist.songIds.length === 0) {
+      if (activePlaylist.songCount === 0) {
         setValidationError('La playlist sélectionnée est vide.')
         return false
       }
@@ -419,9 +447,9 @@ export function GameConfigForm() {
     })
 
     // Add playlist or filter params
-    if (selectedPlaylistId) {
+    if (activePlaylistId) {
       // When playlist is selected, pass the playlist ID
-      params.set('playlist', selectedPlaylistId)
+      params.set('playlist', activePlaylistId)
     } else {
       // Add filter params if active (only when no playlist selected)
       if (filters.selectedArtists.length > 0) {
@@ -541,48 +569,21 @@ export function GameConfigForm() {
           <Card className="space-y-4 p-6">
             {/* Playlists */}
             <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => setShowPlaylistManager(!showPlaylistManager)}
-                className="flex w-full items-center justify-between"
-              >
-                <div className="flex items-center gap-2 text-purple-200">
-                  <QueueListIcon className="h-5 w-5 text-purple-400" />
-                  Playlists
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedPlaylistId ? (
-                    <span className="text-sm text-purple-300">
-                      {getPlaylist(selectedPlaylistId)?.name ||
-                        'Playlist sélectionnée'}
-                    </span>
-                  ) : (
-                    <span className="text-sm text-purple-300">
-                      Toute la bibliothèque
-                    </span>
-                  )}
-                  <ChevronRightIcon
-                    className={`h-4 w-4 transform text-purple-300 transition-transform duration-200 ${showPlaylistManager ? 'rotate-90' : ''}`}
-                  />
-                </div>
-              </button>
-
-              <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  showPlaylistManager
-                    ? 'max-h-[500px] opacity-100'
-                    : 'max-h-0 opacity-0'
-                }`}
-              >
-                <PlaylistManager
-                  selectedPlaylistId={selectedPlaylistId}
-                  onSelect={handlePlaylistSelect}
-                />
+              <div className="flex items-center gap-2 text-purple-200">
+                <QueueListIcon className="h-5 w-5 text-purple-400" />
+                Playlist
               </div>
+              <PlaylistSelector
+                playlists={playlists}
+                selectedPlaylistId={activePlaylistId}
+                onSelect={handlePlaylistSelect}
+                isLoading={arePlaylistsLoading}
+                error={playlistsError}
+              />
             </div>
 
             {/* Filtres bibliothèque - Hidden when playlist is selected */}
-            {!selectedPlaylistId && (
+            {!activePlaylistId && (
               <div className="border-t border-white/10 pt-4">
                 <LibraryFilters
                   filters={filters}

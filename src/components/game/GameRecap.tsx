@@ -42,6 +42,7 @@ interface GameRecapProps {
   onNewGame: () => void
   onHome: () => void
   allSongsPlayed?: boolean
+  playlistExhausted?: boolean
 }
 
 export function GameRecap({
@@ -50,6 +51,7 @@ export function GameRecap({
   onNewGame,
   onHome,
   allSongsPlayed = false,
+  playlistExhausted = false,
 }: GameRecapProps) {
   const shouldReduceMotion = useReducedMotion()
 
@@ -76,7 +78,11 @@ export function GameRecap({
 
   // Get message based on score
   const getMessage = () => {
-    if (allSongsPlayed) return 'Vous avez écouté toute la bibliothèque !'
+    if (allSongsPlayed) {
+      return playlistExhausted
+        ? 'Vous avez écouté toute la playlist !'
+        : 'Vous avez écouté toute la bibliothèque !'
+    }
     if (songsPlayed === 0) return 'Aucune chanson jouée'
     if (successRate === 100) return 'Score parfait !'
     if (successRate >= 80) return 'Excellent !'

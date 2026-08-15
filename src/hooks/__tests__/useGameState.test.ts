@@ -59,6 +59,7 @@ const mockConfig: GameConfig = {
   timerDuration: 5,
   noTimer: false,
   revealDuration: 5,
+  playlistId: null,
 }
 
 describe('gameReducer', () => {
@@ -1496,6 +1497,7 @@ describe('gameReducer', () => {
       timerDuration: 5,
       noTimer: true,
       revealDuration: 5,
+      playlistId: null,
     }
 
     it('transitions from playing to buzzed (not timer)', () => {

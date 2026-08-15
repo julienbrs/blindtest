@@ -48,8 +48,15 @@ import { BrowserUnsupportedError } from '@/components/game/BrowserUnsupportedErr
 import { PausedOverlay } from '@/components/game/PausedOverlay'
 import { StreakCelebration } from '@/components/game/StreakCelebration'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
 import { PageTransition } from '@/components/ui/PageTransition'
-import type { GameConfig, GuessMode, Song, StartPosition } from '@/lib/types'
+import type {
+  GameConfig,
+  GuessMode,
+  Song,
+  SongSelectionErrorResponse,
+  StartPosition,
+} from '@/lib/types'
 
 // Animation variants for game state transitions
 const fadeSlideUp = {
@@ -85,6 +92,7 @@ function GameContent() {
 
   const [showQuitConfirm, setShowQuitConfirm] = useState(false)
   const [allSongsPlayed, setAllSongsPlayed] = useState(false)
+  const [selectionError, setSelectionError] = useState<string | null>(null)
   // Track which song ID triggered the audio ready state
   const [audioReadyForSongId, setAudioReadyForSongId] = useState<string | null>(
     null
@@ -109,16 +117,18 @@ function GameContent() {
   }>({ show: false })
   // Store retry callback for when user clicks retry
   const retryCallbackRef = useRef<(() => void) | null>(null)
+  const loadRandomSongRef = useRef<
+    ((excludeIds: string[], signal?: AbortSignal) => Promise<void>) | null
+  >(null)
   // Track if game was paused due to page visibility change (tab switch)
   const [wasPausedByVisibility, setWasPausedByVisibility] = useState(false)
   // Track if game was paused by user clicking pause button
   const [isPausedByUser, setIsPausedByUser] = useState(false)
   // Track which quick score button was selected during reveal
-  const [quickScoreSelection, setQuickScoreSelection] = useState<
-    'knew' | 'notFound' | null
-  >(null)
-  // Calculated start position in seconds for current song
-  const [audioStartPosition, setAudioStartPosition] = useState(0)
+  const [quickScoreForSong, setQuickScoreForSong] = useState<{
+    songId: string
+    value: 'knew' | 'notFound'
+  } | null>(null)
 
   // Fullscreen mode
   const {
@@ -168,6 +178,7 @@ function GameContent() {
       timerDuration: noTimer ? 0 : Number(timerParam) || 5,
       noTimer,
       revealDuration: Number(searchParams.get('revealDuration')) || 5,
+      playlistId: searchParams.get('playlist') || null,
     }
   }, [searchParams])
 
@@ -193,36 +204,12 @@ function GameContent() {
     }
   }, [searchParams])
 
-  // Parse playlist ID from URL and load playlist songIds from localStorage
-  const playlistSongIds = useMemo(() => {
-    const playlistId = searchParams.get('playlist')
-    if (!playlistId) return null
-
-    // Load playlist from localStorage
-    if (typeof window === 'undefined') return null
-
-    try {
-      const saved = localStorage.getItem('blindtest_playlists')
-      if (!saved) return null
-
-      const playlists = JSON.parse(saved) as Array<{
-        id: string
-        songIds: string[]
-      }>
-      const playlist = playlists.find((p) => p.id === playlistId)
-      return playlist?.songIds || null
-    } catch {
-      return null
-    }
-  }, [searchParams])
-
   // Build filter query string for API calls
   const filterQueryString = useMemo(() => {
     const params = new URLSearchParams()
 
-    // If playlist is selected, use include param for song IDs
-    if (playlistSongIds && playlistSongIds.length > 0) {
-      params.set('include', playlistSongIds.join(','))
+    if (config.playlistId) {
+      params.set('playlist', config.playlistId)
     } else {
       // Otherwise, use library filters
       if (libraryFilters.artists.length > 0) {
@@ -236,12 +223,28 @@ function GameContent() {
       }
     }
     return params.toString()
-  }, [libraryFilters, playlistSongIds])
+  }, [libraryFilters, config.playlistId])
 
   // Audio preloader hook for intelligent preloading
   const audioPreloader = useAudioPreloader({ filterQueryString })
 
   const game = useGameState(config)
+  const quickScoreSelection =
+    quickScoreForSong &&
+    quickScoreForSong.songId === game.state.currentSong?.id
+      ? quickScoreForSong.value
+      : null
+  const audioStartPosition = useMemo(
+    () =>
+      game.state.currentSong
+        ? getStartPosition(
+            game.state.currentSong,
+            startPositionMode,
+            config.clipDuration
+          )
+        : 0,
+    [game.state.currentSong, startPositionMode, config.clipDuration]
+  )
 
   // Load SFX muted state from localStorage on mount
   useEffect(() => {
@@ -262,6 +265,7 @@ function GameContent() {
     if (saved !== null) {
       const vol = parseFloat(saved)
       if (!isNaN(vol) && vol >= 0 && vol <= 1) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate browser-only preference after mount.
         setMusicVolume(vol)
       }
     }
@@ -420,10 +424,31 @@ function GameContent() {
         if (signal?.aborted) return
 
         if (!res.ok) {
-          if (res.status === 404) {
-            // No more songs available
+          let apiError: SongSelectionErrorResponse | null = null
+          try {
+            apiError = (await res.json()) as SongSelectionErrorResponse
+          } catch {
+            // La réponse sera traitée comme une erreur serveur générique.
+          }
+
+          if (apiError?.code === 'SELECTION_EXHAUSTED') {
             setAllSongsPlayed(true)
             game.actions.quit()
+          } else if (
+            apiError?.code === 'PLAYLIST_NOT_FOUND' ||
+            apiError?.code === 'PLAYLIST_EMPTY' ||
+            apiError?.code === 'LIBRARY_EMPTY'
+          ) {
+            setSelectionError(apiError.error)
+          } else {
+            retryCallbackRef.current = () => {
+              void loadRandomSongRef.current?.(excludeIds)
+            }
+            setNetworkError({
+              show: true,
+              message:
+                apiError?.error || 'Le serveur ne peut pas choisir de morceau.',
+            })
           }
           return
         }
@@ -449,8 +474,10 @@ function GameContent() {
               `Audio file for song "${data.song.title}" not accessible, skipping...`
             )
             // Recursively call to get another song with updated exclude list
-            // eslint-disable-next-line react-hooks/immutability
-            await loadRandomSong([...excludeIds, data.song.id], signal)
+            await loadRandomSongRef.current?.(
+              [...excludeIds, data.song.id],
+              signal
+            )
             return
           }
           game.actions.loadSong(data.song)
@@ -477,7 +504,7 @@ function GameContent() {
 
         // Store retry callback
         retryCallbackRef.current = () => {
-          void loadRandomSong(excludeIds)
+          void loadRandomSongRef.current?.(excludeIds)
         }
 
         setNetworkError({ show: true, message })
@@ -485,6 +512,10 @@ function GameContent() {
     },
     [game.actions, checkAudioFileAccessible, filterQueryString, audioPreloader]
   )
+
+  useEffect(() => {
+    loadRandomSongRef.current = loadRandomSong
+  }, [loadRandomSong])
 
   // Handle network error retry
   const handleNetworkRetry = useCallback(() => {
@@ -535,10 +566,8 @@ function GameContent() {
     // Capture values for the async function
     const playedIds = game.state.playedSongIds
 
-    // Reset the audioReady state for the new song
-    setAudioReadyForSongId(null)
-
     // Load a new random song (excluding already played songs), using preloaded if available
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Starts the async request owned and aborted by this effect.
     void loadRandomSong(playedIds, abortController.signal)
 
     // Cleanup: abort the operation when effect is cleaned up (component unmount or deps change)
@@ -584,21 +613,6 @@ function GameContent() {
     }
   }, [audioPreloader, cleanupCelebration, cleanupShake, resetStreak])
 
-  // Calculate start position when a new song is loaded
-  // This ensures the start position is calculated once per song
-  useEffect(() => {
-    if (game.state.currentSong) {
-      const newStartPosition = getStartPosition(
-        game.state.currentSong,
-        startPositionMode,
-        config.clipDuration
-      )
-      setAudioStartPosition(newStartPosition)
-    } else {
-      setAudioStartPosition(0)
-    }
-  }, [game.state.currentSong, startPositionMode, config.clipDuration])
-
   // LOADING → PLAYING transition: Start playback when audio is ready
   // We check that the audio ready signal matches the current song to avoid race conditions
   useEffect(() => {
@@ -615,13 +629,6 @@ function GameContent() {
     audioReadyForSongId,
     game.actions,
   ])
-
-  // Reset quick score selection when leaving reveal state (auto-advance, song ended, etc.)
-  useEffect(() => {
-    if (game.state.status !== 'reveal') {
-      setQuickScoreSelection(null)
-    }
-  }, [game.state.status])
 
   // Callback when audio is ready to play - receives songId from AudioPlayer
   const handleAudioReady = useCallback((songId: string) => {
@@ -662,8 +669,6 @@ function GameContent() {
   // Handle next song action with audio unlock for iOS Safari
   const handleNextSong = useCallback(async () => {
     await unlockAudio()
-    // Reset quick score selection for the next song
-    setQuickScoreSelection(null)
     game.actions.nextSong()
   }, [unlockAudio, game.actions])
 
@@ -730,7 +735,11 @@ function GameContent() {
 
       await unlockAudio()
       // Track selection for visual feedback
-      setQuickScoreSelection(knew ? 'knew' : 'notFound')
+      if (!game.state.currentSong) return
+      setQuickScoreForSong({
+        songId: game.state.currentSong.id,
+        value: knew ? 'knew' : 'notFound',
+      })
       if (knew) {
         // Track streak for consecutive correct answers
         recordStreakCorrect()
@@ -750,6 +759,7 @@ function GameContent() {
       recordStreakCorrect,
       recordStreakSkip,
       quickScoreSelection,
+      game.state.currentSong,
     ]
   )
 
@@ -810,6 +820,25 @@ function GameContent() {
     )
   }
 
+  if (selectionError) {
+    return (
+      <PageTransition>
+        <main className="flex min-h-screen items-center justify-center p-4">
+          <Card className="w-full max-w-md space-y-5 p-6 text-center">
+            <XMarkIcon className="mx-auto h-12 w-12 text-red-400" />
+            <div>
+              <h1 className="text-2xl font-bold">Partie indisponible</h1>
+              <p className="mt-2 text-purple-200">{selectionError}</p>
+            </div>
+            <Button onClick={() => router.push('/solo')} fullWidth>
+              Modifier la sélection
+            </Button>
+          </Card>
+        </main>
+      </PageTransition>
+    )
+  }
+
   // Show recap screen when game is ended
   if (game.state.status === 'ended') {
     return (
@@ -821,6 +850,7 @@ function GameContent() {
             onNewGame={handleNewGame}
             onHome={handleHome}
             allSongsPlayed={allSongsPlayed}
+            playlistExhausted={Boolean(config.playlistId)}
           />
         </motion.div>
       </PageTransition>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { refreshCache, getCacheInfo } from '@/lib/audioScanner'
+import { clearPlaylistCatalogCache } from '@/lib/playlistScanner'
 import { logError } from '@/lib/logger'
 
 export interface RescanResponse {
@@ -20,6 +21,7 @@ export async function POST(): Promise<
   try {
     const startTime = Date.now()
     await refreshCache()
+    clearPlaylistCatalogCache()
     const duration = Date.now() - startTime
     const info = getCacheInfo()
 

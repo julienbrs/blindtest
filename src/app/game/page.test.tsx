@@ -3,9 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 // Mock next/navigation
 const mockPush = vi.fn()
+let mockSearchParamValues: Record<string, string> = {}
 vi.mock('next/navigation', () => ({
   useSearchParams: () => ({
-    get: vi.fn().mockReturnValue(null),
+    get: (key: string) => mockSearchParamValues[key] ?? null,
   }),
   useRouter: () => ({
     push: mockPush,
@@ -215,6 +216,7 @@ function resetMockState() {
   // Reset audio support mock state
   mockIsAudioSupported = true
   mockIsCheckingAudio = false
+  mockSearchParamValues = {}
 }
 
 describe('GamePage - LOADING → PLAYING transition (Issue 6.4)', () => {
@@ -1083,7 +1085,11 @@ describe('GamePage - File Not Found Auto-Skip (Issue 10.2)', () => {
       // No more songs available
       .mockResolvedValueOnce({
         ok: false,
-        status: 404,
+        status: 409,
+        json: async () => ({
+          error: 'Sélection épuisée',
+          code: 'SELECTION_EXHAUSTED',
+        }),
       })
 
     render(<GamePage />)
@@ -1160,6 +1166,68 @@ describe('GamePage - File Not Found Auto-Skip (Issue 10.2)', () => {
       // Should have retried with another song
       expect(global.fetch).toHaveBeenCalledTimes(4)
     })
+  })
+})
+
+describe('GamePage - server playlists', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMockState()
+    mockSearchParamValues = { playlist: 'm3u_party' }
+    mockGameState.status = 'loading'
+    mockGameState.currentSong = null
+    mockGameState.playedSongIds = []
+    global.fetch = vi.fn()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('applies the playlist ID to the first solo draw', async () => {
+    ;(global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          song: {
+            id: 'playlist-song',
+            title: 'Playlist Song',
+            artist: 'Artist',
+          },
+        }),
+      })
+      .mockResolvedValueOnce({ ok: true })
+
+    render(<GamePage />)
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('playlist=m3u_party'),
+        expect.anything()
+      )
+      expect(mockActions.loadSong).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'playlist-song' })
+      )
+    })
+  })
+
+  it('shows a recoverable screen for an unknown playlist instead of hanging', async () => {
+    ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({
+        error: 'Playlist inconnue',
+        code: 'PLAYLIST_NOT_FOUND',
+      }),
+    })
+
+    render(<GamePage />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Partie indisponible' })
+    ).toBeInTheDocument()
+    expect(screen.getByText('Playlist inconnue')).toBeInTheDocument()
+    expect(mockActions.quit).not.toHaveBeenCalled()
   })
 })
 

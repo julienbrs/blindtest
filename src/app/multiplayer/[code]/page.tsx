@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
@@ -35,7 +35,7 @@ import { useAudioUnlock } from '@/hooks/useAudioUnlock'
 import { ReactionPicker } from '@/components/multiplayer/ReactionPicker'
 import { ReactionOverlay } from '@/components/multiplayer/ReactionOverlay'
 import { StreakCelebration } from '@/components/game/StreakCelebration'
-import type { Song } from '@/lib/types'
+import type { Song, SongSelectionErrorResponse } from '@/lib/types'
 
 /**
  * MultiplayerRoomPage - The lobby/game page for a specific multiplayer room
@@ -117,8 +117,19 @@ export default function MultiplayerRoomPage() {
     isOnline,
   })
 
+  const playlistQueryString = useMemo(() => {
+    const query = new URLSearchParams()
+    if (room?.settings.playlistId) {
+      query.set('playlist', room.settings.playlistId)
+    }
+    return query.toString()
+  }, [room?.settings.playlistId])
+
   // Audio preloader for intelligent next song preloading (host only)
-  const audioPreloader = useAudioPreloader({ enabled: isHost })
+  const audioPreloader = useAudioPreloader({
+    enabled: isHost,
+    filterQueryString: playlistQueryString,
+  })
 
   // Live reactions for multiplayer games
   const { reactions, sendReaction } = useReactions({
@@ -149,6 +160,7 @@ export default function MultiplayerRoomPage() {
   const [isBuzzing, setIsBuzzing] = useState(false)
   const [timerRemaining, setTimerRemaining] = useState(0)
   const [revealCountdown, setRevealCountdown] = useState(0)
+  const [selectionError, setSelectionError] = useState<string | null>(null)
 
   // Try to reconnect on mount
   useEffect(() => {
@@ -293,27 +305,43 @@ export default function MultiplayerRoomPage() {
     router.push('/multiplayer')
   }, [leaveRoom, router])
 
+  const handleUpdateSettings = useCallback(
+    async (settings: Parameters<typeof updateSettings>[0]) => {
+      if ('playlistId' in settings) setSelectionError(null)
+      return updateSettings(settings)
+    },
+    [updateSettings]
+  )
+
   const handleStartGame = useCallback(async () => {
     // Unlock audio on interaction (iOS Safari) - critical for host's audio playback
     await unlockAudio()
-    const success = await startGame()
-    if (success) {
-      // Auto-load the first song when game starts
-      // Fetch a random song and start it immediately
-      try {
-        const response = await fetch('/api/songs/random')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.song) {
-            await nextSong(data.song.id)
-          }
-        }
-      } catch {
-        // Ignore fetch errors - host can still click "Next Song" manually
+    setSelectionError(null)
+
+    try {
+      const url = playlistQueryString
+        ? `/api/songs/random?${playlistQueryString}`
+        : '/api/songs/random'
+      const response = await fetch(url)
+      const data = (await response.json()) as
+        | { song: Song }
+        | SongSelectionErrorResponse
+
+      if (!response.ok || !('song' in data) || !data.song) {
+        setSelectionError(
+          'error' in data
+            ? data.error
+            : 'Aucun morceau valide pour démarrer la partie.'
+        )
+        return false
       }
+
+      return await startGame(data.song.id)
+    } catch {
+      setSelectionError('Impossible de charger le premier morceau.')
+      return false
     }
-    return success
-  }, [startGame, unlockAudio, nextSong])
+  }, [startGame, unlockAudio, playlistQueryString])
 
   const handleBack = useCallback(() => {
     router.push('/multiplayer')
@@ -378,27 +406,48 @@ export default function MultiplayerRoomPage() {
 
     // Fallback: Fetch a random song and start it
     try {
-      const excludeIds = gameState.playedSongIds.join(',')
-      const url = excludeIds
-        ? `/api/songs/random?exclude=${excludeIds}`
-        : '/api/songs/random'
-      const response = await fetch(url)
+      const query = new URLSearchParams(playlistQueryString)
+      const excludedSongIds = Array.from(
+        new Set(
+          [...gameState.playedSongIds, gameState.currentSongId].filter(
+            (songId): songId is string => Boolean(songId)
+          )
+        )
+      )
+      if (excludedSongIds.length > 0) {
+        query.set('exclude', excludedSongIds.join(','))
+      }
+
+      const response = await fetch(`/api/songs/random?${query.toString()}`)
       if (response.ok) {
         const data = await response.json()
         if (data.song) {
           await nextSong(data.song.id)
           setIsRevealed(false)
+          setSelectionError(null)
+        }
+      } else {
+        const apiError = (await response.json()) as SongSelectionErrorResponse
+        if (apiError.code === 'SELECTION_EXHAUSTED') {
+          await endGame()
+        } else {
+          setSelectionError(
+            apiError.error || 'Impossible de choisir le prochain morceau.'
+          )
         }
       }
     } catch {
-      // Ignore fetch errors
+      setSelectionError('Impossible de charger le prochain morceau.')
     }
   }, [
     nextSong,
+    endGame,
     gameState.playedSongIds,
+    gameState.currentSongId,
     audioPreloader,
     setIsListeningToRest,
     unlockAudio,
+    playlistQueryString,
   ])
 
   // Auto-advance when countdown reaches 0 (host only, during reveal, not listening to rest)
@@ -605,10 +654,10 @@ export default function MultiplayerRoomPage() {
               isHost={isHost}
               onStartGame={handleStartGame}
               onLeaveRoom={handleLeaveRoom}
-              onUpdateSettings={updateSettings}
+              onUpdateSettings={handleUpdateSettings}
               onKickPlayer={kickPlayer}
               isLoading={isLoading}
-              error={error}
+              error={selectionError || error}
             />
           </main>
         </PageTransition>
@@ -669,6 +718,25 @@ export default function MultiplayerRoomPage() {
                 {players.length > 1 ? 's' : ''}
               </p>
             </motion.div>
+
+            {selectionError && (
+              <div
+                role="alert"
+                className="mb-6 w-full max-w-lg rounded-xl bg-red-500/20 p-4 text-center text-red-200"
+              >
+                <p>{selectionError}</p>
+                {isHost && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="mt-3"
+                    onClick={handleEndGame}
+                  >
+                    Terminer la partie
+                  </Button>
+                )}
+              </div>
+            )}
 
             {/* Main game layout with sidebar on larger screens */}
             <div className="flex w-full max-w-5xl flex-col gap-6 lg:flex-row lg:justify-center">

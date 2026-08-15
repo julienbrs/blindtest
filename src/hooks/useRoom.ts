@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 import type { Room, Player, RoomStatus, GameConfig } from '@/lib/types'
+import {
+  DEFAULT_MULTIPLAYER_GAME_CONFIG,
+  normalizeGameConfig,
+} from '@/lib/gameConfig'
 import type {
   RealtimeChannel,
   RealtimePostgresChangesPayload,
@@ -25,17 +29,6 @@ function generateRoomCode(): string {
 }
 
 /**
- * Default game settings for a new room
- */
-const defaultSettings: GameConfig = {
-  guessMode: 'both',
-  clipDuration: 15,
-  timerDuration: 5,
-  noTimer: false,
-  revealDuration: 5,
-}
-
-/**
  * Convert database row to Room type
  */
 function dbRowToRoom(row: Record<string, unknown>): Room {
@@ -44,8 +37,13 @@ function dbRowToRoom(row: Record<string, unknown>): Room {
     code: row.code as string,
     hostId: row.host_id as string,
     status: row.status as RoomStatus,
-    settings: row.settings as GameConfig,
+    settings: normalizeGameConfig(row.settings),
     currentSongId: row.current_song_id as string | null,
+    playedSongIds: Array.isArray(row.played_song_ids)
+      ? row.played_song_ids.filter(
+          (songId): songId is string => typeof songId === 'string'
+        )
+      : [],
     currentSongStartedAt: row.current_song_started_at
       ? new Date(row.current_song_started_at as string)
       : null,
@@ -100,7 +98,7 @@ export interface UseRoomResult {
   /** Update room settings (host only) */
   updateSettings: (settings: Partial<GameConfig>) => Promise<boolean>
   /** Start the game (host only, requires >= 2 players) */
-  startGame: () => Promise<boolean>
+  startGame: (initialSongId: string) => Promise<boolean>
   /** Kick a player from the room (host only) */
   kickPlayer: (playerId: string) => Promise<boolean>
   /** Reconnect to a room using stored player ID */
@@ -337,8 +335,9 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
             code,
             host_id: crypto.randomUUID(), // Temporary
             status: 'waiting',
-            settings: defaultSettings,
+            settings: DEFAULT_MULTIPLAYER_GAME_CONFIG,
             current_song_id: null,
+            played_song_ids: [],
             current_song_started_at: null,
           })
           .select()
@@ -574,36 +573,62 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
   /**
    * Start the game (host only, requires >= 2 players)
    */
-  const startGame = useCallback(async (): Promise<boolean> => {
-    if (!room || !isHost || !isConfigured) {
-      setError('Action non autorisée')
-      return false
-    }
-
-    if (players.length < 2) {
-      setError('Il faut au moins 2 joueurs pour démarrer')
-      return false
-    }
-
-    try {
-      const supabase = getSupabaseClient()
-
-      const { error: updateError } = await supabase
-        .from('rooms')
-        .update({ status: 'playing' })
-        .eq('id', room.id)
-
-      if (updateError) {
-        throw new Error(updateError.message)
+  const startGame = useCallback(
+    async (initialSongId: string): Promise<boolean> => {
+      if (!room || !isHost || !isConfigured) {
+        setError('Action non autorisée')
+        return false
       }
 
-      return true
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur démarrage'
-      setError(message)
-      return false
-    }
-  }, [room, isHost, players.length, isConfigured])
+      if (players.length < 2) {
+        setError('Il faut au moins 2 joueurs pour démarrer')
+        return false
+      }
+
+      if (!initialSongId) {
+        setError('Aucun morceau valide pour démarrer')
+        return false
+      }
+
+      try {
+        const supabase = getSupabaseClient()
+        const startTime = new Date(Date.now() + 1000)
+
+        const { error: updateError } = await supabase
+          .from('rooms')
+          .update({
+            status: 'playing',
+            current_song_id: initialSongId,
+            current_song_started_at: startTime.toISOString(),
+            played_song_ids: [],
+          })
+          .eq('id', room.id)
+
+        if (updateError) {
+          throw new Error(updateError.message)
+        }
+
+        setRoom((previousRoom) =>
+          previousRoom
+            ? {
+                ...previousRoom,
+                status: 'playing',
+                currentSongId: initialSongId,
+                currentSongStartedAt: startTime,
+                playedSongIds: [],
+              }
+            : null
+        )
+
+        return true
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erreur démarrage'
+        setError(message)
+        return false
+      }
+    },
+    [room, isHost, players.length, isConfigured]
+  )
 
   /**
    * Kick a player from the room (host only)
@@ -767,6 +792,7 @@ export function useRoom(options: UseRoomOptions = {}): UseRoomResult {
           status: 'waiting',
           current_song_id: null,
           current_song_started_at: null,
+          played_song_ids: [],
         })
         .eq('id', room.id)
 

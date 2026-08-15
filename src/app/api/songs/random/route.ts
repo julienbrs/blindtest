@@ -1,40 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongsCache } from '@/lib/audioScanner'
+import { getPlaylistById } from '@/lib/playlistScanner'
 import { logError } from '@/lib/logger'
-import type { RandomSongResponse } from '@/lib/types'
+import type {
+  RandomSongResponse,
+  SongSelectionErrorResponse,
+} from '@/lib/types'
+
+function selectionError(
+  status: number,
+  code: SongSelectionErrorResponse['code'],
+  error: string
+) {
+  return NextResponse.json<SongSelectionErrorResponse>(
+    { error, code },
+    { status }
+  )
+}
 
 export async function GET(request: NextRequest) {
   try {
     let songs = await getSongsCache()
 
     if (songs.length === 0) {
-      return NextResponse.json(
-        { error: 'Aucune chanson disponible' },
-        { status: 404 }
-      )
+      return selectionError(404, 'LIBRARY_EMPTY', 'Aucune chanson disponible')
     }
 
     // Récupérer les paramètres depuis les query params
     const searchParams = request.nextUrl.searchParams
     const excludeParam = searchParams.get('exclude')
-    const excludeIds = excludeParam ? excludeParam.split(',') : []
+    const excludeIds = new Set(
+      excludeParam
+        ? excludeParam
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean)
+        : []
+    )
 
     // Parse filter parameters (same as /api/songs)
     const artistsFilter = searchParams.get('artists')
     const yearMin = searchParams.get('yearMin')
     const yearMax = searchParams.get('yearMax')
 
-    // Parse include parameter for playlist filtering
-    // When provided, only songs with these IDs are considered
-    const includeParam = searchParams.get('include')
-    const includeIds = includeParam
-      ? includeParam.split(',').map((id) => id.trim())
-      : null
+    // A server-side playlist takes priority over artist/year filters.
+    const playlistId = searchParams.get('playlist')?.trim()
+    if (playlistId) {
+      const playlist = await getPlaylistById(playlistId, songs)
+      if (!playlist) {
+        return selectionError(404, 'PLAYLIST_NOT_FOUND', 'Playlist inconnue')
+      }
+      if (playlist.songCount === 0) {
+        return selectionError(422, 'PLAYLIST_EMPTY', 'Playlist vide')
+      }
 
-    // Apply include filter first (playlist songs)
-    // This takes priority over other filters when a playlist is selected
-    if (includeIds && includeIds.length > 0) {
-      songs = songs.filter((s) => includeIds.includes(s.id))
+      const playlistSongIds = new Set(playlist.songIds)
+      songs = songs.filter((song) => playlistSongIds.has(song.id))
     } else {
       // Apply artist filter (comma-separated list) - only when no playlist
       if (artistsFilter) {
@@ -53,12 +74,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Filtrer les chansons déjà jouées
-    const availableSongs = songs.filter((song) => !excludeIds.includes(song.id))
+    const availableSongs = songs.filter((song) => !excludeIds.has(song.id))
 
     if (availableSongs.length === 0) {
-      return NextResponse.json(
-        { error: 'Toutes les chansons ont été jouées' },
-        { status: 404 }
+      return selectionError(
+        409,
+        'SELECTION_EXHAUSTED',
+        'Toutes les chansons de la sélection ont été jouées'
       )
     }
 

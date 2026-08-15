@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
+import { normalizeGameConfig } from '@/lib/gameConfig'
 import type {
   Room,
   Player,
   Buzz,
   Song,
   RoomStatus,
-  GameConfig,
   RoundHistory,
 } from '@/lib/types'
 import type {
@@ -63,8 +63,13 @@ function dbRowToRoom(row: Record<string, unknown>): Room {
     code: row.code as string,
     hostId: row.host_id as string,
     status: row.status as RoomStatus,
-    settings: row.settings as GameConfig,
+    settings: normalizeGameConfig(row.settings),
     currentSongId: row.current_song_id as string | null,
+    playedSongIds: Array.isArray(row.played_song_ids)
+      ? row.played_song_ids.filter(
+          (songId): songId is string => typeof songId === 'string'
+        )
+      : [],
     currentSongStartedAt: row.current_song_started_at
       ? new Date(row.current_song_started_at as string)
       : null,
@@ -257,6 +262,7 @@ export function useMultiplayerGame(
       status,
       currentSongId: room.currentSongId,
       currentSongStartedAt: room.currentSongStartedAt,
+      playedSongIds: room.playedSongIds,
     }))
   }, [room])
 
@@ -297,23 +303,13 @@ export function useMultiplayerGame(
             }
           }
 
-          setGameState((prev) => {
-            // Track played songs
-            const newPlayedSongIds =
-              prev.currentSongId &&
-              updatedRoom.currentSongId !== prev.currentSongId &&
-              !prev.playedSongIds.includes(prev.currentSongId)
-                ? [...prev.playedSongIds, prev.currentSongId]
-                : prev.playedSongIds
-
-            return {
-              ...prev,
-              status: newStatus,
-              currentSongId: updatedRoom.currentSongId,
-              currentSongStartedAt: updatedRoom.currentSongStartedAt,
-              playedSongIds: newPlayedSongIds,
-            }
-          })
+          setGameState((prev) => ({
+            ...prev,
+            status: newStatus,
+            currentSongId: updatedRoom.currentSongId,
+            currentSongStartedAt: updatedRoom.currentSongStartedAt,
+            playedSongIds: updatedRoom.playedSongIds,
+          }))
 
           // Clear buzzes when song changes
           if (
@@ -687,12 +683,18 @@ export function useMultiplayerGame(
 
         // Set the song start time 1 second in the future for sync
         const startTime = new Date(Date.now() + 1000)
+        const completedSongIds = gameState.currentSongId
+          ? Array.from(
+              new Set([...gameState.playedSongIds, gameState.currentSongId])
+            )
+          : gameState.playedSongIds
 
         const { error: updateError } = await supabase
           .from('rooms')
           .update({
             current_song_id: songId,
             current_song_started_at: startTime.toISOString(),
+            played_song_ids: completedSongIds,
           })
           .eq('id', room.id)
 
@@ -711,7 +713,13 @@ export function useMultiplayerGame(
         return false
       }
     },
-    [isConfigured, room, isHost]
+    [
+      isConfigured,
+      room,
+      isHost,
+      gameState.currentSongId,
+      gameState.playedSongIds,
+    ]
   )
 
   /**

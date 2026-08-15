@@ -1,7 +1,7 @@
 'use client'
 
 import { describe, it, expect, beforeEach, vi, afterEach, Mock } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useRoom } from './useRoom'
 
 const PLAYER_ID_KEY = 'blindtest_player_id'
@@ -301,11 +301,80 @@ describe('useRoom', () => {
 
       let success = false
       await act(async () => {
-        success = await result.current.startGame()
+        success = await result.current.startGame('song-123')
       })
 
       expect(success).toBe(false)
       expect(result.current.error).toBe('Action non autorisée')
+    })
+
+    it('sets the first song and clears persisted history before playing', async () => {
+      vi.useRealTimers()
+      localStorage.setItem(PLAYER_ID_KEY, 'host-player')
+      mockSupabase._mocks.mockSingle.mockResolvedValueOnce({
+        data: {
+          id: 'room-123',
+          code: 'ABC123',
+          host_id: 'host-player',
+          status: 'waiting',
+          settings: {
+            guessMode: 'both',
+            clipDuration: 15,
+            timerDuration: 5,
+            noTimer: false,
+            revealDuration: 5,
+          },
+          current_song_id: null,
+          current_song_started_at: null,
+          played_song_ids: ['old-song'],
+          created_at: new Date().toISOString(),
+        },
+        error: null,
+      })
+      mockSupabase._mocks.mockOrder.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'host-player',
+            room_id: 'room-123',
+            nickname: 'Host',
+            avatar: null,
+            score: 0,
+            is_host: true,
+            joined_at: new Date().toISOString(),
+          },
+          {
+            id: 'guest-player',
+            room_id: 'room-123',
+            nickname: 'Guest',
+            avatar: null,
+            score: 0,
+            is_host: false,
+            joined_at: new Date().toISOString(),
+          },
+        ],
+        error: null,
+      })
+
+      const { result } = renderHook(() => useRoom({ roomCode: 'ABC123' }))
+      await waitFor(() => expect(result.current.isHost).toBe(true))
+
+      await act(async () => {
+        expect(await result.current.startGame('first-song')).toBe(true)
+      })
+
+      expect(mockSupabase._mocks.mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'playing',
+          current_song_id: 'first-song',
+          played_song_ids: [],
+        })
+      )
+      expect(result.current.room).toMatchObject({
+        status: 'playing',
+        currentSongId: 'first-song',
+        playedSongIds: [],
+        settings: { playlistId: null },
+      })
     })
   })
 
