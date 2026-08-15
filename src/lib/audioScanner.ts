@@ -153,13 +153,34 @@ export function generateSongId(filePath: string): string {
 }
 
 /**
+ * Resolves the optional MP4 sidecar associated with an audio file.
+ * Example: `/music/Artist - Title.mp3` -> `/music/Artist - Title.mp4`.
+ */
+export function getVideoSidecarPath(filePath: string): string {
+  const extension = extname(filePath)
+  return join(dirname(filePath), `${basename(filePath, extension)}.mp4`)
+}
+
+async function hasVideoSidecar(filePath: string): Promise<boolean> {
+  try {
+    const videoStat = await stat(getVideoSidecarPath(filePath))
+    return videoStat.isFile()
+  } catch {
+    return false
+  }
+}
+
+/**
  * Extracts metadata from an audio file
  * @param filePath - The absolute path to the audio file
  * @returns Song object or null if extraction fails
  */
 export async function extractMetadata(filePath: string): Promise<Song | null> {
   try {
-    const metadata = await parseFile(filePath)
+    const [metadata, hasVideo] = await Promise.all([
+      parseFile(filePath),
+      hasVideoSidecar(filePath),
+    ])
 
     // Generate a unique ID based on the file path
     const id = generateSongId(filePath)
@@ -183,6 +204,7 @@ export async function extractMetadata(filePath: string): Promise<Song | null> {
       hasCover: !!(
         metadata.common.picture && metadata.common.picture.length > 0
       ),
+      hasVideo,
     }
   } catch (error) {
     console.error(`Erreur lecture métadonnées: ${filePath}`, error)

@@ -1,6 +1,13 @@
 'use client'
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  type RefObject,
+} from 'react'
 
 /**
  * Simple debounce function for performance optimization.
@@ -36,6 +43,8 @@ interface AudioPlayerProps {
   startPosition?: number
   /** If true, ignore maxDuration and play until the natural end of the song */
   unlimitedPlayback?: boolean
+  /** Shared audio element reference used to synchronize an optional video */
+  audioElementRef?: RefObject<HTMLAudioElement | null>
 }
 
 export function AudioPlayer({
@@ -49,8 +58,16 @@ export function AudioPlayer({
   volume = 0.7,
   startPosition = 0,
   unlimitedPlayback = false,
+  audioElementRef,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const setAudioRef = useCallback(
+    (element: HTMLAudioElement | null) => {
+      audioRef.current = element
+      if (audioElementRef) audioElementRef.current = element
+    },
+    [audioElementRef]
+  )
   const [currentTime, setCurrentTime] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const prevSongIdRef = useRef<string | undefined>(undefined)
@@ -209,7 +226,7 @@ export function AudioPlayer({
   return (
     <div className="w-full max-w-md">
       <audio
-        ref={audioRef}
+        ref={setAudioRef}
         onTimeUpdate={handleTimeUpdate}
         onCanPlay={handleCanPlay}
         onLoadStart={handleLoadStart}

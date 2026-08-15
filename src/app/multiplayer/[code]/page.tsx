@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
@@ -53,6 +53,7 @@ export default function MultiplayerRoomPage() {
   const params = useParams()
   const router = useRouter()
   const shouldReduceMotion = useReducedMotion()
+  const audioElementRef = useRef<HTMLAudioElement>(null)
 
   const roomCode =
     typeof params.code === 'string' ? params.code.toUpperCase() : ''
@@ -779,6 +780,7 @@ export default function MultiplayerRoomPage() {
                         isListeningToRest || gameState.status === 'reveal'
                       }
                       onEnded={handleAudioEnded}
+                      audioElementRef={audioElementRef}
                     />
                   </motion.div>
                 )}
@@ -795,8 +797,13 @@ export default function MultiplayerRoomPage() {
                       guessMode={room.settings.guessMode ?? 'both'}
                       isRevealed={isRevealed}
                       isPlaying={
-                        gameState.status === 'playing' && !shouldPauseAudio
+                        (gameState.status === 'playing' ||
+                          gameState.status === 'buzzed' ||
+                          gameState.status === 'reveal') &&
+                        !shouldPauseAudio &&
+                        !isPaused
                       }
+                      audioElementRef={audioElementRef}
                     />
                   </motion.div>
                 )}
