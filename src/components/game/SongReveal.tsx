@@ -1,10 +1,12 @@
 'use client'
 
+import { useState, type RefObject } from 'react'
 import Image from 'next/image'
 import { MusicalNoteIcon } from '@heroicons/react/24/solid'
 import type { Song, GuessMode } from '@/lib/types'
 import { SongSkeleton } from '@/components/ui/SongSkeleton'
 import { AudioVisualizer } from '@/components/game/AudioVisualizer'
+import { SongVideo } from '@/components/game/SongVideo'
 
 // Base64 1x1 purple blur placeholder for instant loading
 const PLACEHOLDER_BLUR =
@@ -16,6 +18,8 @@ interface SongRevealProps {
   guessMode: GuessMode
   /** Whether audio is currently playing (for visualizer animation) */
   isPlaying?: boolean
+  /** Authoritative audio element used to keep an optional video in sync */
+  audioElementRef?: RefObject<HTMLAudioElement | null>
 }
 
 export function SongReveal({
@@ -23,37 +27,62 @@ export function SongReveal({
   isRevealed,
   guessMode,
   isPlaying = false,
+  audioElementRef,
 }: SongRevealProps) {
+  const [videoFailedForSongId, setVideoFailedForSongId] = useState<
+    string | null
+  >(null)
+
   if (!song) {
     return <SongSkeleton />
   }
 
+  const showVideo =
+    isRevealed && song.hasVideo === true && videoFailedForSongId !== song.id
+
   return (
-    <div className="flex flex-col items-center gap-3 landscape:gap-2 sm:gap-4">
+    <div className="flex w-full flex-col items-center gap-3 landscape:gap-2 sm:gap-4">
       {/* Container for cover + visualizer */}
-      <div className="relative">
+      <div className={`relative ${showVideo ? 'w-full max-w-md' : ''}`}>
         {/* Audio Visualizer - positioned behind the cover */}
         <AudioVisualizer isPlaying={isPlaying} />
 
-        {/* Pochette - Responsive size: smaller on mobile/landscape, larger on desktop */}
-        <div className="relative z-10 h-48 w-48 overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] landscape:h-36 landscape:w-36 sm:h-56 sm:w-56 md:h-64 md:w-64 landscape:md:h-48 landscape:md:w-48">
-          <Image
-            src={`/api/cover/${song.id}`}
-            alt="Pochette album"
-            fill
-            sizes="(max-width: 640px) 192px, (max-width: 768px) 224px, 256px"
-            quality={75}
-            placeholder="blur"
-            blurDataURL={PLACEHOLDER_BLUR}
-            priority
-            className={`object-cover transition-all duration-500 ${
-              isRevealed ? '' : 'scale-110 blur-xl'
-            }`}
-          />
-          {!isRevealed && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <MusicalNoteIcon className="h-12 w-12 text-white/80 sm:h-14 sm:w-14 md:h-16 md:w-16" />
-            </div>
+        {/* Keep the cover hidden while guessing; load video only on reveal. */}
+        <div
+          className={`relative z-10 overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] ${
+            showVideo
+              ? 'aspect-video w-full'
+              : 'h-48 w-48 landscape:h-36 landscape:w-36 sm:h-56 sm:w-56 md:h-64 md:w-64 landscape:md:h-48 landscape:md:w-48'
+          }`}
+        >
+          {showVideo ? (
+            <SongVideo
+              songId={song.id}
+              isPlaying={isPlaying}
+              audioElementRef={audioElementRef}
+              onError={() => setVideoFailedForSongId(song.id)}
+            />
+          ) : (
+            <>
+              <Image
+                src={`/api/cover/${song.id}`}
+                alt="Pochette album"
+                fill
+                sizes="(max-width: 640px) 192px, (max-width: 768px) 224px, 256px"
+                quality={75}
+                placeholder="blur"
+                blurDataURL={PLACEHOLDER_BLUR}
+                priority
+                className={`object-cover transition-all duration-500 ${
+                  isRevealed ? '' : 'scale-110 blur-xl'
+                }`}
+              />
+              {!isRevealed && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <MusicalNoteIcon className="h-12 w-12 text-white/80 sm:h-14 sm:w-14 md:h-16 md:w-16" />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import {
   getSupportedExtensions,
   parseFileName,
   generateSongId,
+  getVideoSidecarPath,
   extractMetadata,
   extractCover,
   getCoverMimeType,
@@ -298,6 +299,14 @@ describe('generateSongId', () => {
   })
 })
 
+describe('getVideoSidecarPath', () => {
+  it('keeps the directory and replaces the audio extension with mp4', () => {
+    expect(getVideoSidecarPath('/music/Artist - Title.flac')).toBe(
+      '/music/Artist - Title.mp4'
+    )
+  })
+})
+
 describe('extractMetadata', () => {
   let testDir: string
 
@@ -337,6 +346,18 @@ describe('extractMetadata', () => {
     expect(result!.format).toBe('mp3')
     expect(result!.duration).toBe(0)
     expect(result!.hasCover).toBe(false)
+    expect(result!.hasVideo).toBe(false)
+  })
+
+  it('detects an MP4 sidecar with the same base name', async () => {
+    const testFile = join(testDir, 'Artist Name - Song Title.mp3')
+    await writeFile(testFile, '')
+    await writeFile(join(testDir, 'Artist Name - Song Title.mp4'), 'video')
+
+    const result = await extractMetadata(testFile)
+
+    expect(result).not.toBeNull()
+    expect(result!.hasVideo).toBe(true)
   })
 
   it('should use default values when filename has no artist', async () => {

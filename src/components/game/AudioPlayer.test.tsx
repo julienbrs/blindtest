@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
+import { createRef } from 'react'
 import { AudioPlayer } from './AudioPlayer'
 
 // Store original HTMLMediaElement prototype methods
@@ -144,6 +145,22 @@ describe('AudioPlayer', () => {
       // Audio element should exist
       const audio = document.querySelector('audio')
       expect(audio).toBeInTheDocument()
+    })
+
+    it('exposes the audio element for video synchronization', () => {
+      const audioElementRef = createRef<HTMLAudioElement>()
+
+      render(
+        <AudioPlayer
+          songId={undefined}
+          isPlaying={false}
+          maxDuration={20}
+          onEnded={vi.fn()}
+          audioElementRef={audioElementRef}
+        />
+      )
+
+      expect(audioElementRef.current).toBe(document.querySelector('audio'))
     })
 
     it('should handle undefined songId gracefully', () => {

@@ -97,6 +97,7 @@ function GameContent() {
   const [audioReadyForSongId, setAudioReadyForSongId] = useState<string | null>(
     null
   )
+  const audioElementRef = useRef<HTMLAudioElement>(null)
   const hasInitialized = useRef(false)
   // Track if we're currently loading a song (to prevent duplicate loads)
   const isLoadingSongRef = useRef(false)
@@ -230,8 +231,7 @@ function GameContent() {
 
   const game = useGameState(config)
   const quickScoreSelection =
-    quickScoreForSong &&
-    quickScoreForSong.songId === game.state.currentSong?.id
+    quickScoreForSong && quickScoreForSong.songId === game.state.currentSong?.id
       ? quickScoreForSong.value
       : null
   const audioStartPosition = useMemo(
@@ -1029,6 +1029,7 @@ function GameContent() {
                 game.state.status === 'countdown' ||
                 game.state.status === 'reveal'
               }
+              audioElementRef={audioElementRef}
             />
 
             {/* Lecteur audio */}
@@ -1048,6 +1049,7 @@ function GameContent() {
                 volume={musicVolume}
                 startPosition={audioStartPosition}
                 unlimitedPlayback={game.state.status === 'reveal'}
+                audioElementRef={audioElementRef}
               />
             </div>
           </div>

@@ -12,6 +12,7 @@ export interface Song {
   filePath: string // Chemin absolu du fichier
   format: AudioFormat // Format du fichier
   hasCover: boolean // Si une pochette est disponible
+  hasVideo?: boolean // Si un sidecar MP4 du même nom est disponible
 }
 
 export type AudioFormat = 'mp3' | 'wav' | 'ogg' | 'flac' | 'm4a' | 'aac'

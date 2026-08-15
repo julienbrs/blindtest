@@ -1,6 +1,13 @@
 'use client'
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  type RefObject,
+} from 'react'
 
 /**
  * Simple debounce function for performance optimization.
@@ -40,6 +47,8 @@ interface SyncedAudioPlayerProps {
   startPosition?: number
   /** When true, plays full song beyond clip duration (for "listen to rest" feature) */
   unlimitedPlayback?: boolean
+  /** Shared audio element reference used to synchronize an optional video */
+  audioElementRef?: RefObject<HTMLAudioElement | null>
 }
 
 /**
@@ -87,8 +96,16 @@ export function SyncedAudioPlayer({
   volume = 0.7,
   startPosition = 0,
   unlimitedPlayback = false,
+  audioElementRef,
 }: SyncedAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const setAudioRef = useCallback(
+    (element: HTMLAudioElement | null) => {
+      audioRef.current = element
+      if (audioElementRef) audioElementRef.current = element
+    },
+    [audioElementRef]
+  )
   const [currentTime, setCurrentTime] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -119,11 +136,9 @@ export function SyncedAudioPlayer({
       // Reset state for new song
       hasEndedRef.current = false
       pausedAtPositionRef.current = null // Clear paused position for new song
-      /* eslint-disable react-hooks/set-state-in-effect -- Reset state when song changes is required */
       setIsLoaded(false)
       setIsSyncing(false)
       setCurrentTime(startPosition)
-      /* eslint-enable react-hooks/set-state-in-effect */
 
       // Clear any pending sync timeout
       if (syncTimeoutRef.current) {
@@ -142,11 +157,9 @@ export function SyncedAudioPlayer({
     if (!songId) {
       prevSongIdRef.current = null
       pausedAtPositionRef.current = null // Clear paused position
-      /* eslint-disable react-hooks/set-state-in-effect -- Reset state when song is cleared is required */
       setIsLoaded(false)
       setIsSyncing(false)
       setCurrentTime(0)
-      /* eslint-enable react-hooks/set-state-in-effect */
       hasEndedRef.current = false
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current)
@@ -166,7 +179,6 @@ export function SyncedAudioPlayer({
       return
     }
 
-    /* eslint-disable-next-line react-hooks/set-state-in-effect -- Mark syncing state for audio synchronization */
     setIsSyncing(true)
 
     const startSync = () => {
@@ -251,7 +263,6 @@ export function SyncedAudioPlayer({
         clearTimeout(syncTimeoutRef.current)
         syncTimeoutRef.current = null
       }
-      /* eslint-disable-next-line react-hooks/set-state-in-effect -- Reset syncing state on pause */
       setIsSyncing(false)
     }
   }, [isPlaying, isLoaded])
@@ -322,7 +333,7 @@ export function SyncedAudioPlayer({
   return (
     <div className="w-full max-w-md" data-testid="synced-audio-player">
       <audio
-        ref={audioRef}
+        ref={setAudioRef}
         onTimeUpdate={handleTimeUpdate}
         onCanPlay={handleCanPlay}
         onLoadStart={handleLoadStart}

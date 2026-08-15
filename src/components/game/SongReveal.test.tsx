@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { SongReveal } from './SongReveal'
 import type { Song } from '@/lib/types'
 
@@ -29,6 +29,11 @@ const mockSong: Song = {
   filePath: '/path/to/song.mp3',
   format: 'mp3',
   hasCover: true,
+}
+
+const mockSongWithVideo: Song = {
+  ...mockSong,
+  hasVideo: true,
 }
 
 describe('SongReveal', () => {
@@ -92,6 +97,85 @@ describe('SongReveal', () => {
       // The music note icon should not be present when revealed
       const icon = document.querySelector('.h-12.w-12')
       expect(icon).not.toBeInTheDocument()
+    })
+
+    it('keeps the cover hidden and does not request video before reveal', () => {
+      render(
+        <SongReveal
+          song={mockSongWithVideo}
+          isRevealed={false}
+          guessMode="both"
+        />
+      )
+
+      expect(screen.getByTestId('cover-image')).toBeInTheDocument()
+      expect(screen.queryByTestId('song-video')).not.toBeInTheDocument()
+    })
+
+    it('displays the muted MP4 sidecar when a song with video is revealed', () => {
+      render(
+        <SongReveal
+          song={mockSongWithVideo}
+          isRevealed={true}
+          guessMode="both"
+        />
+      )
+
+      const video = screen.getByTestId('song-video')
+      expect(video).toHaveAttribute('src', `/api/video/${mockSong.id}`)
+      expect(video).toHaveAttribute('poster', `/api/cover/${mockSong.id}`)
+      expect(video).toHaveProperty('muted', true)
+      expect(video).toHaveAttribute('playsinline')
+      expect(video).toHaveAttribute('preload', 'metadata')
+      expect(screen.queryByTestId('cover-image')).not.toBeInTheDocument()
+    })
+
+    it('falls back to the cover if the video cannot be loaded', () => {
+      render(
+        <SongReveal
+          song={mockSongWithVideo}
+          isRevealed={true}
+          guessMode="both"
+        />
+      )
+
+      fireEvent.error(screen.getByTestId('song-video'))
+
+      expect(screen.queryByTestId('song-video')).not.toBeInTheDocument()
+      expect(screen.getByTestId('cover-image')).toBeInTheDocument()
+    })
+
+    it('synchronizes the revealed video with the authoritative audio element', () => {
+      const audio = document.createElement('audio')
+      Object.defineProperties(audio, {
+        currentTime: { configurable: true, value: 42, writable: true },
+        paused: { configurable: true, value: false },
+        ended: { configurable: true, value: false },
+      })
+      const audioElementRef = { current: audio }
+
+      render(
+        <SongReveal
+          song={mockSongWithVideo}
+          isRevealed={true}
+          guessMode="both"
+          isPlaying
+          audioElementRef={audioElementRef}
+        />
+      )
+
+      const video = screen.getByTestId('song-video') as HTMLVideoElement
+      Object.defineProperties(video, {
+        readyState: { configurable: true, value: 1 },
+        duration: { configurable: true, value: 100 },
+        paused: { configurable: true, value: true },
+      })
+      const playSpy = vi.spyOn(video, 'play').mockResolvedValue()
+
+      fireEvent.loadedMetadata(video)
+
+      expect(video.currentTime).toBe(42)
+      expect(playSpy).toHaveBeenCalledOnce()
     })
   })
 
